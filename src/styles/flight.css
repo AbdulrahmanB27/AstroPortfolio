@@ -1,0 +1,176 @@
+/* ---------- flight mode overlay ---------- */
+
+.overlay-root > .flight-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+}
+
+.flight-hud[data-visible='true'] {
+  opacity: 1;
+  /* Let the system HUD fade out first: both share the top-left corner. */
+  transition-delay: 0.45s;
+}
+
+.flight-hud[data-visible='true'] .pill,
+.flight-hud[data-visible='true'] .flight-touch__btn {
+  pointer-events: auto;
+}
+
+.flight-hud__top {
+  position: absolute;
+  top: calc(28px + var(--safe-top));
+  left: calc(32px + var(--safe-left));
+  right: calc(32px + var(--safe-right));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.flight-hud__hint {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+
+/* Compass: a faint ring with one tick that points toward the signal. */
+
+.flight-compass {
+  position: absolute;
+  top: calc(30px + var(--safe-top));
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  margin-left: -17px;
+  border: 1px solid rgba(169, 180, 199, 0.28);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-out);
+}
+
+.flight-compass[data-visible='false'] {
+  opacity: 0 !important;
+}
+
+.flight-compass__tick {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform-origin: 50% 50%;
+}
+
+.flight-compass__tick::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  width: 2px;
+  height: 9px;
+  margin-left: -1px;
+  background: var(--star-glow);
+  border-radius: 1px;
+}
+
+/* Quiet toast at the bottom centre. */
+
+.flight-toast {
+  position: absolute;
+  left: 50%;
+  bottom: calc(40px + var(--safe-bottom));
+  transform: translate(-50%, 6px);
+  padding: 10px 16px;
+  border: var(--hair);
+  background: var(--panel-bg);
+  backdrop-filter: blur(var(--panel-blur));
+  font-size: 13.5px;
+  color: var(--ink-100);
+  white-space: nowrap;
+  opacity: 0;
+  transition:
+    opacity 0.4s var(--ease-out),
+    transform 0.4s var(--ease-out);
+}
+
+.flight-toast[data-visible='true'] {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* Touch controls: only on coarse pointers. */
+
+.flight-touch {
+  display: none;
+  position: absolute;
+  left: calc(20px + var(--safe-left));
+  right: calc(20px + var(--safe-right));
+  bottom: calc(22px + var(--safe-bottom));
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+@media (pointer: coarse) {
+  .flight-touch {
+    display: flex;
+  }
+}
+
+.flight-touch__turn {
+  display: flex;
+  gap: 12px;
+}
+
+.flight-touch__btn {
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  border: var(--hair);
+  border-radius: 50%;
+  background: rgba(5, 7, 13, 0.55);
+  color: var(--ink-300);
+  font-size: 14px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    color 0.18s var(--ease-out),
+    border-color 0.18s var(--ease-out),
+    background-color 0.18s var(--ease-out);
+}
+
+.flight-touch__btn:active {
+  color: var(--space-900);
+  background: var(--star-glow);
+  border-color: var(--star-glow);
+}
+
+.flight-touch__thrust {
+  width: 74px;
+  height: 74px;
+}
+
+@media (max-width: 820px) {
+  .flight-hud__top {
+    top: calc(16px + var(--safe-top));
+    left: calc(16px + var(--safe-left));
+    right: calc(16px + var(--safe-right));
+    align-items: flex-start;
+  }
+  /* Phones fly with the touch buttons; the key list is noise there. */
+  .flight-hud__keys {
+    display: none;
+  }
+  .flight-compass {
+    top: calc(70px + var(--safe-top));
+  }
+  .flight-toast {
+    bottom: calc(112px + var(--safe-bottom));
+    max-width: calc(100vw - 32px);
+    white-space: normal;
+    text-align: center;
+  }
+}

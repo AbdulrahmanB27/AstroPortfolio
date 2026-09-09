@@ -1,0 +1,554 @@
+{
+  "meta": {
+    "siteTitle": "Abdulrahman Bahjat — Portfolio",
+    "description": "Interactive space portfolio of Abdulrahman Bahjat, mechanical engineering student at Penn State: robotics, CAD, 3D printing, and full-stack web and mobile apps.",
+    "url": "https://abdulrahmanb27.github.io/AstroPortfolio/",
+    "version": "3.0.0",
+    "updated": "2026-09-07",
+    "contentNotes": [
+      "profile.goals — placeholder wording; replace with your own goals.",
+      "profile.bio — drafted from evidence on this machine; rewrite in your voice.",
+      "profile.contact.linkedin — not set; add your LinkedIn URL if you have one.",
+      "resume.experience — empty; add jobs/internships if any.",
+      "resume.activities — drafted from the robotics course and the Sweet Moment CAS project; confirm dates.",
+      "projects.vex-robots — details inferred from CAD files and renders; confirm the story.",
+      "projects.three-d-notes and projects.minecraft-adhan — no screenshots exist yet; add media when you have them."
+    ]
+  },
+  "profile": {
+    "name": "Abdulrahman Bahjat",
+    "shortName": "Abdulrahman",
+    "title": "Mechanical Engineering Student · Penn State",
+    "tagline": "Builds complete things — from CAD and robots to web and mobile apps.",
+    "intro": "I'm a mechanical engineering student at Penn State who likes finishing what I start: robots and 3D-printed parts on one side, web and mobile apps that real people use on the other. This portfolio is a small star system, and each planet is a project.",
+    "bio": [
+      "I grew up taking things apart and putting them back together, which turned into CAD, a robotics program in high school, and a 3D printer that rarely sits idle. At Penn State I'm studying mechanical engineering while continuing to ship software on the side.",
+      "The projects here span both worlds: a storefront for a local chocolatier, a recipe app that runs as a PWA and on phones, robot designs, and a Raspberry Pi prayer clock styled after Minecraft. I care most about the moment something moves from idea to a thing you can actually use."
+    ],
+    "location": "Pennsylvania, USA",
+    "education": [
+      {
+        "institution": "Penn State University",
+        "program": "B.S. Mechanical Engineering (in progress)",
+        "period": "2025 – present",
+        "location": "University Park, PA",
+        "details": [
+          "Engineering design (EDSGN 100), calculus, programming for engineers (CMPSC 200)"
+        ]
+      },
+      {
+        "institution": "King Abdullah Academy",
+        "program": "High school diploma · IB Diploma Programme courses",
+        "period": "2021 – 2025",
+        "location": "Herndon, VA",
+        "details": [
+          "Robotics, digital society, and creative design electives"
+        ]
+      }
+    ],
+    "interests": [
+      "3D printing",
+      "CAD and product design",
+      "Robotics",
+      "PC building and hardware",
+      "Game modding"
+    ],
+    "goals": [
+      "PLACEHOLDER: Describe what you want to work on next (for example, robotics or product-design internships)."
+    ],
+    "contact": {
+      "email": "abodybahjat@gmail.com",
+      "github": "https://github.com/AbdulrahmanB27",
+      "links": []
+    },
+    "availability": "Open to internships and project collaborations."
+  },
+  "skills": {
+    "groups": [
+      {
+        "id": "cad-manufacturing",
+        "name": "CAD & manufacturing",
+        "items": [
+          "SolidWorks",
+          "Fusion 360",
+          "Autodesk Inventor",
+          "OpenSCAD",
+          "FDM 3D printing",
+          "Blender (basics)"
+        ]
+      },
+      {
+        "id": "programming",
+        "name": "Programming",
+        "items": [
+          "Python",
+          "TypeScript",
+          "JavaScript",
+          "MATLAB",
+          "SQL"
+        ]
+      },
+      {
+        "id": "web-mobile",
+        "name": "Web & mobile",
+        "items": [
+          "React",
+          "Vite",
+          "Tailwind CSS",
+          "Node.js / Express",
+          "Cloudflare Pages & D1",
+          "Capacitor (iOS/Android)",
+          "React Native / Expo",
+          "Stripe"
+        ]
+      },
+      {
+        "id": "3d-interactive",
+        "name": "3D & interactive",
+        "items": [
+          "three.js",
+          "React Three Fiber",
+          "WebGL",
+          "GSAP"
+        ]
+      },
+      {
+        "id": "hardware-robotics",
+        "name": "Hardware & robotics",
+        "items": [
+          "VEX Robotics",
+          "Raspberry Pi",
+          "Arduino",
+          "Touchscreen UIs"
+        ]
+      },
+      {
+        "id": "tools",
+        "name": "Tools",
+        "items": [
+          "Git / GitHub",
+          "VS Code",
+          "GitHub Pages",
+          "Replit",
+          "GIMP"
+        ]
+      }
+    ]
+  },
+  "resume": {
+    "file": "resume/Abdulrahman-Bahjat-Resume.pdf",
+    "updated": "2026-09",
+    "headline": "Mechanical engineering student who builds hardware and software end to end.",
+    "summary": "Penn State mechanical engineering student with hands-on experience in CAD, robotics, 3D printing, and shipping full-stack web and mobile applications for real users.",
+    "experience": [],
+    "activities": [
+      {
+        "role": "Web developer (CAS project)",
+        "org": "Sweet Moment Chocolates, Herndon, VA",
+        "period": "2024 – 2025",
+        "bullets": [
+          "Designed and built the online storefront for a local handcrafted-chocolate business.",
+          "Implemented catalog, cart, checkout, and an admin panel; later rebuilt as a fast static site."
+        ]
+      },
+      {
+        "role": "Robotics program",
+        "org": "King Abdullah Academy",
+        "period": "2022 – 2023",
+        "bullets": [
+          "Modeled three robot designs in CAD (Crab Bot, Scorpion, Spin Bot) with different chassis and mechanisms."
+        ]
+      }
+    ],
+    "highlights": [
+      "sweet-moment",
+      "mykitchen",
+      "vex-robots",
+      "minecraft-adhan"
+    ]
+  },
+  "categories": [
+    {
+      "id": "software",
+      "name": "Software",
+      "color": "#4fd0bd"
+    },
+    {
+      "id": "engineering",
+      "name": "Engineering",
+      "color": "#e08a6a"
+    },
+    {
+      "id": "hardware",
+      "name": "Hardware",
+      "color": "#e2b45c"
+    },
+    {
+      "id": "design",
+      "name": "Design",
+      "color": "#a396ff"
+    }
+  ],
+  "projects": [
+    {
+      "id": "sweet-moment",
+      "title": "Sweet Moment Chocolates",
+      "category": "software",
+      "year": "2024 – 2025",
+      "status": "live",
+      "tagline": "Online storefront for a local chocolatier",
+      "summary": "Designed and built the website for Sweet Moment, a handcrafted-chocolate business in Herndon, VA: product catalog, cart and checkout, and an admin panel — first as a full-stack React and Express app with Stripe, then rebuilt as a fast static site.",
+      "description": [
+        "Sweet Moment needed a storefront that looked as premium as the product. The first version was a full-stack app: a React front end, an Express API, PostgreSQL through Drizzle ORM, Stripe checkout, and an admin panel for products and orders.",
+        "To make hosting simple and pages instant, the catalog was later generated as a static site and deployed on GitHub Pages, keeping the design and the cart flow while removing the server."
+      ],
+      "technologies": [
+        "React",
+        "TypeScript",
+        "Express",
+        "Stripe",
+        "Drizzle ORM",
+        "Tailwind CSS",
+        "Vite",
+        "GitHub Pages"
+      ],
+      "links": {
+        "repo": "https://github.com/AbdulrahmanB27/SweetMoment",
+        "live": "https://abdulrahmanb27.github.io/SweetMoment/",
+        "other": []
+      },
+      "media": [
+        {
+          "type": "image",
+          "src": "media/projects/sweet-moment-home.jpg",
+          "alt": "Sweet Moment Chocolates home page with hero, featured products, and navigation"
+        },
+        {
+          "type": "image",
+          "src": "media/projects/sweet-moment-brand.jpg",
+          "alt": "Sweet Moment brand artwork"
+        }
+      ],
+      "process": [
+        "Started from the owner's brand and packaging so the site matched the physical product.",
+        "Shipped the full-stack version first, then measured what the business actually used and simplified to static hosting."
+      ],
+      "featured": true,
+      "order": 1,
+      "planet": {
+        "style": "terra",
+        "color": "#b5733f",
+        "accent": "#e8c39e",
+        "size": 2,
+        "rings": true,
+        "moons": 1,
+        "orbit": {}
+      },
+      "placeholder": false
+    },
+    {
+      "id": "mykitchen",
+      "title": "MyKitchen",
+      "category": "software",
+      "year": "2026",
+      "status": "live",
+      "tagline": "Recipe dashboard as a PWA and native apps",
+      "summary": "A recipe manager that runs in the browser as a PWA and on iOS and Android through Capacitor: recipe cards, cook mode, a meal planner, shopping lists, family sharing links and vote sessions, backed by Cloudflare Pages Functions and D1.",
+      "description": [
+        "MyKitchen started as a personal tool and grew into a small product: recipes with step-by-step cook mode, swipe mode for picking dinner, a weekly meal planner, and a shopping list that knows what is missing.",
+        "Sharing works through family links and vote sessions so a household can decide together. The backend is a set of Cloudflare Pages Functions over a D1 database, and recipe import uses the Gemini API. The same code base ships as a PWA and as native apps through Capacitor."
+      ],
+      "technologies": [
+        "React 19",
+        "TypeScript",
+        "Tailwind CSS 4",
+        "Vite",
+        "Cloudflare Pages Functions",
+        "Cloudflare D1",
+        "Capacitor",
+        "Framer Motion",
+        "Gemini API"
+      ],
+      "links": {
+        "repo": "https://github.com/AbdulrahmanB27/MyKitchenCloudflare",
+        "live": "https://abdulrahmanb27.github.io/MyKitchenCloudflare/",
+        "other": []
+      },
+      "media": [
+        {
+          "type": "image",
+          "src": "media/projects/mykitchen-script.png",
+          "alt": "MyKitchen wordmark"
+        },
+        {
+          "type": "image",
+          "src": "media/projects/mykitchen-logo.png",
+          "alt": "MyKitchen app icon"
+        }
+      ],
+      "process": [
+        "Versioned releases (v3.x to v4.0) with a tasks/todo and lessons log kept in the repo.",
+        "Native builds are generated from the web app so features land everywhere at once."
+      ],
+      "featured": true,
+      "order": 2,
+      "planet": {
+        "style": "ocean",
+        "color": "#3fb9a8",
+        "accent": "#bfeee6",
+        "size": 1.7,
+        "rings": false,
+        "moons": 2,
+        "orbit": {}
+      },
+      "placeholder": false
+    },
+    {
+      "id": "vex-robots",
+      "title": "VEX Robotics Designs",
+      "category": "engineering",
+      "year": "2023",
+      "status": "archived",
+      "tagline": "Three robot concepts modeled in CAD",
+      "summary": "Crab Bot, Scorpion, and Spin Bot: three robot designs modeled in CAD during the robotics program at King Abdullah Academy, each with a different chassis and mechanism.",
+      "description": [
+        "The robotics program was where CAD stopped being an exercise and became a way to test ideas quickly. Each design took a different approach to moving and manipulating: a wide, stable crab-style chassis; a scorpion with an articulated tail mechanism; and a compact spinning bot.",
+        "The models were built as complete assemblies so parts could be checked for fit before anything was cut or printed."
+      ],
+      "technologies": [
+        "VEX Robotics",
+        "CAD",
+        "Mechanical design",
+        "3D printing"
+      ],
+      "links": {
+        "other": []
+      },
+      "media": [
+        {
+          "type": "image",
+          "src": "media/projects/vex-crab-bot.png",
+          "alt": "CAD render of the Crab Bot robot design"
+        },
+        {
+          "type": "image",
+          "src": "media/projects/vex-scorpion.png",
+          "alt": "CAD render of the Scorpion robot design"
+        },
+        {
+          "type": "image",
+          "src": "media/projects/vex-spin-bot.png",
+          "alt": "CAD render of the Spin Bot robot design"
+        }
+      ],
+      "process": [],
+      "featured": false,
+      "order": 3,
+      "planet": {
+        "style": "rocky",
+        "color": "#c9694a",
+        "accent": "#f0b08a",
+        "size": 1.2,
+        "rings": false,
+        "moons": 0,
+        "orbit": {}
+      },
+      "placeholder": true
+    },
+    {
+      "id": "minecraft-adhan",
+      "title": "Minecraft Adhan Clock",
+      "category": "hardware",
+      "year": "2025",
+      "status": "in-progress",
+      "tagline": "Raspberry Pi prayer clock styled after Minecraft",
+      "summary": "A Raspberry Pi touchscreen clock that mimics Minecraft's day/night clock while showing accurate Islamic prayer times: real-time sun and moon position, multiple calculation methods, moon phases from the Islamic calendar, and adhan playback — all offline-capable.",
+      "description": [
+        "The idea was a clock you would actually want on a shelf: the familiar Minecraft clock animation driven by the real sun, with prayer times layered on top.",
+        "It is a Python app built on pygame for the touchscreen UI, with prayer-time calculation, a Hijri calendar for moon phases, local caching so it works offline, and audio playback for the adhan."
+      ],
+      "technologies": [
+        "Python",
+        "pygame",
+        "Raspberry Pi",
+        "Touchscreen UI",
+        "astral",
+        "hijri-converter"
+      ],
+      "links": {
+        "other": []
+      },
+      "media": [],
+      "process": [
+        "Designed for a 5-inch touchscreen with optional speaker and real-time clock modules."
+      ],
+      "featured": false,
+      "order": 4,
+      "planet": {
+        "style": "lava",
+        "color": "#d9a441",
+        "accent": "#ffd98a",
+        "size": 1,
+        "rings": false,
+        "moons": 1,
+        "orbit": {}
+      },
+      "placeholder": false
+    },
+    {
+      "id": "three-d-notes",
+      "title": "3D Notes",
+      "category": "software",
+      "year": "2025",
+      "status": "concept",
+      "tagline": "Mobile app that mixes 3D modeling with notes",
+      "summary": "A mobile app prototype that pairs simple 3D modeling with note-taking: place primitive shapes, switch between 3D and 2D views, and attach floating notes to objects in space. Built with React Native, Expo, and three.js.",
+      "description": [
+        "3D Notes explores what a sketchbook looks like when the page is a scene: shapes you can arrange with gestures, notes that float where they belong, and projects you can come back to.",
+        "It is a prototype built with React Native and Expo, rendering through expo-gl and React Three Fiber, with SQLite for local project storage."
+      ],
+      "technologies": [
+        "React Native",
+        "Expo",
+        "expo-gl",
+        "three.js",
+        "React Three Fiber",
+        "SQLite"
+      ],
+      "links": {
+        "other": []
+      },
+      "media": [],
+      "process": [],
+      "featured": false,
+      "order": 5,
+      "planet": {
+        "style": "ice",
+        "color": "#8b7cf6",
+        "accent": "#d6cffb",
+        "size": 0.9,
+        "rings": false,
+        "moons": 0,
+        "orbit": {}
+      },
+      "placeholder": true
+    },
+    {
+      "id": "recipe-stash",
+      "title": "RecipeStash",
+      "category": "software",
+      "year": "2025",
+      "status": "live",
+      "tagline": "One-page meal-prep recipe holder",
+      "summary": "A single-file recipe holder with tag filters, search, and an add-recipe form. Everything is saved in the browser, so it runs anywhere as one HTML page.",
+      "description": [
+        "A quick personal tool that became the seed for MyKitchen: no build step, no backend, just a page that keeps meal-prep recipes organized and searchable."
+      ],
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "localStorage"
+      ],
+      "links": {
+        "repo": "https://github.com/AbdulrahmanB27/RecipeStash",
+        "live": "https://abdulrahmanb27.github.io/RecipeStash/",
+        "other": []
+      },
+      "media": [
+        {
+          "type": "image",
+          "src": "media/projects/recipe-stash.jpg",
+          "alt": "RecipeStash page with recipe filters and the add-recipe form"
+        }
+      ],
+      "process": [],
+      "featured": false,
+      "order": 6,
+      "planet": {
+        "style": "ice",
+        "color": "#6fa3c9",
+        "accent": "#cfe6f7",
+        "size": 0.7,
+        "rings": false,
+        "moons": 0,
+        "orbit": {}
+      },
+      "placeholder": false
+    },
+    {
+      "id": "astro-portfolio",
+      "title": "AstroPortfolio",
+      "category": "design",
+      "year": "2026",
+      "status": "live",
+      "tagline": "This site: one continuous 3D universe",
+      "summary": "This portfolio is a single continuous 3D scene built with React Three Fiber: a home planet with a menu, a rocket cockpit for personal information, a launch sequence, and an orbital map where every planet is a project — plus a static admin studio that edits the data file behind it all.",
+      "description": [
+        "Everything is one scene graph and one world scale. Transitions are camera timelines rather than page loads, so the cockpit, the launch, and the solar system feel like places rather than pages.",
+        "Content lives in a single validated JSON file. Planets, labels, the cockpit screens, and the resume all read from it, and a static /admin studio edits and exports it — no backend, deployable on GitHub Pages."
+      ],
+      "technologies": [
+        "React",
+        "TypeScript",
+        "three.js",
+        "React Three Fiber",
+        "GSAP",
+        "Zustand",
+        "Vite",
+        "GitHub Pages"
+      ],
+      "links": {
+        "repo": "https://github.com/AbdulrahmanB27/AstroPortfolio",
+        "other": []
+      },
+      "media": [
+        {
+          "type": "image",
+          "src": "media/projects/astroportfolio-home.jpg",
+          "alt": "The portfolio's home planet: an astronaut on rocky terrain, the rocket on its pad, and the star behind the navigation"
+        },
+        {
+          "type": "image",
+          "src": "media/projects/astroportfolio-system.jpg",
+          "alt": "The orbital map: project planets on thin orbit rings around the central star"
+        }
+      ],
+      "process": [
+        "Built to a written art-direction contract and reviewed by independent visual critiques of real screenshots."
+      ],
+      "featured": false,
+      "order": 7,
+      "planet": {
+        "style": "metal",
+        "color": "#6c8ce0",
+        "accent": "#c9d6ff",
+        "size": 1,
+        "rings": true,
+        "moons": 0,
+        "orbit": {}
+      },
+      "placeholder": false
+    }
+  ],
+  "settings": {
+    "grid": {
+      "enabled": false,
+      "opacity": 0.08,
+      "density": 12,
+      "radius": 640
+    },
+    "intro": {
+      "enabled": true
+    },
+    "audio": {
+      "enabled": true
+    },
+    "labels": {
+      "density": "balanced"
+    },
+    "motion": {
+      "orbitSpeedScale": 1
+    }
+  }
+}

@@ -1,0 +1,507 @@
+/* ---------- solar system HUD, labels, project panel ---------- */
+
+.planet-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.planet-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  gap: 1px;
+  padding: 2px 6px;
+  text-align: left;
+  white-space: nowrap;
+  will-change: transform, opacity;
+  transition: opacity 0.18s var(--ease-out);
+}
+
+.planet-label__name {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-100);
+  opacity: var(--label-alpha, 1);
+}
+
+.planet-label__cat {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  /* Tracks the label's own alpha at 62% of it, so the category can never be louder than
+     the name above it. Held at a flat 1 it was: at the default density the name rendered
+     around #85888D (5.7:1) while SOFTWARE sat at full chroma #4FD0BD (10.7:1), so the eye
+     read the tag before the project. The earlier note here was right that dimming a
+     saturated tag twice sinks it below the contrast floor — that is why the name's resting
+     alpha went up at the same time, which lets the pair carry less total ink than before
+     while putting the brighter half on the name. */
+  opacity: calc(var(--label-alpha, 1) * 0.62);
+}
+
+.planet-label__name,
+.planet-label__cat {
+  text-shadow: 0 0 3px rgba(5, 7, 13, 0.9);
+}
+
+.planet-label[data-anchor='left'],
+.planet-label[data-anchor='upper-left'],
+.planet-label[data-anchor='lower-left'] {
+  text-align: right;
+}
+
+.system-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+}
+
+.system-hud[data-visible='true'] {
+  opacity: 1;
+}
+
+.system-hud[data-visible='true'] .pill,
+.system-hud[data-visible='true'] .project-index__item {
+  pointer-events: auto;
+}
+
+.system-hud__top {
+  position: absolute;
+  top: calc(28px + var(--safe-top));
+  left: calc(32px + var(--safe-left));
+  right: calc(32px + var(--safe-right));
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.system-hud .lockup {
+  position: static;
+  transform: none;
+}
+
+.system-hud__bottom {
+  position: absolute;
+  left: calc(32px + var(--safe-left));
+  bottom: calc(26px + var(--safe-bottom));
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.project-index {
+  /* Floats above the button: in flow it reserved its full height even when closed,
+     which pushed the whole control block into the middle of the frame. */
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 10px);
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  background: var(--panel-bg);
+  display: grid;
+  gap: 2px;
+  min-width: 260px;
+  border: var(--hair);
+  backdrop-filter: blur(var(--panel-blur));
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition:
+    opacity 0.25s var(--ease-out),
+    transform 0.25s var(--ease-out);
+}
+
+.project-index[data-open='true'] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.project-index__item {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.project-index__item:hover,
+.project-index__item:focus-visible {
+  background: rgba(255, 180, 84, 0.08);
+}
+
+.project-index__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.project-index__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.project-index__meta {
+  font-size: 9.5px;
+}
+
+/* project panel */
+
+.project-panel {
+  position: absolute;
+  top: calc(24px + var(--safe-top));
+  right: calc(28px + var(--safe-right));
+  bottom: calc(24px + var(--safe-bottom));
+  width: min(46vw, 640px);
+  opacity: 0;
+  transform: translateX(16px);
+  transition:
+    opacity 0.45s var(--ease-out),
+    transform 0.45s var(--ease-out);
+  pointer-events: none;
+}
+
+.project-panel[data-visible='true'] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.project-panel__frame {
+  position: relative;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  /* A thin frame rather than a heavy card: the scene behind it is dimmed on focus. */
+  background: rgba(8, 12, 22, 0.72);
+  border: 1px solid rgba(207, 232, 255, 0.14);
+  backdrop-filter: blur(12px);
+}
+
+.project-panel__header,
+.project-panel__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  flex-wrap: wrap;
+}
+
+.project-panel__header {
+  border-bottom: 1px solid rgba(207, 232, 255, 0.12);
+}
+
+.project-panel__footer {
+  border-top: 1px solid rgba(207, 232, 255, 0.12);
+}
+
+.project-panel__body {
+  overflow-y: auto;
+  padding: 22px 26px 52px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(207, 232, 255, 0.35) transparent;
+}
+
+/* Only while something is actually below the fold — an always-on fade dims the last two
+   lines of every project instead of hinting that there is more to read. */
+.project-panel__frame::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 58px;
+  /* Long ramp for the same reason as the mission computer: a short one cuts a line of
+     body text through its x-height instead of dissolving it. */
+  height: 116px;
+  background: linear-gradient(to top, rgb(8, 12, 22) 0, rgb(8, 12, 22) 45%, rgba(8, 12, 22, 0) 100%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s var(--ease-out);
+  z-index: 2;
+}
+
+.project-panel__frame[data-more='true']::after {
+  opacity: 1;
+}
+
+.project-panel__frame .scroll-cue {
+  /* Clear of the pager, whose box is 61px tall with its border - at 66px the cue dipped
+     3px into it. */
+  bottom: 76px;
+}
+
+.project-panel__body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.project-panel__body::-webkit-scrollbar-thumb {
+  background: rgba(207, 232, 255, 0.28);
+  border-radius: 4px;
+}
+
+.project-panel__title {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(24px, 2.2vw, 30px);
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+}
+
+.project-panel__tagline {
+  margin: 0 0 16px;
+  font-size: 15.5px;
+  color: var(--ink-300);
+}
+
+.project-panel__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-300);
+  /* The category/year line wrapped mid-date-range inside its own row on phones. */
+  white-space: nowrap;
+}
+
+.project-panel__cat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.project-panel__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.project-media {
+  margin: 0 0 18px;
+  border: var(--hair);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(5, 7, 13, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(111, 163, 255, 0.16);
+}
+
+.project-media img,
+.project-media video {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  /* Screenshots are artifacts inside the world, not a bright hole punched through it.
+     Light-background captures (CAD tools, web pages) are the reason this is aggressive. */
+  filter: saturate(0.95) brightness(0.94) contrast(1.02);
+}
+
+.project-media {
+  position: relative;
+}
+
+/* A cool veil ties any source palette back to the page's own value range. */
+.project-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  bottom: 34px;
+  background: linear-gradient(180deg, rgba(11, 16, 32, 0.1) 0%, rgba(11, 16, 32, 0.34) 100%);
+  pointer-events: none;
+}
+
+.project-media figcaption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--ink-300);
+}
+
+.project-media__nav {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.project-media__nav button {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(207, 232, 255, 0.3);
+}
+
+.project-media__nav button[data-active='true'] {
+  background: var(--star-glow);
+}
+
+.project-panel__summary {
+  margin: 0 0 14px;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--ink-100);
+}
+
+.project-panel__p {
+  margin: 0 0 12px;
+  font-size: 14.5px;
+  color: var(--ink-300);
+}
+
+@media (max-width: 820px) {
+  .system-hud__top {
+    top: calc(16px + var(--safe-top));
+    left: calc(16px + var(--safe-left));
+    right: calc(16px + var(--safe-right));
+  }
+  /* The index is the labelling mechanism on phones, so it belongs in the header row
+     rather than floating over the orbits. */
+  .system-hud__top {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .system-hud__bottom {
+    left: calc(16px + var(--safe-left));
+    right: calc(16px + var(--safe-right));
+    bottom: calc(16px + var(--safe-bottom));
+  }
+  .project-index {
+    right: 0;
+    min-width: 0;
+  }
+  /* Feathered top edge: a hard 1px rule used to slice straight through the planets. */
+  .project-index::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -40px;
+    height: 40px;
+    background: linear-gradient(to top, rgba(5, 7, 13, 0.92) 0%, rgba(5, 7, 13, 0) 100%);
+    pointer-events: none;
+  }
+  .project-index {
+    max-height: 52vh;
+    overflow-y: auto;
+  }
+  .project-index__item {
+    padding: 12px 12px;
+    min-height: 44px;
+  }
+  .project-index {
+    min-width: min(80vw, 300px);
+  }
+  /* On a phone, floating labels collide with rings, planets and each other. The
+     project index (a real 44px-row list) is the labelling mechanism instead. */
+  .planet-labels {
+    display: none;
+  }
+  .project-panel {
+    /* A scrolling document with the planet peeking above it: the old 58vh box cut the
+       description entirely, so the page read as empty on a phone. */
+    top: 34vh;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: auto;
+    transform: translateY(16px);
+  }
+  .project-panel__frame {
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    /* The scrim below does the separating. A 1px rule straight across the frame was the
+       hard horizontal cut through the planet that read as a broken layout. */
+    border-top: 0;
+  }
+  /* A scrim above the sheet so the planet dissolves into it. A full-width border drawn
+     straight across the frame read as a broken layout rather than a designed boundary —
+     the home menu already fades this way and it is the difference between the two. */
+  .project-panel::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 88px;
+    background: linear-gradient(to top, rgb(8, 12, 22) 0%, rgba(8, 12, 22, 0.72) 38%, rgba(8, 12, 22, 0) 100%);
+    pointer-events: none;
+  }
+  .project-panel__body {
+    padding: 16px 16px 22px;
+  }
+  /* The header wrapped: the category line took one row and the return pill took another,
+     so the chrome above the case study measured 102px on a 390px screen. Held on one row
+     it costs 64px, and the 44px tap target survives. The description was getting 25px of
+     the viewport - one clipped line, mid-sentence - and every pixel here goes to it. */
+  .project-panel__header {
+    flex-wrap: nowrap;
+    padding: 10px 16px;
+    gap: 10px;
+  }
+  .project-panel__header .project-panel__meta {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .project-media {
+    margin-bottom: 12px;
+  }
+  .project-media img,
+  .project-media video {
+    /* Capped so the first paragraph of the case study is above the fold. */
+    max-height: 112px;
+  }
+  .project-media figcaption {
+    padding: 6px 10px;
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+  /* Clear of the pager, which is taller here than on the desktop frame (73px vs 58px).
+     At the desktop offsets the fade ran under the footer and the cue sat behind it. */
+  .project-panel__frame::after {
+    bottom: 73px;
+    height: 96px;
+  }
+  .project-panel__frame .scroll-cue {
+    bottom: 80px;
+  }
+  .project-panel__header .pill,
+  .project-panel__footer .pill {
+    padding: 12px 14px;
+    min-height: 44px;
+    min-width: 112px;
+    justify-content: center;
+    white-space: nowrap;
+  }
+  .project-panel__header .pill {
+    min-width: 0;
+  }
+  .project-media__nav button {
+    width: 8px;
+    height: 8px;
+    margin: 8px;
+  }
+}
+
+.pill[disabled],
+.pill[aria-disabled='true'] {
+  opacity: 0.35;
+  pointer-events: none;
+}

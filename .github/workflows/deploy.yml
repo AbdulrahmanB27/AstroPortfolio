@@ -1,0 +1,95 @@
+# Builds the portfolio and deploys dist/ to GitHub Pages.
+#
+# One-time setup in the repository: Settings → Pages → Build and deployment → Source:
+# "GitHub Actions". See docs/DEPLOY.md.
+#
+# Base path rule (must match vite.config.ts, public/404.html and scripts/pages-check.mjs):
+#   public/CNAME exists  → custom domain, site is served from "/"
+#   otherwise            → project site, served from "/<repository name>/"
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deployments race; let an in-flight deployment finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      base-path: ${{ steps.base.outputs.base }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      # The defect that made the cockpit unusable was invisible to the unit tests and to
+      # the type checker: the DOM was correct and only the rendered pixels were wrong. The
+      # end-to-end suite samples the canvas, so it gates the deploy.
+      - name: Install the Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Resolve base path
+        id: base
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          set -eu
+          REPO_NAME="${REPO_NAME:-${GITHUB_REPOSITORY#*/}}"
+          if [ -f public/CNAME ]; then
+            BASE="/"
+            echo "public/CNAME found ($(tr -d '[:space:]' < public/CNAME)); building for the domain root"
+          else
+            BASE="/${REPO_NAME}/"
+            echo "No public/CNAME; building as a project site"
+          fi
+          echo "base=${BASE}" >> "$GITHUB_OUTPUT"
+          echo "VITE_BASE_PATH=${BASE}"
+
+      - name: Build (typecheck + vite build, main app + /admin/)
+        env:
+          VITE_BASE_PATH: ${{ steps.base.outputs.base }}
+        run: npm run build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload dist/
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

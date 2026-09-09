@@ -1,0 +1,567 @@
+@import './tokens.css';
+@import './computer.css';
+@import './system.css';
+@import './flight.css';
+@import './dev.css';
+@import './audio.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--space-900);
+  color: var(--ink-100);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+body {
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--star-glow);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.canvas-root {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.overlay-root {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Each overlay opts in to pointer events only while it is visible; hidden panels must
+   never intercept clicks meant for the 3D scene or other overlays. */
+.home-menu,
+.lockup,
+.planet-labels {
+  pointer-events: none;
+}
+
+.home-menu[data-visible='true'] .home-menu__item,
+.intro-skip {
+  pointer-events: auto;
+}
+
+.blackout {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: var(--space-900);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------- typography helpers ---------- */
+
+.t-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.t-mono {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-300);
+}
+
+.t-muted {
+  color: var(--ink-300);
+}
+
+/* ---------- loader ---------- */
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: var(--space-900);
+  transition: opacity 0.7s var(--ease-in-out);
+}
+
+.loader[data-hidden='true'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loader__inner {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+}
+
+.loader__star {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--star-glow);
+  box-shadow:
+    0 0 18px 4px rgba(255, 180, 84, 0.55),
+    0 0 60px 18px rgba(255, 122, 42, 0.18);
+}
+
+.loader__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-300);
+}
+
+.loader__bar {
+  width: 160px;
+  height: 1px;
+  background: rgba(169, 180, 199, 0.18);
+  overflow: hidden;
+}
+
+.loader__bar > i {
+  display: block;
+  height: 100%;
+  background: var(--star-glow);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease-out);
+}
+
+/* ---------- name lockup ---------- */
+
+.lockup {
+  position: absolute;
+  top: calc(28px + var(--safe-top));
+  left: calc(32px + var(--safe-left));
+  display: grid;
+  gap: 4px;
+  /* The name sits straight on the rendered scene, so whatever the starfield puts behind it
+     becomes part of a glyph: a warm dot landed under the S of "Penn State" and the word read
+     as "Ştate". Soft enough that the terrain still shows through, dark enough that a star
+     cannot be mistaken for a diacritic. */
+  padding: 10px 26px 14px 0;
+  margin: -10px 0 0 0;
+  background: radial-gradient(
+    130% 150% at 0% 0%,
+    rgba(5, 7, 13, 0.78) 0%,
+    rgba(5, 7, 13, 0.52) 58%,
+    rgba(5, 7, 13, 0) 100%
+  );
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.6s var(--ease-out),
+    transform 0.6s var(--ease-out);
+}
+
+/* A halo on the glyphs themselves, the same trick the planet labels use: the scrim handles
+   the field, this handles a star landing hard against a letter. */
+.lockup__name,
+.lockup__title {
+  text-shadow:
+    0 0 3px rgba(5, 7, 13, 1),
+    0 0 6px rgba(5, 7, 13, 1),
+    0 0 11px rgba(5, 7, 13, 0.96),
+    0 0 20px rgba(5, 7, 13, 0.8);
+}
+
+.lockup[data-visible='true'] {
+  opacity: 1;
+  transform: none;
+}
+
+.lockup__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  /* Scales with the viewport so the title does not read as browser chrome at 1920+. */
+  font-size: clamp(20px, 1.45vw, 30px);
+  letter-spacing: -0.01em;
+}
+
+.lockup__title {
+  font-size: clamp(13px, 0.85vw, 17px);
+  color: var(--ink-300);
+}
+
+/* ---------- home menu ---------- */
+
+/* Scrim behind the navigation: the mono sub-labels sat at 1.4-4.2:1 against lit rock. */
+.home-menu::before {
+  content: '';
+  position: absolute;
+  inset: -70px -60px -70px -110px;
+  /* Radial so it feathers on every side; a linear gradient left hard top and bottom edges. */
+  background: radial-gradient(
+    ellipse 78% 62% at 82% 50%,
+    rgba(5, 7, 13, 0.86) 0%,
+    rgba(5, 7, 13, 0.6) 42%,
+    rgba(5, 7, 13, 0.22) 68%,
+    rgba(5, 7, 13, 0) 100%
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+.home-menu {
+  position: absolute;
+  right: calc(40px + var(--safe-right));
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  gap: 6px;
+  min-width: 220px;
+}
+
+@media (min-width: 821px) and (max-width: 1360px) {
+  /* Tighter rhythm keeps the five items in the sky rather than over the terrain. */
+  .home-menu__item {
+    padding: 7px 12px 7px 8px;
+  }
+  .home-menu__label {
+    font-size: 20px;
+  }
+}
+
+.home-menu__item {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: center;
+  column-gap: 14px;
+  padding: 10px 12px 10px 8px;
+  text-align: left;
+  border-radius: 6px;
+  opacity: 0;
+  transform: translateX(10px);
+  transition:
+    opacity 0.55s var(--ease-out),
+    transform 0.55s var(--ease-out),
+    background-color 0.18s var(--ease-out);
+  transition-delay: var(--delay, 0ms);
+}
+
+.home-menu[data-visible='true'] .home-menu__item {
+  opacity: 1;
+  transform: none;
+}
+
+.home-menu__item:hover,
+.home-menu__item:focus-visible {
+  background: rgba(255, 180, 84, 0.06);
+}
+
+.home-menu__tick {
+  width: 22px;
+  height: 1px;
+  background: var(--ink-500);
+  transform-origin: right;
+  transition:
+    background-color 0.18s var(--ease-out),
+    transform 0.18s var(--ease-out);
+}
+
+.home-menu__item:hover .home-menu__tick,
+.home-menu__item:focus-visible .home-menu__tick {
+  background: var(--star-glow);
+  transform: scaleX(1.5);
+}
+
+.home-menu__label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.1;
+  color: var(--ink-100);
+  transition: color 0.18s var(--ease-out);
+}
+
+.home-menu__sub {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-300);
+  transition: color 0.18s var(--ease-out);
+}
+
+.home-menu__item:hover .home-menu__label,
+.home-menu__item:focus-visible .home-menu__label {
+  color: #fff;
+}
+
+.home-menu__item:hover .home-menu__sub,
+.home-menu__item:focus-visible .home-menu__sub {
+  color: var(--star-glow);
+}
+
+/* ---------- intro overlay ---------- */
+
+.intro-skip {
+  position: absolute;
+  right: calc(28px + var(--safe-right));
+  bottom: calc(24px + var(--safe-bottom));
+  padding: 10px 14px;
+  border: var(--hair);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-300);
+  background: rgba(5, 7, 13, 0.5);
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+}
+
+.intro-skip[data-visible='true'] {
+  opacity: 1;
+}
+
+.intro-skip:hover {
+  color: var(--ink-100);
+  border-color: rgba(255, 180, 84, 0.5);
+}
+
+/* ---------- generic pill button ---------- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: var(--hair);
+  border-radius: 999px;
+  background: rgba(5, 7, 13, 0.55);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-300);
+  text-decoration: none;
+  transition:
+    color 0.18s var(--ease-out),
+    border-color 0.18s var(--ease-out),
+    background-color 0.18s var(--ease-out);
+}
+
+.pill:hover,
+.pill:focus-visible {
+  color: var(--ink-100);
+  border-color: rgba(255, 180, 84, 0.55);
+}
+
+.pill--accent {
+  color: var(--space-900);
+  background: var(--star-glow);
+  border-color: var(--star-glow);
+}
+
+.pill--accent:hover,
+.pill--accent:focus-visible {
+  color: var(--space-900);
+  background: #ffc576;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 820px) {
+  .lockup {
+    top: calc(18px + var(--safe-top));
+    left: calc(18px + var(--safe-left));
+  }
+  .lockup__name {
+    font-size: 18px;
+  }
+  .lockup__title {
+    font-size: 12px;
+  }
+  .home-menu {
+    right: auto;
+    top: auto;
+    left: calc(18px + var(--safe-left));
+    right: calc(18px + var(--safe-right));
+    bottom: calc(22px + var(--safe-bottom));
+    transform: none;
+    /* One column: two columns broke the scan order and the row rhythm. */
+    grid-template-columns: 1fr;
+    gap: 0;
+    min-width: 0;
+  }
+  .home-menu::before {
+    inset: -34px -24px -40px -24px;
+    background: linear-gradient(
+      0deg,
+      rgba(5, 7, 13, 0.97) 0%,
+      rgba(5, 7, 13, 0.95) 70%,
+      rgba(5, 7, 13, 0.86) 88%,
+      rgba(5, 7, 13, 0) 100%
+    );
+  }
+  .home-menu__item {
+    grid-template-columns: 1fr;
+    padding: 9px 0;
+    min-height: 44px;
+  }
+  .home-menu__tick {
+    display: none;
+  }
+  .home-menu__sub {
+    /* A stale two-column rule used to squeeze this to 14px, so every word wrapped onto
+       its own line and "Projects / LAUNCH / AND / EXPLORE" scanned as four menu items. */
+    white-space: nowrap;
+  }
+  .home-menu__label {
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- short landscape phones ---------- */
+
+@media (max-height: 460px) and (orientation: landscape) {
+  .home-menu {
+    /* One right-aligned column clear of the rocket; the two-column grid left an orphan
+       cell and put leader dashes across the vehicle. */
+    left: auto;
+    /* Proportional, not a fixed 20px: at 844px wide that left a 2.6% margin against the
+       5-6% every other breakpoint keeps, so the column crowded the frame edge. */
+    right: calc(4.2vw + var(--safe-right));
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+    grid-template-columns: 1fr;
+    gap: 0;
+    min-width: 168px;
+  }
+  .home-menu::before {
+    inset: -22px -28px -22px -70px;
+    background: radial-gradient(
+      ellipse 86% 74% at 84% 50%,
+      rgba(5, 7, 13, 0.88) 0%,
+      rgba(5, 7, 13, 0.62) 44%,
+      rgba(5, 7, 13, 0) 100%
+    );
+  }
+  .home-menu__item {
+    grid-template-columns: 1fr;
+    padding: 4px 2px;
+    text-align: right;
+  }
+  .home-menu__tick {
+    display: none;
+  }
+  .home-menu__label {
+    font-size: 16px;
+  }
+  .home-menu__sub {
+    margin-top: 1px;
+    font-size: 9px;
+  }
+}
+
+
+/* ---------- scroll cue ---------- */
+
+/* A small chevron at the foot of a reading panel, shown only while there is more below.
+   The fade alone was ambiguous: it read as text being cut off rather than as an
+   invitation to scroll, and on a phone there is no scrollbar to say otherwise. */
+.scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  border-radius: 50%;
+  background: rgba(207, 232, 255, 0.1);
+  border: 1px solid rgba(207, 232, 255, 0.22);
+  opacity: 0;
+  transition: opacity 0.25s var(--ease-out);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.scroll-cue::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -5px 0 0 -4px;
+  border-right: 1.5px solid rgba(207, 232, 255, 0.75);
+  border-bottom: 1.5px solid rgba(207, 232, 255, 0.75);
+  transform: rotate(45deg);
+}
+
+.scroll-cue[data-visible='true'] {
+  opacity: 1;
+  animation: scroll-cue-nudge 2.4s var(--ease-out) infinite;
+}
+
+@keyframes scroll-cue-nudge {
+  0%, 70%, 100% { transform: translateY(0); }
+  82% { transform: translateY(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue[data-visible='true'] { animation: none; }
+}

@@ -1,0 +1,424 @@
+/* ---------- mission computer (cockpit screen) ---------- */
+
+.mc {
+  position: absolute;
+  left: 50%;
+  /* Anchored from the top and sized to its content: a fixed height truncated About,
+     Skills and Resume while leaving a 145px void on Contact. */
+  top: clamp(88px, 15vh, 150px);
+  width: min(54vw, 800px);
+  height: auto;
+  /* All four tabs share a frame. Sizing purely to content swung the panel 258px between
+     Contact and About, so the cockpit re-composed itself on every tab click and the bare
+     floor took a third of the frame on the shortest tab. */
+  min-height: min(560px, calc(100vh - 190px));
+  max-height: calc(100vh - 190px);
+  display: flex;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out) 0.1s;
+  pointer-events: none;
+}
+
+.mc[data-visible='true'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mc__frame {
+  position: relative;
+  /* Flex child of a max-height parent: `max-height: 100%` cannot resolve against an
+     auto-height parent, so the panel used to grow past the bottom of the viewport. */
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  /* Opaque: the emissive console plane behind it used to bleed a hard-edged rectangle
+     straight through the body copy. */
+  background: #0a0e1a;
+  border: 1px solid rgba(207, 232, 255, 0.16);
+  box-shadow:
+    0 0 0 1px rgba(5, 7, 13, 0.6),
+    0 30px 80px rgba(0, 0, 0, 0.55),
+    inset 0 0 60px rgba(207, 232, 255, 0.04);
+}
+
+.mc__corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(207, 232, 255, 0.55);
+  border-style: solid;
+  border-width: 0;
+}
+.mc__corner--tl { left: -1px; top: -1px; border-left-width: 1px; border-top-width: 1px; }
+.mc__corner--tr { right: -1px; top: -1px; border-right-width: 1px; border-top-width: 1px; }
+.mc__corner--bl { left: -1px; bottom: -1px; border-left-width: 1px; border-bottom-width: 1px; }
+.mc__corner--br { right: -1px; bottom: -1px; border-right-width: 1px; border-bottom-width: 1px; }
+
+.mc__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px 12px 22px;
+  border-bottom: 1px solid rgba(207, 232, 255, 0.12);
+}
+
+.mc__tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.mc__tab {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  text-align: left;
+  border-bottom: 2px solid transparent;
+  transition:
+    color 0.18s var(--ease-out),
+    border-color 0.18s var(--ease-out),
+    background-color 0.18s var(--ease-out);
+}
+
+.mc__tab-label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink-300);
+}
+
+.mc__tab-sub {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-500);
+}
+
+.mc__tab:hover .mc__tab-label,
+.mc__tab[data-active='true'] .mc__tab-label {
+  color: var(--ink-100);
+}
+
+.mc__tab[data-active='true'] {
+  border-bottom-color: var(--star-glow);
+}
+
+.mc__tab[data-active='true'] .mc__tab-sub {
+  color: var(--star-glow);
+}
+
+.mc__body {
+  position: relative;
+  overflow-y: auto;
+  /* Generous bottom padding so a line never terminates on the panel border. */
+  padding: 26px 30px 60px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(207, 232, 255, 0.35) transparent;
+}
+
+/* Fade + scroll cue sit on the frame, not on the scroller, so the scrollbar stays visible.
+   Inset to 0, not 1px: an absolutely positioned child is placed against the padding box,
+   which is exactly where the scroller paints, so a 1px inset left the top row of the next
+   line of glyphs uncovered — a hard bright dash sitting on the panel's bottom border. The
+   frame's own border is drawn outside the padding box, so it still shows. */
+.mc__frame::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* The first 44px are fully opaque — taller than a line box plus its descenders — so a
+     partly scrolled row is hidden outright rather than sliced through its glyphs.
+     What matters above that is how fast the ramp changes, not how long the element is.
+     At 96px with the opaque stop at 46% the ramp was 52px, so a 25px line box crossed
+     about 48% of the gradient and its lower half disappeared while its upper half stayed
+     lit: "2025 — PRESENT" rendered as a row of glyph tops. Body text sits close to the
+     panel fill in value, so it goes invisible around 70% coverage — the visual cut is far
+     sharper than the CSS ramp suggests. A 100px ramp puts roughly 25% across one line,
+     which reads as dimming. */
+  height: 144px;
+  background: linear-gradient(to top, #0a0e1a 0, #0a0e1a 46%, rgba(10, 14, 26, 0) 100%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s var(--ease-out);
+  z-index: 2;
+}
+
+/* Only while there is something below the fold; see `MissionComputer`. */
+.mc__frame[data-more='true']::after {
+  opacity: 1;
+}
+
+.mc__body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mc__body::-webkit-scrollbar-thumb {
+  background: rgba(207, 232, 255, 0.28);
+  border-radius: 4px;
+}
+
+.mc-doc {
+  max-width: 640px;
+}
+
+.mc-doc__title {
+  margin: 6px 0 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(24px, 2.4vw, 32px);
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+}
+
+/* One-line summary of what Abdulrahman builds. Sits between the name and the longer
+ * intro so the panel answers "who is this" before it asks to be read. */
+.mc-doc__deck {
+  margin: 0 0 14px;
+  font-family: var(--font-display);
+  font-size: clamp(14px, 1.3vw, 16px);
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+  color: var(--star-glow);
+}
+
+/* Prose is capped by its own measure, not by the panel. The container is 640px wide and
+   the secondary paragraphs are set at 14.5px, which put them at 86 characters a line —
+   past the point where the eye reliably finds the start of the next one, and it showed:
+   three consecutive lines of the lede ended on a stranded single word. The meta grid below
+   still uses the full container width. */
+.mc-doc__deck,
+.mc-doc__lede,
+.mc-doc__p {
+  max-width: 66ch;
+}
+
+.mc-doc__lede {
+  margin: 0 0 18px;
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--ink-100);
+}
+
+.mc-doc__p {
+  margin: 0 0 14px;
+  color: var(--ink-300);
+  font-size: 14.5px;
+}
+
+.mc-doc__h2 {
+  margin: 22px 0 10px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-300);
+}
+
+.mc-doc__note {
+  margin: 18px 0 0;
+  padding-top: 12px;
+  border-top: var(--hair);
+  font-size: 13.5px;
+  color: var(--ink-300);
+}
+
+.mc-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 8px 36px;
+  margin-top: 6px;
+}
+
+.mc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.mc-list li {
+  display: grid;
+  gap: 2px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(207, 232, 255, 0.18);
+}
+
+.mc-list--plain li {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.mc-list li[data-placeholder='true'] {
+  outline: 1px dashed rgba(255, 180, 84, 0.5);
+  padding: 4px 8px;
+}
+
+.mc-list strong {
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--ink-100);
+}
+
+.mc-list__meta,
+.mc-list__detail {
+  font-size: 13px;
+  color: var(--ink-300);
+}
+
+.tags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  padding: 6px 9px;
+  border: 1px solid rgba(207, 232, 255, 0.2);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-100);
+  background: rgba(207, 232, 255, 0.03);
+}
+
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 28px;
+  margin-top: 8px;
+}
+
+.skill-group__name {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--ink-100);
+}
+
+.resume-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 4px 0 20px;
+}
+
+.resume-actions .pill--accent {
+  padding: 14px 20px;
+  font-size: 12px;
+}
+
+.contact-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.contact-list li {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: var(--hair);
+}
+
+.contact-list li:last-child {
+  border-bottom: 0;
+}
+
+.contact-list__link {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 19px;
+  color: var(--star-glow);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 180, 84, 0.4);
+  text-underline-offset: 4px;
+  transition: color 0.18s var(--ease-out);
+}
+
+.contact-list__link:hover {
+  color: var(--star-glow);
+}
+
+@media (max-width: 820px) {
+  .mc {
+    width: calc(100vw - 20px);
+    /* Leave a real strip of forward window above the panel: at 52px the panel started
+       under the window sill, so the whole phone view was a dashboard on black. The
+       cockpit camera aims the star into whatever strip this leaves. */
+    top: calc(104px + var(--safe-top));
+    height: auto;
+    max-height: calc(100vh - 128px - var(--safe-top) - var(--safe-bottom));
+    transform: translate(-50%, 0);
+  }
+  /* A 96px fade is most of two lines on a phone. Short enough here to hide a partly
+     scrolled row without swallowing the ones above it. */
+  .mc__frame::after {
+    height: 92px;
+    background: linear-gradient(to top, #0a0e1a 0, #0a0e1a 46%, rgba(10, 14, 26, 0) 100%);
+  }
+  .mc__body {
+    padding-bottom: 46px;
+  }
+  .mc__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .mc__tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .mc__tabs::-webkit-scrollbar {
+    display: none;
+  }
+  /* Sub-captions do not fit four tabs on a phone; the labels alone stay unambiguous. */
+  .mc__tab-sub {
+    display: none;
+  }
+  .mc__tab {
+    padding: 12px 12px;
+    min-height: 44px;
+    align-content: center;
+    white-space: nowrap;
+  }
+  .mc__exit {
+    align-self: flex-start;
+    min-height: 40px;
+  }
+  .mc__body {
+    padding: 18px 18px 44px;
+  }
+  .mc__body {
+    padding: 18px 16px 28px;
+  }
+  .mc-grid,
+  .skill-grid {
+    grid-template-columns: 1fr;
+  }
+  .contact-list li {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .contact-list__link {
+    font-size: 16px;
+    word-break: break-all;
+  }
+}

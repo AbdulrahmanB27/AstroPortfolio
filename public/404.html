@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Redirecting — Abdulrahman Bahjat</title>
+    <style>
+      html { background: #05070d; color: #a9b4c7; font: 15px/1.55 Inter, system-ui, sans-serif; }
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; text-align: center; }
+      p { margin: 0; padding: 24px; }
+      a { color: #ffb454; }
+    </style>
+    <script>
+      // GitHub Pages serves this file for any path that has no matching file.
+      // The portfolio is a single page that routes with the URL hash (#/about, #/projects/<id>),
+      // so the right answer is almost always "go back to the app root and keep the hash".
+      //
+      // Base path rule (mirrors .github/workflows/deploy.yml and vite.config.ts):
+      //   <user>.github.io/<repo>/…   → project site, base = "/<repo>/" (first path segment)
+      //   custom domain (public/CNAME) → base = "/"
+      // Only "/admin" (the separate admin/index.html entry) is a real directory that may be
+      // requested without its trailing slash; everything else lands on the app root.
+      (function () {
+        var loc = window.location;
+        var path = loc.pathname;
+        var segments = path.split('/').filter(Boolean);
+        var isGithubIo = /\.github\.io$/i.test(loc.hostname);
+        var base = isGithubIo && segments.length > 0 ? '/' + segments[0] + '/' : '/';
+        var rest = path.slice(base.length).replace(/\/+$/, '');
+        var target = rest === 'admin' ? base + 'admin/' : base;
+
+        // A user site (<user>.github.io with base "/") reaches this file for "/typo/", where
+        // the first segment is not a repo name. If the computed target is the very path that
+        // just 404ed, fall back to the domain root instead of redirecting in a loop.
+        if (target === path) target = '/';
+
+        var next = target + loc.search + loc.hash;
+        if (next !== path + loc.search + loc.hash) loc.replace(next);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>That page does not exist. <a href="/">Back to the portfolio</a>.</p>
+  </body>
+</html>

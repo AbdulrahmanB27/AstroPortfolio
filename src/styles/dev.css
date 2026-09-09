@@ -1,0 +1,299 @@
+/* ---------- developer overlay (Ctrl+Alt+Shift+D / ?dev=true) ---------- */
+
+.dev-panel {
+  position: absolute;
+  /* Left edge, below the name lockup: the right edge belongs to the site's own controls
+     (menu, Home planet, project panel) and the overlay must never intercept them. */
+  top: calc(100px + var(--safe-top));
+  left: calc(12px + var(--safe-left));
+  width: min(300px, calc(100vw - 24px));
+  max-width: 320px;
+  max-height: calc(100vh - 210px - var(--safe-top) - var(--safe-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(169, 180, 199, 0.25) transparent;
+  padding: 10px 12px 12px;
+  background: rgba(5, 7, 13, 0.82);
+  border: var(--hair);
+  backdrop-filter: blur(8px);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink-300);
+  z-index: 5;
+  /* The overlay root is inert; each overlay opts in. The panel only exists in dev mode. */
+  pointer-events: auto;
+}
+
+.dev-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.dev-panel__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-500);
+}
+
+.dev-panel__title > i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--star-glow);
+}
+
+.dev-panel__close,
+.dev-btn {
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-300);
+  padding: 3px 8px;
+  border: var(--hair);
+  border-radius: 3px;
+  background: rgba(11, 16, 32, 0.6);
+  transition:
+    color 0.18s var(--ease-out),
+    border-color 0.18s var(--ease-out);
+}
+
+.dev-panel__close:hover,
+.dev-btn:hover:not(:disabled) {
+  color: var(--ink-100);
+  border-color: rgba(255, 180, 84, 0.55);
+}
+
+.dev-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* readout rows */
+
+.dev-row {
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.dev-row__k {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-500);
+}
+
+.dev-row__v {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  color: var(--ink-100);
+  overflow-wrap: anywhere;
+}
+
+.dev-row__v b {
+  font-weight: 500;
+  color: var(--ink-100);
+}
+
+.dev-row__v > span {
+  color: var(--ink-300);
+}
+
+.dev-stats,
+.dev-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+}
+
+.dev-stack {
+  flex-direction: column;
+  gap: 0;
+}
+
+.dev-tag {
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--star-glow);
+  border: 1px solid rgba(255, 180, 84, 0.35);
+}
+
+.dev-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* sections and controls */
+
+.dev-section {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(169, 180, 199, 0.12);
+}
+
+.dev-section__title {
+  margin: 0 0 6px;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-500);
+}
+
+.dev-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.dev-check input {
+  margin: 0;
+  width: 12px;
+  height: 12px;
+  accent-color: var(--star-glow);
+}
+
+.dev-field {
+  padding: 2px 0;
+}
+
+.dev-field__k {
+  min-width: 62px;
+}
+
+.dev-range {
+  display: grid;
+  grid-template-columns: minmax(62px, auto) 1fr 48px;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.dev-range__k {
+  white-space: nowrap;
+}
+
+.dev-range input {
+  width: 100%;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--star-glow);
+  cursor: pointer;
+}
+
+.dev-range__v {
+  text-align: right;
+  color: var(--ink-100);
+}
+
+.dev-select {
+  font: inherit;
+  font-size: 11px;
+  color: var(--ink-100);
+  padding: 1px 4px;
+  border: var(--hair);
+  border-radius: 3px;
+  background: rgba(11, 16, 32, 0.9);
+}
+
+.dev-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+}
+
+.dev-actions__k {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-500);
+  margin-right: 2px;
+}
+
+/* in-canvas chips (drei <Html>) */
+
+.dev-chip-wrap {
+  pointer-events: none;
+}
+
+.dev-chip {
+  position: relative;
+  display: grid;
+  gap: 1px;
+  transform: translate(10px, -6px);
+  padding: 2px 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  background: rgba(5, 7, 13, 0.72);
+  border: 1px solid rgba(111, 163, 255, 0.35);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  color: var(--ink-100);
+}
+
+.dev-chip::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 4px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--rim-cool);
+}
+
+.dev-chip__name {
+  text-transform: uppercase;
+}
+
+.dev-chip__values {
+  color: var(--ink-300);
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 820px) {
+  .dev-panel {
+    max-height: 50vh;
+  }
+}
+
+/* Collapsed state: a small corner chip. Dev mode must never block the site's own UI. */
+.dev-panel[data-expanded='false'] {
+  width: auto;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+  padding: 6px 10px;
+}
+
+.dev-panel[data-expanded='false'] > *:not(.dev-panel__head) {
+  display: none;
+}
+
+.dev-panel__title {
+  cursor: pointer;
+}
