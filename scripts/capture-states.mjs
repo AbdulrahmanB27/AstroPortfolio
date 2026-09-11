@@ -36,12 +36,22 @@ const STATES = [
   { id: 'home-dev', url: '/?nointro&dev=true#/', wait: 2600, viewports: ['desktop'] },
   { id: 'home', url: '/?nointro#/', wait: 2600, viewports: ['desktop', 'wide', 'laptop', 'mobile', 'mobileLandscape'] },
   { id: 'cockpit-about', url: '/?nointro#/about', wait: 2600, viewports: ['desktop', 'mobile'] },
-  { id: 'cockpit-skills', url: '/?nointro#/skills', wait: 2600, viewports: ['desktop'] },
+  { id: 'cockpit-skills', url: '/?nointro#/skills', wait: 2600, viewports: ['desktop', 'mobile'] },
   { id: 'cockpit-resume', url: '/?nointro#/resume', wait: 2600, viewports: ['desktop', 'mobile'] },
-  { id: 'cockpit-contact', url: '/?nointro#/contact', wait: 2600, viewports: ['desktop'] },
+  // All four portrait tabs, not two. The console bank is a 2x2 grid in portrait, so the two
+  // bottom-row screens are read from a different camera height than the top-row ones and the
+  // frame above the panel is cabin rather than window — a composition only these frames show.
+  { id: 'cockpit-contact', url: '/?nointro#/contact', wait: 2600, viewports: ['desktop', 'mobile'] },
   { id: 'system', url: '/?nointro#/projects', wait: 3200, viewports: ['desktop', 'wide', 'laptop', 'mobile'] },
   { id: 'project', url: '/?nointro#/projects/sweet-moment', wait: 3400, viewports: ['desktop', 'mobile'] },
   { id: 'project-2', url: '/?nointro#/projects/vex-robots', wait: 3400, viewports: ['desktop'] },
+  // The full-screen reading surface and the simplified version are real destinations, so they
+  // belong in the set a visual judge is given rather than in a throwaway script. `clicks` is
+  // for a state you have to press a button to reach; `settle` is what it costs to arrive.
+  // The cabin: what you see once the reader is closed. It has exactly one control, and for one
+  // build it had none at all, which no check here could see.
+  { id: 'cockpit-cabin', url: '/?nointro#/about', wait: 2600, clicks: ['.mc__back'], settle: 1800, viewports: ['desktop', 'mobile'] },
+  { id: 'lite', url: '/lite/', wait: 1400, viewports: ['desktop', 'mobile'] },
 ];
 
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=default', '--ignore-gpu-blocklist'] });
@@ -58,8 +68,21 @@ for (const state of STATES) {
     page.on('pageerror', (e) => errors.push(`[${state.id}/${vp}] pageerror: ${String(e).slice(0, 300)}`));
     try {
       await page.goto(baseUrl + state.url, { waitUntil: 'load', timeout: 60000 });
+      // Wait out the loading veil before timing anything. It fades over 0.7s, and the
+      // fixed waits below were landing inside that fade: with the mission computer now a
+      // translucent display rather than an opaque panel, the loader's name showed through
+      // it as a ghost in the middle of the cockpit. A capture taken during a transition is
+      // a capture of something no visitor sees.
+      if (!state.startWhen) {
+        await page.waitForSelector('.loader[data-hidden="true"]', { timeout: 60000 }).catch(() => {});
+        await page.waitForTimeout(800);
+      }
       if (state.startWhen) await page.waitForSelector(state.startWhen, { state: 'visible', timeout: 60000 });
       await page.waitForTimeout(state.wait);
+      for (const selector of state.clicks ?? []) {
+        await page.click(selector, { timeout: 10000 });
+        await page.waitForTimeout(state.settle ?? 1200);
+      }
       if (state.click || state.frames) {
         if (state.click) await page.click(state.click, { timeout: 10000, modifiers: state.clickModifiers ?? [] });
         // Timed against a real clock, not by summing sleeps: each screenshot costs a few

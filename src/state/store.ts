@@ -23,6 +23,22 @@ export type SceneState =
 
 export type CockpitTab = 'about' | 'skills' | 'resume' | 'contact';
 
+/**
+ * Where you are in the cockpit.
+ *
+ * 'room' is the cabin: four console displays, each carrying its section's name. 'full' is the
+ * reader — selecting a display flies the camera into it and the reading surface opens flat
+ * over the frame.
+ *
+ * There used to be a third state between them, which flew square-on to one display and swapped
+ * that surface to the full text so the reading happened on the rocket. It was built twice and
+ * rejected twice: a raked surface behind a perspective camera is a worse place to read than a
+ * page, and no amount of framing changed that. The displays are still physically on the ship
+ * and still carry the sections; the reading is flat, and getting there is an animation into it
+ * rather than a different kind of zoom.
+ */
+export type CockpitView = 'room' | 'full';
+
 export interface VisitedInfo {
   intro: boolean;
   cockpitEntries: number;
@@ -77,6 +93,12 @@ export interface AppState {
   /** True while a gsap sequence owns the camera; UI ignores clicks that would conflict. */
   busy: boolean;
   cockpitTab: CockpitTab;
+  /**
+   * Where the camera sits inside the cockpit. 'room' frames the whole cabin with the
+   * console screen in it; 'full' opens the flat reader over the frame.
+   * The content is the same either way — it lives on the console, not in an overlay.
+   */
+  cockpitView: CockpitView;
   selectedProjectId: string | null;
   hoveredProjectId: string | null;
   visited: VisitedInfo;
@@ -98,6 +120,7 @@ export interface AppState {
   setScene: (scene: SceneState) => void;
   setBusy: (busy: boolean) => void;
   setCockpitTab: (tab: CockpitTab) => void;
+  setCockpitView: (view: CockpitView) => void;
   setSelectedProject: (id: string | null) => void;
   setHoveredProject: (id: string | null) => void;
   markIntroSeen: () => void;
@@ -130,6 +153,7 @@ export const useApp = create<AppState>()(
     scene: 'loading',
     busy: false,
     cockpitTab: 'about',
+    cockpitView: 'room',
     selectedProjectId: null,
     hoveredProjectId: null,
     visited: readVisited(),
@@ -148,6 +172,7 @@ export const useApp = create<AppState>()(
     setScene: (scene) => set({ scene }),
     setBusy: (busy) => set({ busy }),
     setCockpitTab: (cockpitTab) => set({ cockpitTab }),
+    setCockpitView: (cockpitView) => set({ cockpitView }),
     setSelectedProject: (selectedProjectId) => set({ selectedProjectId }),
     setHoveredProject: (hoveredProjectId) => set({ hoveredProjectId }),
     markIntroSeen: () => {

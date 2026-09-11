@@ -27,7 +27,21 @@ interface LabelSlot {
 const slots = new Map<string, LabelSlot>();
 let labelsEnabled = false;
 
+/*
+ * The home planet, which is not a project.
+ *
+ * It sits on the one dashed amber orbit in the frame and was the only body in the view
+ * carrying no label, so two reviewers read it as either a project they could not identify or
+ * a bug — and the "Home planet" control in the HUD never got tied to anything you could see.
+ * It is deliberately not a button: the HUD control is the way back, and a second one competing
+ * with it would be worse than none. Registered as a label obstacle so project names route
+ * around it like they route around the HUD.
+ */
+let homeSlot: HTMLElement | null = null;
+const HOME_POS = new Vector3(WORLD.homeRingRadius, 0, 0);
+
 const tmp = new Vector3();
+const tmpHome = new Vector3();
 
 /** Lives inside the R3F canvas: projects planets and positions the DOM labels. */
 export function LabelBridge() {
@@ -77,10 +91,16 @@ export function LabelBridge() {
     const sy = ((1 - tmp.y) / 2) * size.height;
     const sEdge = new Vector3(0, WORLD.starRadius * 1.4, 0).project(camera);
     const sr = Math.abs(((1 - sEdge.y) / 2) * size.height - sy);
-    const blockedRects = [...document.querySelectorAll<HTMLElement>('[data-label-obstacle]')].map((el, i) => {
-      const r = el.getBoundingClientRect();
-      return { id: `hud-${i}`, left: r.left - 6, top: r.top - 6, right: r.right + 6, bottom: r.bottom + 6 };
-    });
+    // An obstacle that has faded itself out is not in the way. The HUD's obstacles fade
+    // through their container's opacity, so their own computed value stays 1 and they keep
+    // blocking correctly; the home label sets its own, and off-frame it must stop reserving
+    // the last place it was drawn.
+    const blockedRects = [...document.querySelectorAll<HTMLElement>('[data-label-obstacle]')]
+      .filter((el) => Number(getComputedStyle(el).opacity) > 0.05)
+      .map((el, i) => {
+        const r = el.getBoundingClientRect();
+        return { id: `hud-${i}`, left: r.left - 6, top: r.top - 6, right: r.right + 6, bottom: r.bottom + 6 };
+      });
     const placed = layoutLabels(inputs, [{ id: 'star', x: sx, y: sy, radius: sr }], size, { density, blockedRects });
     for (const p of placed) {
       const slot = slots.get(p.id);
@@ -96,6 +116,25 @@ export function LabelBridge() {
     for (const id of behind) {
       const slot = slots.get(id);
       if (slot) slot.el.style.opacity = '0';
+    }
+
+    if (homeSlot) {
+      tmpHome.copy(HOME_POS).project(camera);
+      const behindCamera = tmpHome.z > 1;
+      const hx = ((tmpHome.x + 1) / 2) * size.width;
+      const hy = ((1 - tmpHome.y) / 2) * size.height;
+      const inFrame = hx > 40 && hx < size.width - 40 && hy > 40 && hy < size.height - 40;
+      homeSlot.style.transform = `translate3d(${Math.round(hx)}px, ${Math.round(hy + 16)}px, 0)`;
+      /*
+       * Subordinate by SIZE and TINT, not by ink.
+       *
+       * At 0.5 this measured 3.07:1 against the sky — the dimmest text in the frame, on the
+       * one label that says "this is the way home". It is 11px against a project's 12-12.5px
+       * and --ink-300 against --ink-100, which is what carries the subordination; taking the
+       * ink down as well only made it hard to read. A CSS floor on the child could not fix
+       * this: the effective alpha is this value times that one.
+       */
+      homeSlot.style.opacity = !behindCamera && inFrame ? String(labelState.alpha * 0.85) : '0';
     }
   });
   return null;
@@ -131,18 +170,33 @@ export function PlanetLabels() {
         slot.el.style.opacity = '0';
         slot.el.style.pointerEvents = 'none';
       }
+      // The layer's own `visibility` is what actually hides this; resetting it here keeps the
+      // element from flashing at its stale alpha on the way back in.
+      if (homeSlot) homeSlot.style.opacity = '0';
     }
   }, [active]);
 
   return (
-    <div className="planet-labels" aria-hidden={!active}>
+    <div className="planet-labels" data-active={active} aria-hidden={!active}>
+      <span
+        className="planet-label planet-label--home"
+        ref={(el) => {
+          homeSlot = el;
+        }}
+        style={{ opacity: 0 }}
+        data-label-obstacle
+        aria-hidden="true"
+      >
+        <span className="planet-label__name">Home</span>
+      </span>
       {projects.map((p) => {
         const category = portfolio.categoryById.get(p.category);
         return (
           <button
             key={p.id}
             type="button"
-            className="planet-label"
+            className="planet-label planet-label--project"
+            data-featured={p.featured || undefined}
             ref={(el) => {
               if (el) refs.current.set(p.id, el);
               else refs.current.delete(p.id);

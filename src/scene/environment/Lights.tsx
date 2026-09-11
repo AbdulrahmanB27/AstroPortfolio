@@ -20,7 +20,10 @@ export function Lights() {
   // Inside the cockpit the room is lit by its own practicals; the exterior key would
   // otherwise wash the interior to a flat warm grey.
   const interior = isCockpitScene(appScene);
-  const k = interior ? 0.22 : 1;
+  // Inside, the star reaches the cabin only through the forward window, so the exterior key
+  // is a shaft rather than a room light. At 0.22 it was still lifting every wall to a flat
+  // warm grey and cancelling the practicals it was supposed to sit behind.
+  const k = interior ? 0.09 : 1;
 
   useEffect(() => {
     const key = keyRef.current;

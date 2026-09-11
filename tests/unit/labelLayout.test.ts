@@ -56,9 +56,29 @@ describe('layoutLabels', () => {
   });
 
   it('keeps neighbouring planets on the same side when both sit outward', () => {
-    const placed = layoutLabels([label('a', 1080, 300), label('b', 1140, 380)], [], viewport);
+    // Far enough apart that each label is unambiguously next to its own planet.
+    const placed = layoutLabels([label('a', 1080, 220), label('b', 1160, 480)], [], viewport);
     const sides = placed.filter((p) => p.visible).map((p) => p.anchor);
     expect(sides.every((s) => s.includes('right'))).toBe(true);
+  });
+
+  /**
+   * Outward-flanking is right for isolated planets and wrong for a tight pair: the left one
+   * takes 'left', the right one takes 'right', and two names end up on opposite sides of a
+   * small gap with nothing to say which belongs to which. Inside CROWD_DISTANCE_PX the
+   * labels stack instead, on the same axis as the planets they name.
+   */
+  it('stacks labels vertically when two planets are crowded together', () => {
+    const placed = layoutLabels([label('a', 1080, 300), label('b', 1140, 380)], [], viewport);
+    const visible = placed.filter((p) => p.visible);
+    expect(visible).toHaveLength(2);
+    for (const p of visible) {
+      expect(['above', 'below'], `${p.id} anchor`).toContain(p.anchor);
+    }
+    // And they still do not collide.
+    const [a, b] = visible.map(boxOf);
+    const overlap = a!.left < b!.right && a!.right > b!.left && a!.top < b!.bottom && a!.bottom > b!.top;
+    expect(overlap).toBe(false);
   });
 
   it('keeps labels inside the viewport', () => {

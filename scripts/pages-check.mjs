@@ -26,7 +26,7 @@
 // No dependencies beyond node built-ins and the repo's @playwright/test.
 
 import { createServer, request as httpRequest } from 'node:http';
-import { createReadStream, existsSync, mkdirSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { extname, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -44,6 +44,42 @@ const opt = (name, fallback) => {
 };
 
 const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
+
+/*
+ * One run at a time.
+ *
+ * This script rebuilds `dist/` twice — once with the sub-path base it needs to test, once back
+ * to the root base so it leaves the tree usable. Two runs overlapping therefore fight over the
+ * same directory, and the loser reports a FAIL that has nothing to do with the product. That
+ * happened: a run in the foreground raced a run in a background task and printed
+ * "PAGES CHECK: FAIL" on a build that passes 91/91 on its own. A deployment check that cries
+ * wolf is worse than no deployment check, so it refuses rather than racing.
+ */
+const LOCK = resolve(repoRoot, 'node_modules', '.pages-check.lock');
+if (existsSync(LOCK)) {
+  const age = Date.now() - statSync(LOCK).mtimeMs;
+  if (age < 15 * 60_000) {
+    console.error(
+      [
+        '',
+        'Another pages:check is running (lock ' + Math.round(age / 1000) + 's old at ' + LOCK + ').',
+        'It rebuilds dist/, so two runs cannot overlap. Wait for it, or delete the lock if it died.',
+        '',
+      ].join(String.fromCharCode(10)),
+    );
+    process.exit(2);
+  }
+}
+writeFileSync(LOCK, String(process.pid));
+const releaseLock = () => {
+  try {
+    rmSync(LOCK, { force: true });
+  } catch {
+    /* the report is what matters; a stale lock ages out */
+  }
+};
+process.on('exit', releaseLock);
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => process.exit(130));
 const distDir = resolve(repoRoot, 'dist');
 const outDir = resolve(repoRoot, opt('out', 'captures/pages-check'));
 const skipBuild = flag('skip-build');
@@ -98,6 +134,7 @@ if (!existsSync(resolve(distDir, 'index.html'))) {
   finish();
 }
 check(existsSync(resolve(distDir, 'admin', 'index.html')), 'dist/admin/index.html exists', 'admin entry emitted by the MPA build');
+check(existsSync(resolve(distDir, 'lite', 'index.html')), 'dist/lite/index.html exists', 'simplified entry emitted by the MPA build');
 check(existsSync(resolve(distDir, '404.html')), 'dist/404.html exists', 'copied from public/404.html');
 
 // ---------------------------------------------------------------------------------------
@@ -295,6 +332,14 @@ async function httpChecks() {
   r = await fetchRaw(`${o}${prefix}/admin/`);
   check(r.status === 200 && /text\/html/.test(r.headers['content-type'] ?? ''), `GET ${prefix}/admin/ → 200 text/html`, `got ${r.status}`);
 
+  // The simplified portfolio is a real directory index too, and it is the fallback a
+  // visitor without WebGL is sent to — so it has to resolve on a sub-path host.
+  r = await fetchRaw(`${o}${prefix}/lite`);
+  check(r.status === 301 && r.headers.location === `${prefix}/lite/`, `GET ${prefix}/lite → 301 ${prefix}/lite/`, `got ${r.status} ${r.headers.location ?? ''}`);
+
+  r = await fetchRaw(`${o}${prefix}/lite/`);
+  check(r.status === 200 && /text\/html/.test(r.headers['content-type'] ?? ''), `GET ${prefix}/lite/ → 200 text/html`, `got ${r.status}`);
+
   r = await fetchRaw(`${o}${prefix}/this-page-does-not-exist`);
   check(
     r.status === 404 && /text\/html/.test(r.headers['content-type'] ?? '') && r.body.includes('Redirecting'),
@@ -306,7 +351,7 @@ async function httpChecks() {
   check(r.status === 200, `GET ${prefix}/404.html → 200 (the file itself is reachable)`, `got ${r.status}`);
 
   // Every <script src> / <link href> in both entries resolves under the prefix with the right type.
-  for (const entry of ['index.html', 'admin/index.html']) {
+  for (const entry of ['index.html', 'admin/index.html', 'lite/index.html']) {
     const html = readFileSync(resolve(distDir, entry), 'utf8');
     const refs = [...html.matchAll(/\b(?:src|href)=["']([^"']+)["']/g)].map((m) => m[1]).filter((u) => u.startsWith('/'));
     for (const ref of refs) {
@@ -360,7 +405,7 @@ async function assetChecks() {
 
 function distReferenceChecks() {
   heading('Absolute root references in dist/');
-  for (const entry of ['index.html', 'admin/index.html']) {
+  for (const entry of ['index.html', 'admin/index.html', 'lite/index.html']) {
     const html = readFileSync(resolve(distDir, entry), 'utf8');
     const bad = [...html.matchAll(/["'(=]\s*(\/(?:assets|src)\/[^"')\s>]*)/g)].map((m) => m[1]);
     const rootRefs = [...html.matchAll(/\b(?:src|href)=["'](\/[^"']*)["']/g)]
@@ -437,6 +482,13 @@ async function browserChecks() {
       overlay: '.project-panel[data-visible="true"]',
       label: 'project panel',
       state: { scene: 'project', selectedProjectId: 'sweet-moment' },
+    },
+    {
+      id: 'lite',
+      context: pagesContext,
+      url: `${P}lite/`,
+      overlay: '.lite__projects',
+      label: 'simplified portfolio',
     },
     {
       id: 'admin',

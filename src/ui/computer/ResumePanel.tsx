@@ -74,7 +74,28 @@ export function ResumePanel() {
                   <li key={p!.id}>
                     <strong>{p!.title}</strong>
                     <span className="mc-list__meta">{p!.tagline}</span>
-                    <span className="mc-list__meta t-mono">{p!.technologies.slice(0, 4).join(' · ')}</span>
+                    {/*
+                      One unbreakable item per technology, and no separator glyph at all.
+
+                      Joined into a single string the browser broke the list wherever there was
+                      a space — the resume rendered "MECHANICAL DESIGN · 3D" then "PRINTING",
+                      which states a technology the data does not contain, and three lines
+                      ended on a dangling "·". Moving the "·" onto the term that follows it
+                      fixed the trailing artefact and created a leading one: three wrapped
+                      lines then STARTED with a middot, which at 1x reads as a bullet or a
+                      typo.
+
+                      A glyph that can be orphaned at either end of a line is the wrong
+                      separator for a wrapping list. The gap is the separator now — a flex row
+                      with a column gap, which cannot be orphaned because it is not a glyph.
+                    */}
+                    <span className="mc-list__meta mc-list__tech t-mono">
+                      {p!.technologies.slice(0, 4).map((t) => (
+                        <span key={t} className="nowrap">
+                          {t}
+                        </span>
+                      ))}
+                    </span>
                   </li>
                 ))}
               </ul>

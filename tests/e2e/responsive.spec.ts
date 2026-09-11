@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { expectNoConsoleErrors, open, scene, sel, waitForScene } from './helpers';
+import { expectDisplayUndimmed, expectNoConsoleErrors, open, scene, sel, settleCamera, waitForScene } from './helpers';
 
 /** Small screens, reduced motion, and the accessible paths through the content. */
 
@@ -18,16 +18,43 @@ test.describe('mobile portrait', () => {
     expectNoConsoleErrors(errors);
   });
 
-  test('the cockpit screen is readable and scrolls', async ({ page }) => {
+  /**
+   * The computer is rendered ON the console through a CSS3D layer, so its CSS width is the
+   * display's resolution, not a viewport measurement — the old assertion (`width <= 390`)
+   * compared a 900px design surface against a phone and would now fail by construction.
+   * What still matters is what reaches the glass: the panel has to sit inside the viewport
+   * after the 3D transform, and its type has to be big enough to read once projected.
+   */
+  test('the cockpit screen is readable and stays inside the frame', async ({ page }) => {
     const errors = await open(page, '#/about', { dev: true });
     await expect(page.locator(sel.missionComputer)).toBeVisible({ timeout: 25_000 });
-    const panel = page.locator('.mc__body');
-    await expect(panel).toBeVisible();
-    const fontSize = await page.locator('.mc-doc__lede').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
-    expect(fontSize).toBeGreaterThanOrEqual(14);
-    // The panel must not overflow the viewport horizontally.
-    const width = await panel.evaluate((el) => el.getBoundingClientRect().width);
-    expect(width).toBeLessThanOrEqual(390);
+    await expect(page.locator('.mc__body')).toBeVisible();
+
+    const m = await page.evaluate(() => {
+      const frame = document.querySelector('.mc__frame')!.getBoundingClientRect();
+      const lede = document.querySelector('.mc-doc__lede')!;
+      const css = parseFloat(getComputedStyle(lede).fontSize);
+      const panelCssWidth = parseFloat(getComputedStyle(document.querySelector('.mc')!).width);
+      // How much the 3D transform shrinks the design surface on its way to the screen.
+      const projected = frame.width / panelCssWidth;
+      return { frame: { x: frame.x, right: frame.right, width: frame.width }, css, projected };
+    });
+
+    // Projected type size, which is what a reader actually sees.
+    expect(m.css * m.projected, 'projected body type').toBeGreaterThanOrEqual(9);
+    expect(m.frame.x, 'panel off the left edge').toBeGreaterThanOrEqual(-2);
+    expect(m.frame.right, 'panel past the right edge').toBeLessThanOrEqual(392);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
+    expectNoConsoleErrors(errors);
+  });
+
+  /** The phone half of the overlay-leak check; see the desktop case in `core.spec.ts`. */
+  test('nothing from another scene dims the cockpit display', async ({ page }) => {
+    const errors = await open(page, '#/about', { dev: true });
+    await expect(page.locator(sel.missionComputer)).toBeVisible({ timeout: 25_000 });
+    await settleCamera(page);
+    await expectDisplayUndimmed(page, 'phone');
     expectNoConsoleErrors(errors);
   });
 
@@ -93,9 +120,12 @@ for (const [name, width, height] of [
       const errors = await open(page, '#/about', { dev: true });
       await expect(page.locator(sel.missionComputer)).toBeVisible({ timeout: 25_000 });
       const lede = page.locator('.mc-doc__lede');
+      // Both in CSS space. The panel is rendered on the console through a CSS3D layer, so
+      // its bounding box is projected onto the screen while its font size is not — dividing
+      // one by the other measured a 74-character line as 86.
       const m = await lede.evaluate((el) => {
         const cs = getComputedStyle(el);
-        return { width: el.getBoundingClientRect().width, fontSize: parseFloat(cs.fontSize) };
+        return { width: parseFloat(cs.width), fontSize: parseFloat(cs.fontSize) };
       });
       expect(m.fontSize, 'body text too small').toBeGreaterThanOrEqual(14);
       // Roughly 0.5em per character: keep the line between 40 and 80 characters. A panel
@@ -160,7 +190,7 @@ test.describe('reduced motion', () => {
 
     await page.locator(`${sel.homeMenu} button:has-text("About")`).click();
     await waitForScene(page, 'cockpit', 10_000);
-    await page.locator('button:has-text("Exit cockpit")').click();
+    await page.locator('.mc__exit').click();
     await waitForScene(page, 'home', 10_000);
 
     await page.locator(`${sel.homeMenu} button:has-text("Projects")`).click();

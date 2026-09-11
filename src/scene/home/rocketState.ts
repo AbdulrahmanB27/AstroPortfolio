@@ -18,6 +18,30 @@ export const vehicleView = {
   interior: false,
 };
 
+/**
+ * React needs this flag too, not just the frame loop.
+ *
+ * The mission computer is mounted on the console through a CSS3D layer, and that layer is
+ * real DOM in a portal — setting `visible = false` on the 3D group does nothing to it. The
+ * panel stayed on screen from outside the ship, drawn over the rocket's hull on the home
+ * planet. Hiding it means not rendering it, which means React has to know, which means this
+ * has to be subscribable rather than only readable.
+ */
+type Listener = () => void;
+const listeners = new Set<Listener>();
+
+export function subscribeVehicleView(listener: Listener): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+/** Snapshot for `useSyncExternalStore`: a primitive, so identity never churns. */
+export function getVehicleInterior(): boolean {
+  return vehicleView.interior;
+}
+
 export function setVehicleInterior(interior: boolean): void {
+  if (vehicleView.interior === interior) return;
   vehicleView.interior = interior;
+  for (const listener of listeners) listener();
 }

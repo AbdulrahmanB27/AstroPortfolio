@@ -190,9 +190,14 @@ export function planetMaterialFor(style: PlanetStyle, colorHex: string, accentHe
   const map = buildPlanetTexture(style, colorHex, accentHex, seed);
   switch (style) {
     case 'ice':
-      return new MeshStandardMaterial({ map, roughness: 0.28, metalness: 0.05 });
+      // A planet is not a polished sphere. At 0.28 the small non-featured bodies carried a
+      // tight circular specular hotspot on a flat albedo and read as glossy plastic marbles —
+      // closer to the cartoon the art direction rules out than the ringed and mooned ones,
+      // which a reviewer singled out as looking genuinely good. Rougher turns the hotspot into
+      // a broad terminator gradient, which is what reads as a body.
+      return new MeshStandardMaterial({ map, roughness: 0.52, metalness: 0.04 });
     case 'ocean':
-      return new MeshStandardMaterial({ map, roughness: 0.35, metalness: 0.08 });
+      return new MeshStandardMaterial({ map, roughness: 0.55, metalness: 0.06 });
     case 'metal':
       return new MeshStandardMaterial({ map, roughness: 0.42, metalness: 0.75 });
     case 'lava':

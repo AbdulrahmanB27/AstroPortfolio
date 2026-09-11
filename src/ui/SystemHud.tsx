@@ -65,7 +65,11 @@ export function SystemHud() {
                   onBlur={() => setHovered(null)}
                   onClick={() => focusProject(p.id)}
                 >
-                  <span className="project-index__dot" style={{ background: p.planet.color }} aria-hidden="true" />
+                  {/* The category's colour, not the planet's. Each row used to carry two
+                      independent colour codes 250px apart — the dot took the planet material
+                      and the tag took the category — so they agreed on some rows and
+                      contradicted on others, which teaches a rule and then breaks it. */}
+                  <span className="project-index__dot" style={{ background: cat?.color }} aria-hidden="true" />
                   <span className="project-index__title">{p.title}</span>
                   <span className="project-index__meta t-mono" style={{ color: cat?.color }}>
                     {cat?.name}

@@ -48,6 +48,35 @@ test.describe('flight mode', () => {
     expect(await scene(page)).toBe('home');
   });
 
+  /**
+   * The Konami code is what people actually try when they go hunting for a hidden mode, so
+   * it triggers flight alongside the word. Matched on `event.code`, which is why this test
+   * presses physical keys rather than characters.
+   */
+  test('the Konami code also enters flight mode', async ({ page }) => {
+    const errors = await open(page, '#/projects', { dev: true });
+    await expect(page.locator(sel.systemHud)).toBeVisible({ timeout: 25_000 });
+    for (const key of ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']) {
+      await page.keyboard.press(key);
+    }
+    await waitForScene(page, 'flight', 20_000);
+    // The enter-flight glide owns the camera for ~1.2s and swallows input until it lands.
+    await waitForIdle(page);
+    await page.keyboard.press('Escape');
+    await waitForScene(page, 'system', 20_000);
+    expectNoConsoleErrors(errors);
+  });
+
+  test('a partial Konami code does nothing', async ({ page }) => {
+    await open(page, '#/projects', { dev: true });
+    await expect(page.locator(sel.systemHud)).toBeVisible({ timeout: 25_000 });
+    for (const key of ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight']) {
+      await page.keyboard.press(key);
+    }
+    await page.waitForTimeout(1000);
+    expect(await scene(page)).toBe('system');
+  });
+
   test('the pilot trigger flies, moves and exits back to the system', async ({ page }) => {
     const errors = await open(page, '#/projects', { dev: true });
     await expect(page.locator(sel.systemHud)).toBeVisible({ timeout: 25_000 });

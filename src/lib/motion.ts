@@ -7,6 +7,8 @@ export function prefersReducedMotion(): boolean {
 
 /** Durations in seconds. Repeat variants are used after the first play. */
 export const DURATIONS = {
+  /** Push in to the console screen and back. Repeated often, so it stays short. */
+  cockpitView: 0.75,
   introFirst: 6.4,
   introReturning: 1.8,
   enterCockpit: 2.2,

@@ -45,10 +45,13 @@ export function ProjectPlanet({ project, placement, onSelect }: Props) {
     [project.planet.rings, placement.planetRadius],
   );
   const haloMaterial = useMemo(
-    // Scaled past the 1.0 bloom threshold: at the flat token value the selection ring was
-    // a hard-edged slab with the background luminance literally adjacent to it, so nothing
-    // about the selected planet glowed.
-    () => new MeshBasicMaterial({ color: new Color(PALETTE.rimCool).multiplyScalar(1.7), transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide }),
+    // Lifted off the flat token value, where the ring was a hard-edged slab with the
+    // background luminance literally adjacent to it and nothing about the selected planet
+    // glowed. Backed off from 1.7 once the hoop moved outside a ringed planet's band: at that
+    // radius it circumscribes the whole drawing, and two reviewers independently called it the
+    // most saturated thing in the frame after the star, pulling the eye off the project title.
+    // It has to say "this one is selected", which is a highlight, not a HUD element.
+    () => new MeshBasicMaterial({ color: new Color(PALETTE.rimCool).multiplyScalar(1.3), transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide }),
     [],
   );
   useEffect(
@@ -78,7 +81,7 @@ export function ProjectPlanet({ project, placement, onSelect }: Props) {
     g.scale.setScalar(s * emphasis);
     if (bodyRef.current) bodyRef.current.rotation.y += delta * 0.05;
     if (haloRef.current) {
-      const target = selected ? 0.5 : hovered ? 0.3 : 0;
+      const target = selected ? 0.34 : hovered ? 0.2 : 0;
       haloMaterial.opacity += (target - haloMaterial.opacity) * Math.min(1, delta * 10);
       haloRef.current.visible = haloMaterial.opacity > 0.01;
     }
@@ -93,6 +96,8 @@ export function ProjectPlanet({ project, placement, onSelect }: Props) {
   });
 
   const tilt = project.planet.rings ? 0.35 : 0.12;
+  // Clear of the rings where there are rings, close to the body where there are none.
+  const haloInner = project.planet.rings ? RING_OUTER + 0.14 : 1.3;
 
   return (
     <group ref={groupRef} name={`planet-${project.id}`}>
@@ -121,10 +126,18 @@ export function ProjectPlanet({ project, placement, onSelect }: Props) {
             />
           </mesh>
         )}
-        {/* Selection / hover halo, in the planet's own ring plane and deliberately thin:
-            a bright hoop at a contradictory tilt read as a neon HUD element. */}
+        {/*
+          Selection / hover halo, in the planet's own ring plane and deliberately thin: a
+          bright hoop at a contradictory tilt read as a neon HUD element.
+
+          Its radius clears whatever the planet actually draws. At a flat 1.3 radii it sat in
+          the gap between a ringed planet's surface (1.0) and its ring band (1.45-2.3), so
+          two concentric ellipses crossed on the screen and the near arc ran straight across
+          the lit face — reviewers read it as a stray wireframe rather than "this one is
+          selected". Outside the whole drawing there is nothing for it to cut through.
+        */}
         <mesh ref={haloRef} rotation={[-Math.PI / 2, 0, 0]} material={haloMaterial} visible={false}>
-          <ringGeometry args={[r * 1.3, r * 1.335, 96]} />
+          <ringGeometry args={[r * haloInner, r * (haloInner + 0.035), 96]} />
         </mesh>
         {Array.from({ length: moonCount }, (_, i) => (
           <mesh key={i} name={`moon-${i}`}>

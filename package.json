@@ -14,8 +14,11 @@
     "test:e2e": "playwright test",
     "build:resume": "node scripts/build-resume.mjs",
     "capture": "node scripts/capture-states.mjs",
+    "ui:audit": "node scripts/ui-audit.mjs",
     "pages:check": "node scripts/pages-check.mjs",
-    "perf:check": "node scripts/perf-check.mjs"
+    "perf:check": "node scripts/perf-check.mjs",
+    "ui:verify": "node scripts/ui-verify.mjs",
+    "media:optimise": "node scripts/optimise-media.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",
@@ -36,6 +39,7 @@
     "@types/react-dom": "^19.2.7",
     "@types/three": "^0.185.4",
     "@vitejs/plugin-react": "^5.1.0",
+    "sharp": "^0.35.4",
     "typescript": "^5.9.3",
     "vite": "^7.3.6",
     "vitest": "^5.0.0"

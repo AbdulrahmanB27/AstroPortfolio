@@ -41,6 +41,13 @@
     </script>
   </head>
   <body>
+    <!--
+      "/" is right on a custom domain and on Cloudflare, and wrong on a GitHub project site,
+      where the root is "/<repo>/". This link is only ever seen with JavaScript off — the
+      script above redirects before the body paints — and with JavaScript off nothing here can
+      learn the repo name, because Vite copies this file verbatim and never rewrites it. So it
+      stays "/", which is correct everywhere except the one case that cannot be fixed.
+    -->
     <p>That page does not exist. <a href="/">Back to the portfolio</a>.</p>
   </body>
 </html>

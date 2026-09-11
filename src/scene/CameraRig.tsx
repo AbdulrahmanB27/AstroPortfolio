@@ -52,7 +52,11 @@ export function CameraRig() {
     const dist = tmpTarget.distanceTo(tmpPos);
     tmpTarget.x += swayX * dist;
     tmpTarget.y += swayY * dist;
-    camera.up.set(Math.sin(rig.roll), Math.cos(rig.roll), 0);
+    // The rig's up, with the launch's roll applied about the view axis. Reading a console
+    // display needs the display's own up: square-on and centred is not enough, because a
+    // surface whose up is not world up still renders rolled in the frame.
+    camera.up.copy(rig.up).normalize();
+    if (rig.roll) camera.up.applyAxisAngle(tmpTarget.clone().sub(tmpPos).normalize(), rig.roll);
     camera.lookAt(tmpTarget);
 
     if (Math.abs(camera.fov - rig.fov) > 0.01) {

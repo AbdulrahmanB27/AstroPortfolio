@@ -6,6 +6,7 @@ import { DURATIONS, EASES } from '../lib/motion';
 import { handles } from '../scene/rig';
 import { homeApproachPose, homePose, projectPose, starApproachPose, systemPose } from '../scene/poses';
 import { orbitClock } from '../scene/system/orbitClock';
+import { drawnExtent } from '../scene/system/planetExtent';
 import { setSystemDim, setSystemReveal } from '../scene/system/systemState';
 import { setVehicleInterior } from '../scene/home/rocketState';
 import { planetWorldPositions } from '../scene/system/planetRegistry';
@@ -44,11 +45,38 @@ export function jumpToSystem(): void {
  * body, so framing every project on the body alone let a ringed one spill past two frame
  * edges while a bare one floated in the middle of the same slot.
  */
+/*
+ * How far the world dims behind a focused project.
+ *
+ * This was 0 — the bottom of the range — chosen when `handles.exposure` was a no-op, so
+ * nobody ever saw what it did. With the exposure feature actually working, 0 took the planet
+ * out of the frame entirely: the subject of the view went black and only its rim light and
+ * the selection ring were left. The panel being the brightest thing does not require the
+ * planet to be invisible; the art direction has it as the hero of the left third.
+ *
+ * Measured on the project frame: 0 put the scene band at 5.7 mean luminance against 30.6
+ * undimmed; this lands it near 24, which reads as "lit, but not the subject any more".
+ */
+const PROJECT_DIM = 0.72;
+
 function visualRadius(id: string): number {
   const placement = portfolio.placementById.get(id);
   const project = portfolio.projectById.get(id);
   if (!placement) return 1;
   return placement.planetRadius * (project?.planet.rings ? 1.75 : 1);
+}
+
+/**
+ * How far the planet's drawing reaches, in world units. Read from `drawnExtent`, which is the
+ * single place rings and moons are measured — the same function the label solver uses to keep
+ * a moon off a project name. `visualRadius` above is a hand-tuned approximation of this for
+ * the landscape framing and is deliberately left alone; portrait needs the real number.
+ */
+function drawnRadiusOf(id: string): number {
+  const placement = portfolio.placementById.get(id);
+  const project = portfolio.projectById.get(id);
+  if (!placement || !project) return 1;
+  return placement.planetRadius * drawnExtent(project.planet);
 }
 
 export function jumpToProject(id: string): void {
@@ -59,11 +87,11 @@ export function jumpToProject(id: string): void {
   handles.cockpit?.setPower(0);
   setSystemReveal(1);
   setSystemDim(1);
-  handles.exposure?.setLevel(0);
+  handles.exposure?.setLevel(PROJECT_DIM);
   setLabelsAlpha(0);
   app.setSelectedProject(id);
   const pos = planetPosition(id);
-  applyPose(projectPose(pos, visualRadius(id)));
+  applyPose(projectPose(pos, visualRadius(id), drawnRadiusOf(id)));
   setProbeOpacity(1);
   finish('project', 0.15);
 }
@@ -83,7 +111,7 @@ export function focusProject(id: string): void {
   }
   const tl = begin('focusingProject');
   const pos = planetPosition(id);
-  const pose = projectPose(pos, visualRadius(id));
+  const pose = projectPose(pos, visualRadius(id), drawnRadiusOf(id));
   const dim = { value: 0 };
   const probe = { value: 0 };
   const labels = { value: 1 };
@@ -93,7 +121,7 @@ export function focusProject(id: string): void {
   tweenPose(tl, pose, d, EASES.glide, 0);
   tl.to(labels, { value: 0, duration: d * 0.35, onUpdate: () => setLabelsAlpha(labels.value) }, 0);
   tl.to(dim, { value: 1, duration: d * 0.8, ease: 'power2.out', onUpdate: () => setSystemDim(dim.value) }, d * 0.1);
-  tl.to(exposure, { value: 0, duration: d * 0.8, ease: 'power2.out', onUpdate: () => handles.exposure?.setLevel(exposure.value) }, d * 0.1);
+  tl.to(exposure, { value: PROJECT_DIM, duration: d * 0.8, ease: 'power2.out', onUpdate: () => handles.exposure?.setLevel(exposure.value) }, d * 0.1);
   tl.to(probe, { value: 1, duration: d * 0.5, ease: 'power2.out', onUpdate: () => setProbeOpacity(probe.value) }, d * 0.55);
   tl.eventCallback('onComplete', () => finish('project', 0.15));
 }
@@ -110,7 +138,7 @@ export function returnToOrbit(): void {
   const dim = { value: 1 };
   const probe = { value: 1 };
   const labels = { value: 0 };
-  const exposure = { value: 0 };
+  const exposure = { value: PROJECT_DIM };
   const d = DURATIONS.returnToOrbit;
   tl.to(probe, { value: 0, duration: d * 0.4, onUpdate: () => setProbeOpacity(probe.value) }, 0);
   tweenPose(tl, pose, d, EASES.approach, 0);

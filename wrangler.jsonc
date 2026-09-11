@@ -1,0 +1,26 @@
+// Cloudflare Workers with Static Assets. There is no Worker script: the site is entirely
+// static, so this file is the whole deployment.
+//
+//   npm run build            (VITE_BASE_PATH unset — vite.config.ts already defaults to "/")
+//   npx wrangler deploy      (first time: `npx wrangler login`)
+//
+// Or connect the GitHub repository in the Cloudflare dashboard with build command
+// `npm run build` and output directory `dist`, and it deploys on every push.
+//
+// The 3D app routes on the URL hash, so any path the host does not know is a real mistake.
+// That is why this is "404-page" and not "single-page-application": the SPA setting would
+// answer every crawler typo with a 200 and the 433 KB app, where this answers with
+// public/404.html and a 404, which is what it should be. The default html_handling
+// ("auto-trailing-slash") already sends /admin to /admin/ and /lite to /lite/.
+//
+// Custom domains here need the domain's nameservers on Cloudflare (free). If they cannot be
+// moved, GitHub Pages takes a custom domain from any DNS host and is the better fit.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "astroportfolio",
+  "compatibility_date": "2026-09-11",
+  "assets": {
+    "directory": "./dist/",
+    "not_found_handling": "404-page"
+  }
+}

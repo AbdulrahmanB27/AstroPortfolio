@@ -1,156 +1,253 @@
-/* ---------- mission computer (cockpit screen) ---------- */
+/* ---------- the reader ---------- */
+
+/*
+ * The cockpit's personal sections, set as a page.
+ *
+ * This file used to describe three surfaces for the same content: a panel floating over the
+ * canvas, the same panel mounted on a console display through a CSS3D layer, and a flat
+ * full-screen version. Two of those are gone. The owner rejected the mounted reading surface
+ * twice — a raked plane behind a perspective camera loses to a page, whatever is done to the
+ * framing — so the displays keep the section titles and the reading happens here.
+ *
+ * What is left, in order: the reader's shell and rail, the content typography (shared, and the
+ * only part that survived unchanged), the console title cards, and the entry animation.
+ */
 
 .mc {
-  position: absolute;
-  left: 50%;
-  /* Anchored from the top and sized to its content: a fixed height truncated About,
-     Skills and Resume while leaving a 145px void on Contact. */
-  top: clamp(88px, 15vh, 150px);
-  width: min(54vw, 800px);
-  height: auto;
-  /* All four tabs share a frame. Sizing purely to content swung the panel 258px between
-     Contact and About, so the cockpit re-composed itself on every tab click and the bare
-     floor took a third of the frame on the shortest tab. */
-  min-height: min(560px, calc(100vh - 190px));
-  max-height: calc(100vh - 190px);
-  display: flex;
-  transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 0.5s var(--ease-out) 0.1s;
-  pointer-events: none;
-}
-
-.mc[data-visible='true'] {
-  opacity: 1;
-  pointer-events: auto;
+  display: grid;
+  /* Centred and capped, so the rail and the page stay in proportion on a 2560px monitor
+     instead of the page growing into a field of empty gutter. */
+  width: min(1240px, 100%);
+  justify-self: center;
+  height: 100%;
+  min-height: 0;
+  color: var(--ink-100);
 }
 
 .mc__frame {
-  position: relative;
-  /* Flex child of a max-height parent: `max-height: 100%` cannot resolve against an
-     auto-height parent, so the panel used to grow past the bottom of the viewport. */
-  flex: 1 1 auto;
-  min-height: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  /* Opaque: the emissive console plane behind it used to bleed a hard-edged rectangle
-     straight through the body copy. */
-  background: #0a0e1a;
-  border: 1px solid rgba(207, 232, 255, 0.16);
-  box-shadow:
-    0 0 0 1px rgba(5, 7, 13, 0.6),
-    0 30px 80px rgba(0, 0, 0, 0.55),
-    inset 0 0 60px rgba(207, 232, 255, 0.04);
+  /* Rail, then page. The rail is a fixed column because a navigation list that changes width
+     with the viewport is harder to scan than one that does not. */
+  grid-template-columns: 268px minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(207, 232, 255, 0.1);
+  border-radius: var(--radius-md);
+  /*
+   * The same warm wash /lite/ carries. Without it this was the only surface in the product
+   * with no trace of the universe on it — a flat near-black card on black, further from the
+   * world than the page that is genuinely outside the 3D site. Measured at +6 luminance at the
+   * top edge, which is a tint, not a light source.
+   */
+  background:
+    radial-gradient(900px 620px at 22% -8%, rgba(255, 180, 84, 0.06), rgba(255, 180, 84, 0) 66%),
+    rgba(9, 13, 24, 0.92);
 }
 
-.mc__corner {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: rgba(207, 232, 255, 0.55);
-  border-style: solid;
-  border-width: 0;
-}
-.mc__corner--tl { left: -1px; top: -1px; border-left-width: 1px; border-top-width: 1px; }
-.mc__corner--tr { right: -1px; top: -1px; border-right-width: 1px; border-top-width: 1px; }
-.mc__corner--bl { left: -1px; bottom: -1px; border-left-width: 1px; border-bottom-width: 1px; }
-.mc__corner--br { right: -1px; bottom: -1px; border-right-width: 1px; border-bottom-width: 1px; }
+/* ---------- the rail ---------- */
 
-.mc__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 18px 12px 22px;
-  border-bottom: 1px solid rgba(207, 232, 255, 0.12);
-}
-
-.mc__tabs {
-  display: flex;
-  gap: 4px;
+.mc__rail {
+  display: grid;
+  /*
+   * Masthead, list, the resume action, then the gap, then the ways out. The action belongs
+   * with the list — it is another thing to get from here — and the gap is what separates
+   * both of them from leaving.
+   *
+   * Every row is `auto` and the rail packs from the top, so the slack falls below everything
+   * rather than inside anything. Giving one row `1fr` put it inside whichever child landed
+   * there: the foot did, so its pill stretched to 180px tall and a `--radius-pill` of 999px
+   * turned it into a circle. Pushing the foot to the bottom of the rail was the first
+   * instinct and it is worse — the rail reads as one block this way, and a list at the top
+   * with its exits stranded 350px below reads as two.
+   */
+  grid-template-rows: auto auto auto auto;
+  align-content: start;
+  gap: 22px;
+  padding: 30px 24px 26px 30px;
+  border-right: 1px solid rgba(207, 232, 255, 0.09);
+  background: rgba(5, 8, 16, 0.46);
 }
 
-.mc__tab {
+.mc__rail-head {
+  display: grid;
+  gap: 6px;
+}
+
+.mc__rail-eyebrow {
+  margin: 0;
+  color: var(--ink-500);
+}
+
+.mc__rail-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  /* Subordinate to the page's own h1, which on two of the four sections is this same string.
+     At 17px semibold the two tied and the surface read as having two titles. */
+  font-size: 13.5px;
+  letter-spacing: 0;
+  line-height: 1.3;
+  color: var(--ink-300);
+}
+
+.mc__rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: grid;
   gap: 2px;
-  padding: 8px 12px;
-  border-radius: 4px;
+  align-content: start;
+}
+
+/*
+ * A section in the rail.
+ *
+ * The whole row is the target, its number is the only mono in it, and the caption under the
+ * name is what a four-item tab row could not carry — so the surface says what is in each
+ * section before anything is clicked. The active row is marked by a bar on its leading edge
+ * rather than an underline, because a list is scanned down and an underline belongs to a row.
+ */
+.mc__tab {
+  position: relative;
+  display: grid;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 12px 10px 16px;
+  border-radius: var(--radius-sm);
   text-align: left;
-  border-bottom: 2px solid transparent;
-  transition:
-    color 0.18s var(--ease-out),
-    border-color 0.18s var(--ease-out),
-    background-color 0.18s var(--ease-out);
+  transition: background-color 0.18s var(--ease-out), color 0.18s var(--ease-out);
+}
+
+.mc__tab::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 2px;
+  background: transparent;
+  transition: background-color 0.18s var(--ease-out);
+}
+
+.mc__tab[data-active='true']::before {
+  background: var(--star-glow);
+}
+
+.mc__tab:hover,
+.mc__tab:focus-visible {
+  background: rgba(207, 232, 255, 0.05);
+}
+
+.mc__tab-text {
+  display: grid;
+  gap: 2px;
 }
 
 .mc__tab-label {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 15px;
+  font-size: 17px;
+  letter-spacing: -0.01em;
   color: var(--ink-300);
+  transition: color 0.18s var(--ease-out);
 }
 
-.mc__tab-sub {
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-500);
-}
-
-.mc__tab:hover .mc__tab-label,
 .mc__tab[data-active='true'] .mc__tab-label {
   color: var(--ink-100);
 }
 
-.mc__tab[data-active='true'] {
-  border-bottom-color: var(--star-glow);
+.mc__tab-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-500);
 }
 
-.mc__tab[data-active='true'] .mc__tab-sub {
-  color: var(--star-glow);
+/* Directly under the list, not above the exits: it is another thing to get from the reader,
+   not another way out of it. */
+.mc__rail-cta {
+  justify-self: start;
+  margin-top: 4px;
+  font-size: 11.5px;
+}
+
+.mc__rail-foot {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(207, 232, 255, 0.09);
+}
+
+/* Leaving the ship is a step further out than closing the reader, so it is quieter and it is
+   a link rather than a second pill competing with the first. */
+.mc__exit {
+  padding: 4px 2px;
+  font-size: 13px;
+  color: var(--ink-500);
+  text-decoration: underline;
+  text-decoration-color: rgba(115, 125, 148, 0.45);
+  text-underline-offset: 4px;
+  transition: color 0.18s var(--ease-out);
+}
+
+.mc__exit:hover,
+.mc__exit:focus-visible {
+  color: var(--ink-100);
+}
+
+/* ---------- the page ---------- */
+
+.mc__page {
+  position: relative;
+  min-height: 0;
+  display: grid;
+}
+
+/*
+ * How far through the document you are.
+ *
+ * A 2px rule across the top of the page, scaled by --read, which the reader writes on every
+ * scroll. It is the top edge rather than a floating bar because the top edge is already a
+ * line — the rail's border meets it there — so this costs no new furniture. Hidden until
+ * there is something to measure: on Skills and Contact the whole document is in frame and a
+ * progress rule at 100% is noise.
+ */
+.mc__progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 2px;
+  transform-origin: left;
+  transform: scaleX(var(--read, 0));
+  background: linear-gradient(90deg, rgba(255, 180, 84, 0.35), var(--star-glow));
+  pointer-events: none;
+  z-index: 2;
 }
 
 .mc__body {
   position: relative;
   overflow-y: auto;
-  /* Generous bottom padding so a line never terminates on the panel border. */
-  padding: 26px 30px 60px;
+  padding: 44px clamp(28px, 4vw, 64px) 52px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(207, 232, 255, 0.35) transparent;
-}
-
-/* Fade + scroll cue sit on the frame, not on the scroller, so the scrollbar stays visible.
-   Inset to 0, not 1px: an absolutely positioned child is placed against the padding box,
-   which is exactly where the scroller paints, so a 1px inset left the top row of the next
-   line of glyphs uncovered — a hard bright dash sitting on the panel's bottom border. The
-   frame's own border is drawn outside the padding box, so it still shows. */
-.mc__frame::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* The first 44px are fully opaque — taller than a line box plus its descenders — so a
-     partly scrolled row is hidden outright rather than sliced through its glyphs.
-     What matters above that is how fast the ramp changes, not how long the element is.
-     At 96px with the opaque stop at 46% the ramp was 52px, so a 25px line box crossed
-     about 48% of the gradient and its lower half disappeared while its upper half stayed
-     lit: "2025 — PRESENT" rendered as a row of glyph tops. Body text sits close to the
-     panel fill in value, so it goes invisible around 70% coverage — the visual cut is far
-     sharper than the CSS ramp suggests. A 100px ramp puts roughly 25% across one line,
-     which reads as dimming. */
-  height: 144px;
-  background: linear-gradient(to top, #0a0e1a 0, #0a0e1a 46%, rgba(10, 14, 26, 0) 100%);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s var(--ease-out);
-  z-index: 2;
-}
-
-/* Only while there is something below the fold; see `MissionComputer`. */
-.mc__frame[data-more='true']::after {
-  opacity: 1;
+  scrollbar-color: rgba(207, 232, 255, 0.3) transparent;
+  /*
+   * A half-scrolled line dissolves at the border instead of being guillotined through its
+   * x-height. This is NOT the bottom gradient that was removed: that one was an opaque wash
+   * painted over the last line or two of a document scrolled to its end, so the bottom row
+   * could not be read at all. The invariant that makes this different is that --fade is always
+   * SHALLOWER THAN THIS CONTAINER'S BOTTOM PADDING, so at the end of the scroll the whole ramp
+   * lies inside padding and no complete line is ever touched.
+   */
+  --fade: 26px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--fade)), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--fade)), transparent 100%);
 }
 
 .mc__body::-webkit-scrollbar {
@@ -158,12 +255,28 @@
 }
 
 .mc__body::-webkit-scrollbar-thumb {
-  background: rgba(207, 232, 255, 0.28);
-  border-radius: 4px;
+  background: rgba(207, 232, 255, 0.24);
+  border-radius: var(--radius-sm);
 }
+
+/* ---------- content typography ---------- */
 
 .mc-doc {
   max-width: 640px;
+  /*
+   * One measure for every prose block on the surface.
+   *
+   * `ch` was the trap that used to sit below: Inter's zero is 0.645em wide while its average
+   * character in running prose is 0.458em, so a `66ch` cap resolved to 91 characters a line —
+   * measured by walking the text node's client rects, not estimated — against the 45-75 band
+   * where the eye reliably finds the start of the next line.
+   *
+   * It is one pixel value per surface rather than an em value per element because a deck, a
+   * lede and a paragraph are three different sizes that have to land on the SAME right edge,
+   * and it is keyed to the smallest of the three, which is what sets the character count.
+   * 478px at 14.5px paragraphs is 72 characters.
+   */
+  --measure: 478px;
 }
 
 .mc-doc__title {
@@ -175,26 +288,35 @@
   line-height: 1.1;
 }
 
-/* One-line summary of what Abdulrahman builds. Sits between the name and the longer
- * intro so the panel answers "who is this" before it asks to be read. */
+/*
+ * One-line summary of what Abdulrahman builds. Sits between the name and the longer intro so
+ * the panel answers "who is this" before it asks to be read.
+ *
+ * It has to be LARGER than that intro. At 16px against a 16.5px lede and a 14.5px body it was
+ * measurably the middle of three near-identical sizes — a reviewer measured cap heights of
+ * 17px for this against 19.5px for the paragraph under it, so the amber standfirst was
+ * physically smaller than the copy it introduces and only colour said otherwise. Colour
+ * cannot carry rank on its own; that was the single most repeated finding of the round.
+ */
 .mc-doc__deck {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   font-family: var(--font-display);
-  font-size: clamp(14px, 1.3vw, 16px);
-  line-height: 1.4;
-  letter-spacing: -0.005em;
+  font-weight: 500;
+  font-size: clamp(17px, 1.6vw, 21px);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
   color: var(--star-glow);
+  /* Three or four words on the last line rather than one; the string is three lines at most
+     on every surface it appears on, which is exactly what `balance` is for. */
+  text-wrap: balance;
 }
 
-/* Prose is capped by its own measure, not by the panel. The container is 640px wide and
-   the secondary paragraphs are set at 14.5px, which put them at 86 characters a line —
-   past the point where the eye reliably finds the start of the next one, and it showed:
-   three consecutive lines of the lede ended on a stranded single word. The meta grid below
-   still uses the full container width. */
+/* Prose is capped by its own measure, not by the panel; the meta grid below still uses the
+   full container width. See --measure on .mc-doc for why this is not in `ch`. */
 .mc-doc__deck,
 .mc-doc__lede,
 .mc-doc__p {
-  max-width: 66ch;
+  max-width: var(--measure);
 }
 
 .mc-doc__lede {
@@ -210,11 +332,19 @@
   font-size: 14.5px;
 }
 
+/*
+ * Section headings. 11px mono uppercase was exactly the primary action's treatment on the
+ * resume panel — "DOWNLOAD RESUME (PDF)" and "ACTIVITIES & PROJECTS" measured the same 14px
+ * cap in the same face — so one voice was doing three jobs at one size and the CTA read as
+ * another kicker. The rule under it is what makes this a section rather than a caption.
+ */
 .mc-doc__h2 {
-  margin: 22px 0 10px;
+  margin: 24px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(207, 232, 255, 0.12);
   font-family: var(--font-mono);
   font-weight: 500;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-300);
@@ -284,9 +414,10 @@
 .tag {
   padding: 6px 9px;
   border: 1px solid rgba(207, 232, 255, 0.2);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  /* The mono floor: 11px anywhere it carries words rather than digits. */
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-100);
@@ -300,11 +431,16 @@
   margin-top: 8px;
 }
 
+/* The group heading was clearing its own chips by 1.5px of cap height, so a grid of 31
+   bordered chips out-weighed the six headings organising them. */
 .skill-group__name {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(207, 232, 255, 0.12);
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 14.5px;
+  font-size: 17px;
+  letter-spacing: -0.01em;
   color: var(--ink-100);
 }
 
@@ -356,59 +492,9 @@
   color: var(--star-glow);
 }
 
+/* Content on a narrow column. The reader's own shell is handled further down, with the rest
+   of its phone layout. */
 @media (max-width: 820px) {
-  .mc {
-    width: calc(100vw - 20px);
-    /* Leave a real strip of forward window above the panel: at 52px the panel started
-       under the window sill, so the whole phone view was a dashboard on black. The
-       cockpit camera aims the star into whatever strip this leaves. */
-    top: calc(104px + var(--safe-top));
-    height: auto;
-    max-height: calc(100vh - 128px - var(--safe-top) - var(--safe-bottom));
-    transform: translate(-50%, 0);
-  }
-  /* A 96px fade is most of two lines on a phone. Short enough here to hide a partly
-     scrolled row without swallowing the ones above it. */
-  .mc__frame::after {
-    height: 92px;
-    background: linear-gradient(to top, #0a0e1a 0, #0a0e1a 46%, rgba(10, 14, 26, 0) 100%);
-  }
-  .mc__body {
-    padding-bottom: 46px;
-  }
-  .mc__header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    padding: 10px 12px;
-  }
-  .mc__tabs {
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .mc__tabs::-webkit-scrollbar {
-    display: none;
-  }
-  /* Sub-captions do not fit four tabs on a phone; the labels alone stay unambiguous. */
-  .mc__tab-sub {
-    display: none;
-  }
-  .mc__tab {
-    padding: 12px 12px;
-    min-height: 44px;
-    align-content: center;
-    white-space: nowrap;
-  }
-  .mc__exit {
-    align-self: flex-start;
-    min-height: 40px;
-  }
-  .mc__body {
-    padding: 18px 18px 44px;
-  }
-  .mc__body {
-    padding: 18px 16px 28px;
-  }
   .mc-grid,
   .skill-grid {
     grid-template-columns: 1fr;
@@ -421,4 +507,363 @@
     font-size: 16px;
     word-break: break-all;
   }
+}
+
+/* ---------- the reader's own sizes ---------- */
+
+/*
+ * Reading sizes, not display sizes: this surface has the whole viewport, and the art direction
+ * puts the body base at 16px. Every earlier version of this content lived on a projected
+ * surface where type had to fight a magnification factor, and the sizes never recovered from
+ * it — a review found the whole body of the full-screen page sitting between 10.5px and
+ * 13.5px, under the contract's own base.
+ */
+.mc-doc {
+  /*
+   * Prose keeps its measure; the grids get the page.
+   *
+   * `.mc-doc` was capped at 640px for a surface 620px wide, so on a reader 1075px wide the
+   * Education/Interests grid stopped at 640 and left a third of the page empty — the same
+   * "620x320px of nothing" a reviewer measured on the resume. The cap belongs on the prose,
+   * which is what --measure is, and the two-column grids can run wider than a paragraph
+   * should.
+   */
+  max-width: 880px;
+  --measure: 34em;
+}
+
+.mc-doc__title {
+  font-size: clamp(30px, 3.4vw, 44px);
+  line-height: 1.04;
+}
+
+.mc-doc__deck {
+  font-size: clamp(18px, 1.8vw, 23px);
+}
+
+.mc-doc__lede {
+  font-size: 18.5px;
+}
+
+.mc-doc__p,
+.mc-list__meta,
+.mc-list__detail {
+  font-size: 16px;
+}
+
+.mc-doc__h2 {
+  font-size: 12px;
+}
+
+.mc-list strong {
+  font-size: 17px;
+}
+
+/* Mono is a caption voice; 11-12px is the band the contract gives it. */
+.mc-list__meta.t-mono {
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+}
+
+/* A wrapping list of technologies, separated by space rather than by a glyph that can be
+   orphaned at either end of a line. */
+.mc-list__tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+}
+
+/* ---------- a phone ---------- */
+
+/*
+ * The rail becomes a row.
+ *
+ * Four names at 15px fit a 390px frame with room over; their captions do not, so they go. The
+ * numbers stay, because they are what makes it a sequence rather than four unrelated words.
+ */
+@media (max-width: 820px) {
+  .mc__frame {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .mc__rail {
+    grid-template-rows: auto;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 10px 14px;
+    padding: 12px 14px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(207, 232, 255, 0.09);
+  }
+  .mc__rail-head {
+    display: none;
+  }
+  .mc__rail-list {
+    grid-auto-flow: column;
+    grid-template-columns: repeat(4, auto);
+    gap: 2px;
+  }
+  .mc__tab {
+    grid-template-columns: 1fr;
+    gap: 0;
+    min-height: 44px;
+    padding: 6px 8px;
+    align-items: center;
+    justify-items: center;
+  }
+  .mc__tab::before {
+    left: 8px;
+    right: 8px;
+    top: auto;
+    bottom: 2px;
+    width: auto;
+    height: 2px;
+  }
+  .mc__tab-sub {
+    display: none;
+  }
+  .mc__tab-label {
+    font-size: 15px;
+  }
+  .mc__rail-foot {
+    grid-auto-flow: column;
+    align-items: center;
+    gap: 12px;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .mc__rail-foot .pill__text {
+    display: none;
+  }
+  .mc__rail-foot .mc__back {
+    min-height: 44px;
+    min-width: 44px;
+    justify-content: center;
+  }
+  /* The rail is one row here and the row is the whole budget: adding the resume shortcut
+     wrapped it to 137px and pushed the first word of content to 26% of the frame, against
+     69px and 18% without. The Resume section is one tap away and its own download button is
+     the first thing in it. */
+  /* Scoped through the rail so it outranks `.pill`'s own `display: inline-flex`, which sits
+     later in the cascade — the first version of this rule was correct and simply lost. */
+  .mc__rail .mc__rail-cta,
+  .mc__rail .mc__exit {
+    display: none;
+  }
+  .mc__body {
+    padding: 26px 18px 44px;
+  }
+  .mc-doc {
+    --measure: 100%;
+  }
+  .mc-doc__lede {
+    font-size: 17px;
+  }
+  .mc-doc__p,
+  .mc-list__meta,
+  .mc-list__detail {
+    font-size: 15.5px;
+  }
+}
+
+/* ---------- console screens ---------- */
+
+/*
+ * Each console display is its own CSS3D surface. `screen-mount` is the surface; what sits on
+ * it is either a section's title card or, once the camera has flown square-on to it, the
+ * full text. Sizes here are in the display's own pixels, not the viewport's — see TITLE_PX
+ * and ACTIVE_PX in `Cockpit`.
+ */
+.screen-mount {
+  display: block;
+}
+
+.screen-card {
+  display: grid;
+  transition: opacity 0.35s var(--ease-out);
+  align-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 22px 24px;
+  text-align: left;
+  border: 1px solid rgba(207, 232, 255, 0.16);
+  border-radius: var(--radius-sm);
+  background:
+    linear-gradient(180deg, rgba(12, 20, 36, 0.96) 0%, rgba(8, 14, 26, 0.98) 100%);
+  color: var(--ink-100);
+  font-family: var(--font-body);
+  cursor: pointer;
+  box-shadow: inset 0 0 40px rgba(111, 163, 255, 0.1);
+  transition: border-color 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out);
+}
+
+/* Idled down while a sibling is being read. Still legible, no longer competing. */
+.screen-card[data-idle='true'] {
+  opacity: 0.42;
+}
+
+/*
+ * On a phone the idle displays are not drawn at all while one is being read.
+ *
+ * Portrait stacks the bank two-by-two, so reading the top-left screen leaves the bottom row
+ * half outside the viewport: 21% of the frame was a milky slab carrying a cropped "03" and
+ * the top half of a 46px letter, which reads as a half-rendered layer rather than as set
+ * dressing — and it was the brightest large area on the frame, pulling the eye down off the
+ * text. Nothing is lost: every section name is in the panel's own tab strip, which is why
+ * that strip got a second row.
+ */
+@media (max-width: 560px) {
+  .screen-card[data-idle='true'] {
+    opacity: 0;
+  }
+}
+
+.screen-card:hover,
+.screen-card:focus-visible {
+  border-color: rgba(255, 180, 84, 0.7);
+  box-shadow: inset 0 0 46px rgba(255, 180, 84, 0.16);
+}
+
+.screen-card__index {
+  color: var(--star-glow);
+  font-size: 13px;
+}
+
+.screen-card__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  /* Large in the display's own pixel space: at rest this is read from across the cabin,
+     where the screen is roughly a fifth of the frame. */
+  font-size: 46px;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+}
+
+.screen-card__sub {
+  font-size: 12px;
+  color: var(--ink-300);
+}
+
+.screen-card__preview {
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: #c8d1de;
+  /*
+   * Two lines, then clamp.
+   *
+   * One line with an ellipsis was meant to stop a preview competing with the name above it,
+   * and on the widest card it cut "Mechanical Engineering Student · Penn State" to "…· Pen…"
+   * — a truncated word on the first display anyone looks at, which reads as a fault rather
+   * than as a summary. Two lines fit inside the card's own height and still lose to a 46px
+   * name.
+   */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.screen-card__open {
+  margin-top: 12px;
+  justify-self: start;
+  font-size: 12px;
+  color: var(--ink-100);
+  border: 1px solid rgba(207, 232, 255, 0.3);
+  border-radius: var(--radius-pill);
+  padding: 7px 13px;
+}
+
+.screen-card:hover .screen-card__open,
+.screen-card:focus-visible .screen-card__open {
+  border-color: var(--star-glow);
+  color: var(--star-glow);
+}
+
+/* ---------- the surface the reader opens on ---------- */
+
+/*
+ * Opening a section is a move INTO a display, so this arrives like one.
+ *
+ * The camera tweens to the chosen screen's pose at the same time (see `setCockpitView`), and
+ * the surface scales up from just under full size as it fades, which is what makes it read as
+ * the display growing to fill the frame rather than as a dialog appearing over it. It animates
+ * in only: leaving is the camera pulling back to the cabin, which is already a transition, and
+ * a reader that had to animate out would hold the exit for no reason.
+ */
+.cockpit-full {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  padding: clamp(12px, 2.4vh, 34px) clamp(12px, 3.2vw, 56px);
+  /* Blurred rather than opaque, so the cabin is still dimly there behind the page and leaving
+     reads as stepping back rather than closing something. */
+  background: rgba(4, 6, 11, 0.82);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+  animation: cockpit-full-in 0.42s var(--ease-out) both;
+}
+
+@keyframes cockpit-full-in {
+  from {
+    opacity: 0;
+    transform: scale(0.955);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cockpit-full {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* ---------- the cabin's one control ---------- */
+
+/*
+ * With the reading on its own surface, the cabin is four displays and nothing else, and the
+ * reader's header is not mounted here — so for one build there was no way out of the cockpit
+ * without first opening a section. The art direction allows exactly this much outside the
+ * screens: "No text outside the screens except the exit control."
+ */
+.cockpit-hud {
+  position: absolute;
+  left: calc(var(--hud-inset) + var(--safe-left));
+  bottom: calc(var(--hud-inset-bottom) + var(--safe-bottom));
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  opacity: 0;
+  transform: translateY(6px);
+  visibility: hidden;
+  transition:
+    opacity 0.4s var(--ease-out),
+    transform 0.4s var(--ease-out),
+    visibility 0s linear 0.4s;
+  pointer-events: none;
+}
+
+.cockpit-hud[data-visible='true'] {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  transition-delay: 0s, 0s, 0s;
+  pointer-events: auto;
+}
+
+.cockpit-hud__hint {
+  margin: 0;
+  color: var(--ink-300);
+  /* It sits straight on the rendered cabin, so it carries its own halo the way the identity
+     lockup and the planet labels do. */
+  text-shadow:
+    0 0 3px rgba(5, 7, 13, 1),
+    0 0 8px rgba(5, 7, 13, 0.95);
 }

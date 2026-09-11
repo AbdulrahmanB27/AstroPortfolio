@@ -282,7 +282,7 @@ export function ProjectsSection({ draft, set, selectedIndex, onSelect, onEditPla
             onChange={(v) => setField('media', v)}
             title={(m) => m.src}
             create={() => ({ type: 'image', src: 'media/projects/', alt: '' })}
-            hint="Files live in public/media/projects/; paths are site-relative (no leading slash)."
+            hint="Drop originals in media-src/projects/ and run npm run media:optimise; reference the .webp it writes to public/media/projects/. Paths are site-relative (no leading slash)."
           >
             {(media, update) => (
               <div className="media-row">
@@ -300,7 +300,7 @@ export function ProjectsSection({ draft, set, selectedIndex, onSelect, onEditPla
                       mono
                       value={media.src}
                       onChange={(v) => update({ src: v ?? '' })}
-                      placeholder="media/projects/file.jpg"
+                      placeholder="media/projects/file.webp"
                     />
                   </div>
                   <TextInput

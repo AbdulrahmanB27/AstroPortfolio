@@ -220,12 +220,12 @@
       "media": [
         {
           "type": "image",
-          "src": "media/projects/sweet-moment-home.jpg",
+          "src": "media/projects/sweet-moment-home.webp",
           "alt": "Sweet Moment Chocolates home page with hero, featured products, and navigation"
         },
         {
           "type": "image",
-          "src": "media/projects/sweet-moment-brand.jpg",
+          "src": "media/projects/sweet-moment-brand.webp",
           "alt": "Sweet Moment brand artwork"
         }
       ],
@@ -277,12 +277,12 @@
       "media": [
         {
           "type": "image",
-          "src": "media/projects/mykitchen-script.png",
+          "src": "media/projects/mykitchen-script.webp",
           "alt": "MyKitchen wordmark"
         },
         {
           "type": "image",
-          "src": "media/projects/mykitchen-logo.png",
+          "src": "media/projects/mykitchen-logo.webp",
           "alt": "MyKitchen app icon"
         }
       ],
@@ -327,17 +327,17 @@
       "media": [
         {
           "type": "image",
-          "src": "media/projects/vex-crab-bot.png",
+          "src": "media/projects/vex-crab-bot.webp",
           "alt": "CAD render of the Crab Bot robot design"
         },
         {
           "type": "image",
-          "src": "media/projects/vex-scorpion.png",
+          "src": "media/projects/vex-scorpion.webp",
           "alt": "CAD render of the Scorpion robot design"
         },
         {
           "type": "image",
-          "src": "media/projects/vex-spin-bot.png",
+          "src": "media/projects/vex-spin-bot.webp",
           "alt": "CAD render of the Spin Bot robot design"
         }
       ],
@@ -458,7 +458,7 @@
       "media": [
         {
           "type": "image",
-          "src": "media/projects/recipe-stash.jpg",
+          "src": "media/projects/recipe-stash.webp",
           "alt": "RecipeStash page with recipe filters and the add-recipe form"
         }
       ],
@@ -505,12 +505,12 @@
       "media": [
         {
           "type": "image",
-          "src": "media/projects/astroportfolio-home.jpg",
+          "src": "media/projects/astroportfolio-home.webp",
           "alt": "The portfolio's home planet: an astronaut on rocky terrain, the rocket on its pad, and the star behind the navigation"
         },
         {
           "type": "image",
-          "src": "media/projects/astroportfolio-system.jpg",
+          "src": "media/projects/astroportfolio-system.webp",
           "alt": "The orbital map: project planets on thin orbit rings around the central star"
         }
       ],

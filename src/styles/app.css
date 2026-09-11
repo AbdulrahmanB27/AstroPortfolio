@@ -46,7 +46,7 @@ button {
 :focus-visible {
   outline: 2px solid var(--star-glow);
   outline-offset: 3px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .visually-hidden {
@@ -80,6 +80,7 @@ button {
 }
 
 .home-menu[data-visible='true'] .home-menu__item,
+.home-menu[data-visible='true'] .home-menu__lite,
 .intro-skip {
   pointer-events: auto;
 }
@@ -176,6 +177,76 @@ button {
   transition: transform 0.4s var(--ease-out);
 }
 
+
+/*
+ * Quiet, but not a caption.
+ *
+ * Set in the sublabels' exact mono voice — 11px, 0.12em, uppercase, same grey, same column,
+ * same left edge, 52px under COMMUNICATIONS — it parsed as the caption of a sixth menu item
+ * whose title had failed to render. It was also the only text on the frame placed straight
+ * over 3D geometry with no scrim, and it lands on the terminator between sunlit sand and
+ * black rock: "SIMPLI" vanished into the landing pad while "ED VERSION" read fine, which no
+ * contrast checker can catch because the background is the WebGL canvas. Its hairline rule
+ * ran across the rocket's landing leg, which the art direction forbids outright.
+ *
+ * So: a different voice from the captions, and its own ground so the terrain underneath
+ * stops mattering.
+ */
+.home-menu__lite {
+  align-self: end;
+  /* Hugs its label. As a grid child in a 1fr column it stretched the full width of the menu
+     with the text left-aligned and 90px of dead trailing space — the same mixed hug-and-fill
+     rag that reads as unfinished anywhere else in the product. */
+  justify-self: start;
+  margin-top: 26px;
+  /* Hidden with the rest of the menu. Without this it stayed painted at full opacity in
+     every other scene — it turned up sitting on an orbit ring in the solar system, because
+     only .home-menu__item carried the fade rule. */
+  opacity: 0;
+  transform: translateX(10px);
+  transition:
+    opacity 0.55s var(--ease-out),
+    transform 0.55s var(--ease-out),
+    color 0.2s var(--ease-out),
+    border-color 0.2s var(--ease-out);
+  /*
+   * The pill voice, because it is a pill.
+   *
+   * Round 10 found this set in the menu sublabels' exact mono caption voice, in their column,
+   * at their size, and reading as the caption of a sixth menu item. The answer then was to
+   * change the voice to body text — which fixed that and made it the only pill in the product
+   * not in mono uppercase, out of fourteen. What actually stops it reading as a caption is the
+   * plate and the border, which no caption has; the voice can match the control system. Same
+   * treatment as its counterpart on /lite/, from the other side of the door.
+   */
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-100);
+  text-decoration: none;
+  /* Opaque enough to PLATE the scene rather than half-reveal it. At 0.62 the rock's hard
+     diagonal silhouette showed through between the two words — measured 28 luminance inside
+     the pill against 92 on the lit terrain just outside its left edge — so the control had a
+     scene edge running across it. */
+  background: rgba(5, 7, 13, 0.9);
+  border: 1px solid rgba(255, 180, 84, 0.45);
+  border-radius: var(--radius-pill);
+  padding: 9px 14px;
+}
+
+.home-menu[data-visible='true'] .home-menu__lite {
+  opacity: 1;
+  transform: none;
+}
+
+.home-menu__lite:hover,
+.home-menu__lite:focus-visible {
+  color: var(--ink-100);
+  border-color: rgba(255, 180, 84, 0.6);
+  background: rgba(5, 7, 13, 0.85);
+}
+
 /* ---------- name lockup ---------- */
 
 .lockup {
@@ -188,12 +259,20 @@ button {
      becomes part of a glyph: a warm dot landed under the S of "Penn State" and the word read
      as "Ştate". Soft enough that the terrain still shows through, dark enough that a star
      cannot be mistaken for a diacritic. */
-  padding: 10px 26px 14px 0;
+  padding: 10px 40px 22px 0;
   margin: -10px 0 0 0;
+  /*
+   * The ellipse has to reach zero INSIDE the box, or the box edge is the edge of the scrim.
+   * At `130% 150%` it did not: the gradient was still at 0.29 alpha where the right edge cut
+   * it and 0.41 at the bottom, which over the star's corona on a phone read as a leftover
+   * debug rectangle sitting on the glow — the first thing on the frame. Sized to the box, the
+   * fade lands on transparent at every edge and there is nothing to see.
+   */
   background: radial-gradient(
-    130% 150% at 0% 0%,
-    rgba(5, 7, 13, 0.78) 0%,
-    rgba(5, 7, 13, 0.52) 58%,
+    100% 100% at 0% 0%,
+    rgba(5, 7, 13, 0.9) 0%,
+    rgba(5, 7, 13, 0.62) 38%,
+    rgba(5, 7, 13, 0.24) 70%,
     rgba(5, 7, 13, 0) 100%
   );
   opacity: 0;
@@ -204,9 +283,16 @@ button {
 }
 
 /* A halo on the glyphs themselves, the same trick the planet labels use: the scrim handles
-   the field, this handles a star landing hard against a letter. */
+   the field, this handles a star landing hard against a letter.
+
+   The tagline was added to this lockup and not to this selector, and on a phone it lands on
+   the star's corona — amber type on an amber field, measured at 1.34:1 by two independent
+   reviewers, with the second half of the sentence effectively gone. It is the one line that
+   says what he builds, on the first surface a recruiter opens. Every line in the lockup gets
+   the halo; there is no line here that does not need it. */
 .lockup__name,
-.lockup__title {
+.lockup__title,
+.lockup__tagline {
   text-shadow:
     0 0 3px rgba(5, 7, 13, 1),
     0 0 6px rgba(5, 7, 13, 1),
@@ -222,14 +308,55 @@ button {
 .lockup__name {
   font-family: var(--font-display);
   font-weight: 600;
-  /* Scales with the viewport so the title does not read as browser chrome at 1920+. */
-  font-size: clamp(20px, 1.45vw, 30px);
-  letter-spacing: -0.01em;
+  /*
+   * Scales with the viewport so the title does not read as browser chrome at 1920+, and large
+   * enough to be the frame's primary type. It was not: measured cap heights put the name at
+   * 15px against the nav word "About" at 16px, and the nav repeats its treatment five times
+   * against the lockup's three lines — so the landing frame had no single primary and the
+   * first thing a visitor read was a menu item. On a phone the two were identical at 18px.
+   */
+  font-size: clamp(26px, 2.1vw, 36px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
 }
 
 .lockup__title {
-  font-size: clamp(13px, 0.85vw, 17px);
+  font-size: clamp(13.5px, 0.95vw, 17px);
   color: var(--ink-300);
+}
+
+/*
+ * What he builds, on the first screen.
+ *
+ * The home frame stated who he is and where he studies but never what he makes: the one line
+ * that answers it existed on the About display and on /lite/ and nowhere a visitor could see
+ * it without clicking into the cockpit and waiting through a transition. Same string, same
+ * amber, straight from the JSON — nothing new is claimed here. Held off the phone, where the
+ * lockup is already three lines deep over the star and the menu carries the frame.
+ */
+.lockup__tagline {
+  margin-top: 5px;
+  /*
+   * 34ch was the phone measure applied to a 1440px frame, and it forced the break "…from CAD
+   * and / robots…", ending a line on a conjunction with the whole top-centre of the frame
+   * empty. `balance` handles the rag; the cap just stops it running under the star.
+   */
+  max-width: 46ch;
+  font-family: var(--font-display);
+  font-size: clamp(13px, 0.82vw, 15px);
+  line-height: 1.35;
+  color: var(--star-glow);
+  text-wrap: balance;
+}
+
+/* Shown on a phone too. It was `display: none` below 821px, so the surface a recruiter is
+   most likely to open first answered who and where but never what — and the frame has the
+   room: the lockup ends well above the star's core. */
+@media (max-width: 820px) {
+  .lockup__tagline {
+    max-width: 30ch;
+    font-size: 13px;
+  }
 }
 
 /* ---------- home menu ---------- */
@@ -249,6 +376,22 @@ button {
   );
   pointer-events: none;
   z-index: -1;
+  /*
+   * Fades with the menu it belongs to.
+   *
+   * The menu items each carry their own fade, but the container and this scrim had no
+   * visibility rule at all — so a dark radial wash sat over every other scene permanently.
+   * On a phone, where the menu drops to the bottom of the viewport, it landed squarely on
+   * the cockpit console: body copy on the display measured a peak of 74 luminance against
+   * the same panel title at 242, and every attempt to fix that by adjusting the panel was
+   * chasing the wrong element.
+   */
+  opacity: 0;
+  transition: opacity 0.55s var(--ease-out);
+}
+
+.home-menu[data-visible='true']::before {
+  opacity: 1;
 }
 
 .home-menu {
@@ -278,7 +421,7 @@ button {
   column-gap: 14px;
   padding: 10px 12px 10px 8px;
   text-align: left;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   opacity: 0;
   transform: translateX(10px);
   transition:
@@ -323,11 +466,13 @@ button {
   transition: color 0.18s var(--ease-out);
 }
 
+/* 11px is the floor for mono carrying words; at 10.5px these measured an 8px cap height, the
+   same as the decorative kicker on /lite/. See the note on .planet-label__cat. */
 .home-menu__sub {
   display: block;
   margin-top: 3px;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-300);
@@ -352,7 +497,7 @@ button {
   bottom: calc(24px + var(--safe-bottom));
   padding: 10px 14px;
   border: var(--hair);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.14em;
@@ -380,7 +525,7 @@ button {
   gap: 8px;
   padding: 9px 14px;
   border: var(--hair);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(5, 7, 13, 0.55);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -420,10 +565,10 @@ button {
     left: calc(18px + var(--safe-left));
   }
   .lockup__name {
-    font-size: 18px;
+    font-size: 23px;
   }
   .lockup__title {
-    font-size: 12px;
+    font-size: 12.5px;
   }
   .home-menu {
     right: auto;
@@ -437,13 +582,25 @@ button {
     gap: 0;
     min-width: 0;
   }
+  /*
+   * A long ramp, and all of it above the first menu item's ink.
+   *
+   * The old stops put 0.86 alpha 53px from the top of a 440px box, so the scene met the panel
+   * on what was effectively a hard horizontal line — and it landed across the astronaut's
+   * shins, which made the portrait frame read as the desktop frame with a lid dropped on it
+   * rather than a composition. The box now starts 120px above the menu, and the ramp is spent
+   * by the time it reaches the first label, so the feather costs no legibility. (Lesson 18:
+   * a fade needs a long ramp AND a deep opaque zone; this has both.)
+   */
   .home-menu::before {
-    inset: -34px -24px -40px -24px;
+    inset: -120px -24px -40px -24px;
     background: linear-gradient(
       0deg,
       rgba(5, 7, 13, 0.97) 0%,
-      rgba(5, 7, 13, 0.95) 70%,
-      rgba(5, 7, 13, 0.86) 88%,
+      rgba(5, 7, 13, 0.96) 62%,
+      rgba(5, 7, 13, 0.93) 78%,
+      rgba(5, 7, 13, 0.62) 88%,
+      rgba(5, 7, 13, 0.26) 95%,
       rgba(5, 7, 13, 0) 100%
     );
   }
@@ -525,11 +682,20 @@ button {
    invitation to scroll, and on a phone there is no scrollbar to say otherwise. */
 .scroll-cue {
   position: absolute;
-  left: 50%;
-  bottom: 10px;
+  /*
+   * In the right gutter and down inside the body's fade ramp.
+   *
+   * `right: 14px` alone was not enough on a 330px console: the reading column runs to
+   * `right: 18px` there, so a 22px disc at `bottom: 10px` still landed on the last visible
+   * line and covered a word of it. Sitting inside the bottom 26px, the only text underneath
+   * it is text the mask has already taken to near-zero — so it obscures nothing that could
+   * be read. It is a sibling of the scroll container, not a child, so the mask never
+   * touches the cue itself.
+   */
+  right: 10px;
+  bottom: 3px;
   width: 22px;
   height: 22px;
-  margin-left: -11px;
   border-radius: 50%;
   background: rgba(207, 232, 255, 0.1);
   border: 1px solid rgba(207, 232, 255, 0.22);

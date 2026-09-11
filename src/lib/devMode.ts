@@ -4,6 +4,7 @@ import { portfolio } from '../data/loadPortfolio';
 import { systemView } from '../scene/system/systemState';
 import { STAGE_FRAME, stageDirToWorld, stageToWorld } from './stageFrame';
 import { STAGE } from './constants';
+import { cockpitPose, cockpitScreenPose } from '../scene/poses';
 
 /**
  * Developer mode: Ctrl+Alt+Shift+D toggles the overlay; `?dev=true` enables it at boot.
@@ -22,6 +23,8 @@ declare global {
       systemView: typeof systemView;
       live: typeof live;
       stage: { frame: typeof STAGE_FRAME; toWorld: typeof stageToWorld; dirToWorld: typeof stageDirToWorld; STAGE: typeof STAGE };
+      /** Camera poses, so framing can be checked without guessing at the numbers. */
+      poses: { cockpit: typeof cockpitPose; cockpitScreen: typeof cockpitScreenPose };
     };
   }
 }
@@ -35,6 +38,7 @@ function applyHook(on: boolean): void {
     systemView,
     live,
     stage: { frame: STAGE_FRAME, toWorld: stageToWorld, dirToWorld: stageDirToWorld, STAGE },
+    poses: { cockpit: cockpitPose, cockpitScreen: cockpitScreenPose },
   };
   else delete window.__astro;
 }

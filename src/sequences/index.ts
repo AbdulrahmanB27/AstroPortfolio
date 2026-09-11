@@ -1,8 +1,11 @@
 import gsap from 'gsap';
 import { Vector3 } from 'three';
+
+/** Default camera up, restored by any pose that does not name one. */
+const WORLD_UP = new Vector3(0, 1, 0);
 import { rig, handles } from '../scene/rig';
-import { cockpitPose, homeApproachPose, homePose, introStartPose, starApproachPose, type CameraPose } from '../scene/poses';
-import { useApp, type CockpitTab, type SceneState } from '../state/store';
+import { cockpitPose, cockpitScreenPose, homeApproachPose, homePose, introStartPose, starApproachPose, type CameraPose } from '../scene/poses';
+import { useApp, type CockpitTab, type CockpitView, type SceneState } from '../state/store';
 import { DURATIONS, EASES } from '../lib/motion';
 import { rocketLocalToWorld } from '../lib/stageFrame';
 import { setVehicleInterior } from '../scene/home/rocketState';
@@ -42,12 +45,17 @@ export function applyPose(pose: CameraPose): void {
   rig.position.copy(pose.position);
   rig.target.copy(pose.target);
   rig.fov = pose.fov;
+  // Poses that do not name an up get world up back, so a reading pose's roll cannot leak
+  // into the next shot.
+  rig.up.copy(pose.up ?? WORLD_UP);
 }
 
 function tweenPose(tl: gsap.core.Timeline, pose: CameraPose, duration: number, ease: string, at: number | string): void {
   tl.to(rig.position, { x: pose.position.x, y: pose.position.y, z: pose.position.z, duration, ease }, at);
   tl.to(rig.target, { x: pose.target.x, y: pose.target.y, z: pose.target.z, duration, ease }, at);
   tl.to(rig, { fov: pose.fov, duration, ease }, at);
+  const up = pose.up ?? WORLD_UP;
+  tl.to(rig.up, { x: up.x, y: up.y, z: up.z, duration, ease }, at);
 }
 
 function blackout(): HTMLElement | null {
@@ -75,11 +83,13 @@ export function jumpTo(scene: 'home' | 'cockpit', tab?: CockpitTab): void {
     finish('home');
   } else {
     if (tab) app.setCockpitTab(tab);
+    // Someone who followed a link to `#/about` asked to read About, so they arrive reading it.
+    app.setCockpitView('full');
     setStageOpacity(1);
     handles.cockpit?.setPower(1);
     setVehicleInterior(true);
-    applyPose(cockpitPose());
-    finish('cockpit', 0.25);
+    applyPose(cockpitScreenPose(tab ?? app.cockpitTab));
+    finish('cockpit', 0);
   }
 }
 
@@ -165,6 +175,9 @@ export function enterCockpit(tab: CockpitTab): void {
     return;
   }
   app.setCockpitTab(tab);
+  // The menu item said "About", so the cockpit opens on About rather than on a room with
+  // About somewhere in it.
+  app.setCockpitView('full');
   const repeat = app.visited.cockpitEntries > 0;
   app.bumpCockpitEntries();
   if (reduced()) {
@@ -174,7 +187,7 @@ export function enterCockpit(tab: CockpitTab): void {
   const tl = begin('enteringCockpit');
   const total = repeat ? DURATIONS.enterCockpitRepeat : DURATIONS.enterCockpit;
   const door = rocketDoorWorld();
-  const cockpit = cockpitPose();
+  const cockpit = cockpitScreenPose(tab);
   const hatch = { open: 0 };
   const power = { value: 0 };
   handles.cockpit?.setPower(0);
@@ -197,17 +210,70 @@ export function enterCockpit(tab: CockpitTab): void {
   tl.to(power, { value: 1, duration: total * 0.26, ease: 'power2.out', onUpdate: () => handles.cockpit?.setPower(power.value) }, total * 0.7);
   tl.eventCallback('onComplete', () => {
     handles.cockpit?.setPower(1);
-    finish('cockpit', 0.25);
+    finish('cockpit', 0);
+  });
+}
+
+/**
+ * Push in to read the console screen, or sit back to see the cabin again.
+ *
+ * The content is on the rocket either way — this only moves the camera. Short, because it
+ * happens every time someone wants to read something, and a cinematic here would wear out
+ * in about three uses.
+ */
+export function setCockpitView(view: CockpitView, tab?: CockpitTab): void {
+  const app = useApp.getState();
+  if (app.scene !== 'cockpit') return;
+  const target = tab ?? app.cockpitTab;
+  if (app.cockpitView === view && target === app.cockpitTab) return;
+  if (tab) app.setCockpitTab(tab);
+  app.setCockpitView(view);
+
+  /*
+   * Opening the reader is a move INTO a display, so the camera makes that move.
+   *
+   * The reader fades and scales up over the same window (see the `cockpit-full-in` keyframes),
+   * which is what makes it read as the display growing to fill the frame rather than as a
+   * dialog appearing over it. Switching section while the reader is open keeps it open and
+   * still moves the camera underneath, so closing it lands on the display you were reading.
+   *
+   * The reading dim lives in `Exposure`, derived from this state — a deep link never runs this
+   * function, so that rule cannot live here.
+   */
+  const pose = view === 'full' ? cockpitScreenPose(target) : cockpitPose();
+  // Switching section inside the reader: nobody is looking at the camera, so do not spend a
+  // transition on it.
+  if (view === 'full' && app.cockpitView === 'full') {
+    applyPose(pose);
+    rig.sway = 0;
+    return;
+  }
+  if (reduced()) {
+    applyPose(pose);
+    rig.sway = 0;
+    return;
+  }
+  current?.kill();
+  const tl = gsap.timeline();
+  current = tl;
+  rig.sway = 0;
+  tweenPose(tl, pose, DURATIONS.cockpitView, EASES.glide, 0);
+  tl.eventCallback('onComplete', () => {
+    rig.sway = 0;
+    current = null;
   });
 }
 
 export function exitCockpit(): void {
   const app = useApp.getState();
   if (app.busy || app.scene !== 'cockpit') return;
+  // Whatever the reading view dimmed, the world outside gets back.
+  handles.exposure?.setLevel(1);
   if (reduced()) {
     jumpTo('home');
     return;
   }
+  app.setCockpitView('room');
   const tl = begin('exitingCockpit');
   const repeat = app.visited.cockpitEntries > 1;
   const total = repeat ? DURATIONS.exitCockpitRepeat : DURATIONS.exitCockpit;

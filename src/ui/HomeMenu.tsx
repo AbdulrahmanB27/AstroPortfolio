@@ -29,6 +29,9 @@ export function HomeMenu() {
       <div className="lockup" data-visible={visible}>
         <div className="lockup__name">{profile.name}</div>
         <div className="lockup__title">{profile.title}</div>
+        {/* The same `profile.tagline` the About display and /lite/ carry. The landing frame
+            said who he is and where he studies but never what he builds. */}
+        <div className="lockup__tagline">{profile.tagline}</div>
       </div>
       <nav className="home-menu" data-visible={visible} aria-label="Primary" aria-hidden={!visible}>
         {ITEMS.map((item, i) => (
@@ -50,6 +53,12 @@ export function HomeMenu() {
             </span>
           </button>
         ))}
+        {/* A way out of the 3D for anyone who wants one — a slow connection, a machine that
+            hates WebGL, a recruiter with thirty seconds. Deliberately quiet: it sits under
+            the navigation rather than competing with it. */}
+        <a className="home-menu__lite" href="lite/" tabIndex={visible ? 0 : -1}>
+          Simplified version
+        </a>
       </nav>
     </>
   );

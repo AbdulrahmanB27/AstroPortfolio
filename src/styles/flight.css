@@ -5,11 +5,16 @@
   inset: 0;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.5s var(--ease-out);
+  /* See the note on `.system-hud`: this HUD is blurred, and a hidden blur still filters. */
+  visibility: hidden;
+  transition:
+    opacity 0.5s var(--ease-out),
+    visibility 0s linear 0.5s;
 }
 
 .flight-hud[data-visible='true'] {
   opacity: 1;
+  visibility: visible;
   /* Let the system HUD fade out first: both share the top-left corner. */
   transition-delay: 0.45s;
 }

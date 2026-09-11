@@ -13,6 +13,12 @@ export interface CameraRigState {
   sway: number;
   /** Extra roll in radians (used lightly during launch). */
   roll: number;
+  /**
+   * Camera up. World up for every ordinary shot; a console display's own up while one is
+   * being read, because a surface whose up is not world up renders rolled in the frame even
+   * with the camera dead on its axis and aimed at its centre.
+   */
+  up: Vector3;
   /** Small camera-shake amplitude in world units (launch only, ≤ 0.06). */
   shake: number;
 }
@@ -23,6 +29,8 @@ export const rig: CameraRigState = {
   fov: 42,
   sway: 0,
   roll: 0,
+  /** Camera up. Reset to world up by every pose that does not specify one. */
+  up: new Vector3(0, 1, 0),
   shake: 0,
 };
 

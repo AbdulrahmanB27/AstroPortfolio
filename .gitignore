@@ -7,3 +7,6 @@ captures/
 *.log
 .DS_Store
 Thumbs.db
+
+# Scratch scripts for a single investigation. Anything worth keeping goes in scripts/.
+tmp/

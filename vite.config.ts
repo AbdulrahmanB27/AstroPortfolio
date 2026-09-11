@@ -20,12 +20,36 @@ export default defineConfig({
       input: {
         main: `${root}index.html`,
         admin: `${root}admin/index.html`,
+        // The simplified portfolio. A separate entry so it never pulls in three: it exists
+        // to be fast and to work where WebGL does not.
+        lite: `${root}lite/index.html`,
       },
       output: {
-        manualChunks: {
-          three: ['three'],
-          r3f: ['@react-three/fiber', '@react-three/drei'],
-          postfx: ['postprocessing', '@react-three/postprocessing'],
+        /*
+         * Function form, not the object form. React has to land in its own chunk or the
+         * simplified entry reaches it through the r3f chunk and drags the whole renderer in
+         * behind it — the one thing /lite/ exists to avoid. The object form declared a
+         * `react` chunk that came out empty, because r3f had already claimed those modules;
+         * matching on the resolved path is unambiguous.
+         *
+         * Order matters: `@react-three/*` lives under node_modules/@react-three, so it is
+         * tested before the plain `react` prefix.
+         */
+        manualChunks(id: string) {
+          if (!id.includes('node_modules')) return undefined;
+          const path = id.replace(/\\/g, '/');
+          if (path.includes('/node_modules/postprocessing/')) return 'postfx';
+          if (path.includes('/node_modules/@react-three/postprocessing/')) return 'postfx';
+          if (path.includes('/node_modules/@react-three/')) return 'r3f';
+          if (path.includes('/node_modules/three/')) return 'three';
+          if (
+            path.includes('/node_modules/react/') ||
+            path.includes('/node_modules/react-dom/') ||
+            path.includes('/node_modules/scheduler/')
+          ) {
+            return 'react';
+          }
+          return undefined;
         },
       },
     },

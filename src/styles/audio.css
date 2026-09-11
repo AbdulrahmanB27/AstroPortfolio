@@ -1,10 +1,13 @@
 /* ---------- sound toggle ---------- */
 
 /* `.pill.audio-toggle` outranks the generic `.pill` transition/colour rules in app.css. */
+/* Inset from the shared token, not from its own numbers: at right 28 / bottom 24 against the
+   solar system's left 32 / bottom 26, this pill sat 2px out of vertical alignment with the
+   one in the same row. See --hud-inset. */
 .pill.audio-toggle {
   position: absolute;
-  right: calc(28px + var(--safe-right));
-  bottom: calc(24px + var(--safe-bottom));
+  right: calc(var(--hud-inset) + var(--safe-right));
+  bottom: calc(var(--hud-inset-bottom) + var(--safe-bottom));
   opacity: 0;
   transform: translateY(4px);
   pointer-events: none;
@@ -98,7 +101,7 @@
     height: 44px;
     padding: 0;
     justify-content: center;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
   }
   .audio-toggle__text {
     position: absolute;

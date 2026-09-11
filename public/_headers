@@ -1,0 +1,21 @@
+# Response headers, for hosts that read this file (Cloudflare Workers Static Assets, Cloudflare
+# Pages, Netlify). GitHub Pages ignores it — it allows no custom headers at all, and serves
+# everything with a fixed Cache-Control: max-age=600 — so on GitHub this file is inert, which
+# is the intended behaviour: the repo deploys unchanged to either.
+#
+# Vite names every bundle by its content hash (main-CnEJHXu_.js), so a changed file is a new
+# URL and an old URL is never wrong. That is what makes a year-long immutable cache safe, and
+# without this header the host's default makes every returning visitor revalidate all seven
+# first-paint files before three.js starts parsing.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The project media are re-encoded by `npm run media:optimise` and their names do not change
+# when their content does, so they get a day rather than a year.
+/media/*
+  Cache-Control: public, max-age=86400
+
+# The content studio is for the owner. Nothing on it is secret — it edits a JSON file the site
+# ships anyway — but a search result pointing at an editor is a confusing front door.
+/admin/*
+  X-Robots-Tag: noindex

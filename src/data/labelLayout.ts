@@ -84,6 +84,33 @@ function anchorOrder(x: number, y: number, centreX: number, centreY: number): La
   const vertical: LabelAnchor[] = up ? ['above', 'below'] : ['below', 'above'];
   return [...horizontal, ...vertical, ...diagonals];
 }
+
+/**
+ * Two planets close together on screen need their labels stacked, not flanked.
+ *
+ * The outward-first order above is right for an isolated planet and wrong for a tight pair:
+ * the left one takes 'left', the right one takes 'right', and the two names end up on
+ * opposite sides of a 32px gap with nothing to say which belongs to which. Sending both to
+ * a vertical anchor puts one above the pair and one below, on the same axis as the planets
+ * they name, which is unambiguous — and the solver's existing overlap test keeps them apart.
+ */
+export const CROWD_DISTANCE_PX = 120;
+
+function crowdedAnchorOrder(x: number, y: number, centreX: number, centreY: number): LabelAnchor[] {
+  const up = y < centreY;
+  const left = x < centreX;
+  const vertical: LabelAnchor[] = up ? ['above', 'below'] : ['below', 'above'];
+  const horizontal: LabelAnchor[] = left ? ['left', 'right'] : ['right', 'left'];
+  const diagonals: LabelAnchor[] = left
+    ? ['upper-left', 'lower-left', 'upper-right', 'lower-right']
+    : ['upper-right', 'lower-right', 'upper-left', 'lower-left'];
+  return [...vertical, ...diagonals, ...horizontal];
+}
+
+/** True when another label's planet sits within `CROWD_DISTANCE_PX` on screen. */
+export function hasCloseNeighbour(label: { id: string; x: number; y: number }, all: { id: string; x: number; y: number }[]): boolean {
+  return all.some((o) => o.id !== label.id && Math.hypot(o.x - label.x, o.y - label.y) < CROWD_DISTANCE_PX);
+}
 const EMPHASIS_RANK: Record<LabelEmphasis, number> = { selected: 3, hover: 2, normal: 1 };
 
 export function rectsOverlap(a: Rect, b: Rect): boolean {
@@ -132,16 +159,22 @@ function clampToViewport(box: Rect, width: number, height: number, margin: numbe
 function opacityFor(emphasis: LabelEmphasis, density: LabelDensity): number {
   if (emphasis !== 'normal') return 1;
   // These drive the project name. The category line is rendered at 62% of whatever this
-  // returns, so the pair keeps its hierarchy at every density. The balanced value used to
-  // be 0.55 against a category pinned at 1, which inverted the hierarchy — the name is now
-  // the brighter half and the pair still carries less ink overall than that arrangement.
+  // returns — floored, see `.planet-label__cat` — so the pair keeps its hierarchy at every
+  // density. The balanced value used to be 0.55 against a category pinned at 1, which
+  // inverted the hierarchy; the name is the brighter half now.
+  //
+  // Backed off from 0.72 because a resting label measured 0.73 effective against a
+  // hover/selected value of 1.0, so emphasis had almost nowhere to move — the contract asks
+  // for 55% at rest and 100% on hover, and the point of a resting state is the distance
+  // between it and the active one. The category's own floor is what protects its contrast,
+  // so lowering this no longer drags the tag under AA with it.
   switch (density) {
     case 'all':
-      return 0.9;
+      return 0.84;
     case 'balanced':
-      return 0.72;
+      return 0.64;
     case 'minimal':
-      return 0.6;
+      return 0.52;
   }
 }
 
@@ -168,7 +201,11 @@ export function layoutLabels(
       ...[...planetDiscs.entries()].filter(([id]) => id !== label.id).map(([, rect]) => rect),
     ];
     let chosen: { anchor: LabelAnchor; box: Rect } | null = null;
-    for (const anchor of anchorOrder(label.x, label.y, viewport.width / 2, viewport.height / 2)) {
+    const crowded = hasCloseNeighbour(label, labels);
+    const order = crowded
+      ? crowdedAnchorOrder(label.x, label.y, viewport.width / 2, viewport.height / 2)
+      : anchorOrder(label.x, label.y, viewport.width / 2, viewport.height / 2);
+    for (const anchor of order) {
       const box = boxFor(label, anchor, gap);
       if (!insideViewport(box, viewport.width, viewport.height, margin)) continue;
       if (blockers.some((b) => rectsOverlap(box, b))) continue;

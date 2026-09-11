@@ -63,6 +63,38 @@ test.describe('solar system', () => {
     expectNoConsoleErrors(errors);
   });
 
+  /**
+   * The home planet is a real body on the one dashed orbit in the frame, and it was the only
+   * one carrying no name — two reviewers read it as either a project they could not identify
+   * or a bug, and the HUD's "Home planet" control never got tied to anything visible. It is
+   * deliberately not a button: a second way back competing with the HUD control is worse than
+   * none, so this asserts both halves — that it is named, and that it is not a destination.
+   */
+  test('the home planet is named, and is not a project', async ({ page }) => {
+    const errors = await open(page, '#/projects', { dev: true });
+    await expect(page.locator(sel.systemHud)).toBeVisible({ timeout: 25_000 });
+    await page.waitForTimeout(1500);
+    const home = page.locator('.planet-label--home');
+    await expect(home).toHaveCount(1);
+    await expect(home).toHaveText(/home/i);
+    // Painted, and quieter than any project label.
+    const alpha = await home.evaluate((el) => Number(getComputedStyle(el).opacity));
+    expect(alpha, 'home label is painted').toBeGreaterThan(0.05);
+    const projectAlpha = await page
+      .locator(sel.planetLabel)
+      .first()
+      .evaluate((el) => Number(getComputedStyle(el).opacity));
+    expect(alpha, 'home label is quieter than a project').toBeLessThan(projectAlpha);
+    expect(await home.evaluate((el) => el.tagName), 'not a control').not.toBe('BUTTON');
+    // And it must not be counted as one: adding it under the bare `.planet-label` class broke
+    // five "a label for every project" assertions at once, because the count went to eight.
+    expect(
+      await page.locator('.planet-label--project.planet-label--home').count(),
+      'the home label is not also a project label',
+    ).toBe(0);
+    expectNoConsoleErrors(errors);
+  });
+
   test('labels do not overlap each other', async ({ page }) => {
     await open(page, '#/projects', { dev: true });
     await expect(page.locator(sel.systemHud)).toBeVisible({ timeout: 25_000 });
