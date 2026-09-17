@@ -1,16 +1,18 @@
-# Runs the Playwright end-to-end suite against the production build on every push.
+# Runs the part of the Playwright suite that a GPU-less runner can execute, on every push.
 #
 # This workflow is deliberately separate from deploy.yml and does not gate it. The runner
-# has no GPU, so WebGL goes through SwiftShader on the CPU: context creation, frame times
-# and every timing budget in the suite differ from the owner's machine. Whether the suite is
-# green here says something about the suite on this runner, not about the site, and the
-# first three deploys were blocked for five days by exactly that confusion.
+# has no GPU, so WebGL goes through SwiftShader on the CPU. Measured on the first run of the
+# full suite here (2026-09-17, 4 vCPUs): the WebGL probe and the DOM-only admin and /lite/
+# tests passed, every cockpit test blew its 60 s budget because the cockpit interior renders
+# at seconds per frame, one test lost its browser session outright, and 58 tests never ran
+# before the 20-minute global timeout. Raising the budgets would make a slow red run a very
+# slow red run; the scene tests need a GPU, so they run on the owner's machine as the gate
+# in `npm run publish:site`, which is the only path to the public branch.
 #
-# What it is for: a red X on the commit that anyone can read without repository admin
-# rights. The `github` reporter writes each failure as an annotation on the run summary, the
-# `setup` project in playwright.config.ts fails inside a minute (with the renderer string)
-# if WebGL never came up, and the HTML report with screenshots and traces is uploaded as an
-# artifact for the owner to download.
+# What runs here: the `setup` project (the 3D site boots in a browser without a GPU — the
+# WebGL gate and the /lite/ redirect are real regression risks) and the admin and /lite/
+# suites, which do not touch the canvas. Failures are annotations on the run summary
+# (readable without admin rights) and the HTML report is uploaded as an artifact.
 name: End-to-end tests
 
 on:
@@ -47,8 +49,9 @@ jobs:
       - name: Install the Playwright browser
         run: npx playwright install --with-deps chromium
 
-      - name: End-to-end tests
-        run: npm run test:e2e
+      # File filters do not skip the `setup` dependency project; it always runs first.
+      - name: End-to-end tests (boot probe, admin studio, simplified site)
+        run: npx playwright test tests/e2e/admin.spec.ts tests/e2e/lite.spec.ts
 
       - name: Upload the Playwright report
         # On success and on failure, but not when the run was cancelled by hand.

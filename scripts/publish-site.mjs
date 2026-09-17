@@ -1,6 +1,12 @@
 // Publishes this clone to the public GitHub repository as a filtered snapshot.
 //
-//   npm run publish:site              (add -- --dry-run to build the commit and not push it)
+//   npm run publish:site              (add -- --dry-run to build the commit and not push it;
+//                                      -- --skip-tests to publish without the e2e gate)
+//
+// This is also where the end-to-end suite gates a release. It cannot gate the deploy on
+// GitHub's runner — no GPU there, and the cockpit renders at seconds per frame through
+// SwiftShader — so it runs here, on the machine with the GPU, before the push. A run that
+// skipped it says so in the published commit message.
 //
 // Why a script and not `git push origin main`. The owner keeps docs/, tasks/, .claude/ and
 // CLAUDE.md out of the public repository — the spec, art direction, build report, lessons and
@@ -25,9 +31,12 @@ const PRIVATE_PATHS = ['docs', 'tasks', '.claude', 'CLAUDE.md'];
 
 const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const dryRun = process.argv.includes('--dry-run');
+const skipTests = process.argv.includes('--skip-tests');
 
+// Returns trimmed stdout; with `stdio: 'inherit'` (the push, so the progress is visible)
+// execFileSync returns null and there is nothing to trim.
 const git = (args, opts = {}) =>
-  execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8', stdio: ['pipe', 'pipe', 'inherit'], ...opts }).trim();
+  (execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8', stdio: ['pipe', 'pipe', 'inherit'], ...opts }) ?? '').trim();
 
 const fail = (msg) => {
   console.error(`\npublish-site: ${msg}\n`);
@@ -39,7 +48,18 @@ if (git(['status', '--porcelain'])) fail('the working tree has uncommitted chang
 const head = git(['rev-parse', 'HEAD']);
 const headSubject = git(['log', '-1', '--format=%s', head]);
 
-// 2. The public branch as it is right now.
+// 2. The gate: unit tests and the full end-to-end suite against the production build, on
+//    this machine. `npm run test:e2e` builds dist/ itself (Playwright's webServer).
+if (skipTests) {
+  console.warn('\npublish-site: --skip-tests — publishing WITHOUT the end-to-end gate\n');
+} else {
+  console.log('\nRunning the gate: npm test && npm run test:e2e (a few minutes)\n');
+  execFileSync('npm', ['test'], { cwd: repoRoot, stdio: 'inherit', shell: true });
+  execFileSync('npm', ['run', 'test:e2e'], { cwd: repoRoot, stdio: 'inherit', shell: true });
+}
+if (git(['status', '--porcelain'])) fail('the gate left the working tree dirty; commit what changed and run again');
+
+// 3. The public branch as it is right now.
 let remoteUrl;
 try {
   remoteUrl = git(['remote', 'get-url', REMOTE]);
@@ -49,7 +69,7 @@ try {
 git(['fetch', '--quiet', REMOTE, PUBLIC_BRANCH]);
 const publicHead = git(['rev-parse', `${REMOTE}/${PUBLIC_BRANCH}`]);
 
-// 3. The filtered tree, built in a throwaway index so the real one is untouched.
+// 4. The filtered tree, built in a throwaway index so the real one is untouched.
 const tmpIndex = resolve(repoRoot, '.git', 'publish-index');
 const env = { ...process.env, GIT_INDEX_FILE: tmpIndex };
 if (existsSync(tmpIndex)) rmSync(tmpIndex);
@@ -70,7 +90,7 @@ if (tree === publicTree) {
   process.exit(0);
 }
 
-// 4. What changed since the last publish, for the message.
+// 5. What changed since the last publish, for the message.
 const lastMessage = git(['log', '-1', '--format=%B', publicHead]);
 const previousSource = /^Source-Commit: ([0-9a-f]{40})$/m.exec(lastMessage)?.[1];
 let sinceLines = [];
@@ -86,6 +106,9 @@ const message = [
   `Publish ${count} commit${count === 1 ? '' : 's'}: ${headSubject}`,
   '',
   `Snapshot of the private clone at ${head.slice(0, 7)}, without ${PRIVATE_PATHS.join(', ')}.`,
+  skipTests
+    ? 'Published with --skip-tests: the end-to-end gate did NOT run for this snapshot.'
+    : 'Gate: unit tests and the full end-to-end suite passed on the GPU machine before the push.',
   ...(sinceLines.length ? ['', ...sinceLines] : []),
   '',
   `Source-Commit: ${head}`,
@@ -105,7 +128,7 @@ if (dryRun) {
   process.exit(0);
 }
 
-// 5. Fast-forward push (the parent is the current public head, so this cannot rewrite history).
+// 6. Fast-forward push (the parent is the current public head, so this cannot rewrite history).
 git(['push', REMOTE, `refs/heads/public:refs/heads/${PUBLIC_BRANCH}`], { stdio: 'inherit' });
 const repoWeb = remoteUrl.replace(/\.git$/, '').replace(/^git@github\.com:/, 'https://github.com/');
 console.log(`\nPushed. Watch the deploy at ${repoWeb}/actions`);
