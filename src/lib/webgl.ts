@@ -9,10 +9,10 @@ export function hasWebGL(): boolean {
   if (typeof document === 'undefined') return true;
   try {
     const canvas = document.createElement('canvas');
-    const gl =
-      canvas.getContext('webgl2') ??
-      canvas.getContext('webgl') ??
-      canvas.getContext('experimental-webgl');
+    // WebGL2 only: that is the one context three's renderer asks for, so a WebGL1-only
+    // browser passing this gate would reach the renderer's throw and a black canvas
+    // instead of the simplified site.
+    const gl = canvas.getContext('webgl2');
     if (!gl) return false;
     // Release it immediately: the check must not eat one of the browser's few contexts.
     const lose = (gl as WebGLRenderingContext).getExtension('WEBGL_lose_context');

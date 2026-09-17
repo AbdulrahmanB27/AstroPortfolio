@@ -19,8 +19,9 @@
       // Base path rule (mirrors .github/workflows/deploy.yml and vite.config.ts):
       //   <user>.github.io/<repo>/…   → project site, base = "/<repo>/" (first path segment)
       //   custom domain (public/CNAME) → base = "/"
-      // Only "/admin" (the separate admin/index.html entry) is a real directory that may be
-      // requested without its trailing slash; everything else lands on the app root.
+      // "/admin" and "/lite" (the separate admin/ and lite/ entries) are real directories that
+      // may be requested without their trailing slash; everything else lands on the app root.
+      // Pages itself already 301s those two — this is the fallback for a host that does not.
       (function () {
         var loc = window.location;
         var path = loc.pathname;
@@ -28,7 +29,7 @@
         var isGithubIo = /\.github\.io$/i.test(loc.hostname);
         var base = isGithubIo && segments.length > 0 ? '/' + segments[0] + '/' : '/';
         var rest = path.slice(base.length).replace(/\/+$/, '');
-        var target = rest === 'admin' ? base + 'admin/' : base;
+        var target = rest === 'admin' || rest === 'lite' ? base + rest + '/' : base;
 
         // A user site (<user>.github.io with base "/") reaches this file for "/typo/", where
         // the first segment is not a repo name. If the computed target is the very path that

@@ -86,12 +86,20 @@ test.describe('flight mode', () => {
     await waitForIdle(page);
 
     const before = await page.evaluate(() => window.__astro!.handles.flight!.getPosition());
+    // Thrust integrates per rendered frame with dt capped at 50 ms, so distance is a function
+    // of frame count, not wall clock: 20 units from rest needs nine frames. A fixed hold
+    // therefore asserted the harness's frame rate; polling asserts the ship moves.
     await page.keyboard.down('w');
-    await page.waitForTimeout(1500);
+    await expect
+      .poll(
+        async () => {
+          const p = await page.evaluate(() => window.__astro!.handles.flight!.getPosition());
+          return Math.hypot(p[0] - before[0], p[2] - before[2]);
+        },
+        { message: 'ship should move under thrust', timeout: 15_000 },
+      )
+      .toBeGreaterThan(20);
     await page.keyboard.up('w');
-    const after = await page.evaluate(() => window.__astro!.handles.flight!.getPosition());
-    const moved = Math.hypot(after[0] - before[0], after[2] - before[2]);
-    expect(moved, 'ship should move under thrust').toBeGreaterThan(20);
 
     await page.keyboard.press('Escape');
     await waitForScene(page, 'system', 20_000);

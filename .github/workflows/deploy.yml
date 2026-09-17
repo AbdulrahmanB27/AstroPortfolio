@@ -1,11 +1,21 @@
 # Builds the portfolio and deploys dist/ to GitHub Pages.
 #
 # One-time setup in the repository: Settings → Pages → Build and deployment → Source:
-# "GitHub Actions". See docs/DEPLOY.md.
+# "GitHub Actions". With "Deploy from a branch" GitHub runs its own Jekyll build of the raw
+# tree instead, which publishes the SOURCE index.html (asking for /src/main.tsx, served as
+# application/octet-stream) — a white screen. That is exactly what the first deploy did.
+# See docs/DEPLOY.md.
 #
 # Base path rule (must match vite.config.ts, public/404.html and scripts/pages-check.mjs):
 #   public/CNAME exists  → custom domain, site is served from "/"
 #   otherwise            → project site, served from "/<repository name>/"
+#
+# What gates the deploy: the typecheck, the unit tests (content schema, layout math) and the
+# build itself. The end-to-end suite runs in its own workflow (e2e.yml) on the same push and
+# does NOT gate this one. It did, for the first three pushes, and it failed every time on the
+# GPU-less runner without ever having failed on the product — so the site stayed a white
+# screen for five days behind a red gate. A red e2e run is still visible on the commit; it
+# just no longer decides whether the owner's content edit goes live.
 name: Deploy to GitHub Pages
 
 on:
@@ -26,14 +36,15 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     outputs:
       base-path: ${{ steps.base.outputs.base }}
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -43,15 +54,6 @@ jobs:
 
       - name: Unit tests
         run: npm test
-
-      # The defect that made the cockpit unusable was invisible to the unit tests and to
-      # the type checker: the DOM was correct and only the rendered pixels were wrong. The
-      # end-to-end suite samples the canvas, so it gates the deploy.
-      - name: Install the Playwright browser
-        run: npx playwright install --with-deps chromium
-
-      - name: End-to-end tests
-        run: npm run test:e2e
 
       - name: Resolve base path
         id: base
@@ -70,26 +72,38 @@ jobs:
           echo "base=${BASE}" >> "$GITHUB_OUTPUT"
           echo "VITE_BASE_PATH=${BASE}"
 
-      - name: Build (typecheck + vite build, main app + /admin/)
+      - name: Build (typecheck + vite build, main app + /admin/ + /lite/)
         env:
           VITE_BASE_PATH: ${{ steps.base.outputs.base }}
         run: npm run build
 
+      # The built entry must reference hashed bundles, never the source module. This is the
+      # one-line check that would have caught the white screen before it reached the domain.
+      - name: Built index.html references the bundle, not the source
+        run: |
+          set -eu
+          if grep -q 'src/main.tsx' dist/index.html; then
+            echo 'dist/index.html still points at /src/main.tsx — this is the source file, not a build'
+            exit 1
+          fi
+          grep -o 'src="[^"]*assets/main-[^"]*\.js"' dist/index.html
+
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload dist/
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

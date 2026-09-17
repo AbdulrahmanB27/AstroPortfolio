@@ -96,10 +96,11 @@ export const sel = {
 /**
  * Wait until the camera stops moving.
  *
- * Headless WebGL renders through a software rasteriser at a few frames a second, and gsap
- * clamps its per-frame delta, so a 0.75s camera move takes roughly ten seconds of wall
- * clock in this harness. Fixed waits sample the middle of a tween and produce confident
- * nonsense — this repo has been caught by that before.
+ * Headless WebGL may render through a software rasteriser at a few frames a second. The app
+ * disables gsap's lag smoothing under `?nointro` (src/sequences/boot.ts) so timelines follow
+ * the clock at any frame rate, but a tween still ends on a rendered frame, not on a timer.
+ * Fixed waits sample the middle of a tween and produce confident nonsense — this repo has
+ * been caught by that before.
  */
 export async function settleCamera(page: Page): Promise<void> {
   await page.evaluate(() => {
@@ -115,7 +116,9 @@ export async function settleCamera(page: Page): Promise<void> {
       return settled;
     },
     null,
-    { timeout: 120_000, polling: 400 },
+    // Below the 60 s test timeout, so a camera that never settles reports "camera never
+    // settled" from here rather than the generic test timeout from the config.
+    { timeout: 40_000, polling: 400 },
   );
 }
 

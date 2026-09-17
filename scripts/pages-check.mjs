@@ -4,8 +4,16 @@
 //
 // Usage:
 //   node scripts/pages-check.mjs [--skip-build] [--prefix AstroPortfolio] [--out captures/pages-check]
+//   node scripts/pages-check.mjs --root        (custom domain: the site served from "/")
 //   (--prefix takes the repository name; pass it without slashes in Git Bash, which rewrites
-//   "/Name/" into a Windows path before node sees it)
+//   "/Name/" into a Windows path before node sees it — that is also why the root mode is a
+//   flag and not `--prefix /`)
+//
+// The site is deployed to a custom domain (public/CNAME), so `--root` is the check that
+// matches production; the project-site mode stays because the repo must still deploy
+// unchanged to https://<user>.github.io/<repo>/ if the domain ever goes away. In root mode
+// the checks that only make sense under a prefix ("/" answers 404", "/assets/ is wrong",
+// the github.io first-segment redirect) are skipped and say so, not failed.
 //
 // What it does (spec §50 / §66 "GitHub Pages build/paths/routes"):
 //   1. `VITE_BASE_PATH=/AstroPortfolio/ npm run build` (unless --skip-build).
@@ -83,8 +91,10 @@ for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => process.exi
 const distDir = resolve(repoRoot, 'dist');
 const outDir = resolve(repoRoot, opt('out', 'captures/pages-check'));
 const skipBuild = flag('skip-build');
-/** Base path as Vite receives it, e.g. "/AstroPortfolio/". */
-const basePath = ('/' + opt('prefix', '/AstroPortfolio/').replace(/^\/+|\/+$/g, '') + '/').replace('//', '/');
+/** Base path as Vite receives it, e.g. "/AstroPortfolio/" — or "/" with --root. */
+const basePath = flag('root')
+  ? '/'
+  : ('/' + opt('prefix', '/AstroPortfolio/').replace(/^\/+|\/+$/g, '') + '/').replace('//', '/');
 /** Same thing without the trailing slash, e.g. "/AstroPortfolio". */
 const prefix = basePath.replace(/\/$/, '');
 /** Fake project-site host; Chromium resolves it to 127.0.0.1 (see browserChecks). */
@@ -317,11 +327,16 @@ async function httpChecks() {
   heading('HTTP behaviour under the prefix');
   const o = pagesServer.origin;
 
-  let r = await fetchRaw(`${o}/`);
-  check(r.status === 404, `GET / → 404 outside the project prefix`, `got ${r.status}`);
+  let r;
+  if (prefix) {
+    r = await fetchRaw(`${o}/`);
+    check(r.status === 404, `GET / → 404 outside the project prefix`, `got ${r.status}`);
 
-  r = await fetchRaw(`${o}${prefix}`);
-  check(r.status === 301 && r.headers.location === `${prefix}/`, `GET ${prefix} → 301 ${prefix}/`, `got ${r.status} ${r.headers.location ?? ''}`);
+    r = await fetchRaw(`${o}${prefix}`);
+    check(r.status === 301 && r.headers.location === `${prefix}/`, `GET ${prefix} → 301 ${prefix}/`, `got ${r.status} ${r.headers.location ?? ''}`);
+  } else {
+    console.log('  (root mode: no prefix, so no "outside the prefix" or "/prefix → /prefix/" checks)');
+  }
 
   r = await fetchRaw(`${o}${prefix}/`);
   check(r.status === 200 && /text\/html/.test(r.headers['content-type'] ?? ''), `GET ${prefix}/ → 200 text/html`, `got ${r.status} ${r.headers['content-type']}`);
@@ -407,11 +422,15 @@ function distReferenceChecks() {
   heading('Absolute root references in dist/');
   for (const entry of ['index.html', 'admin/index.html', 'lite/index.html']) {
     const html = readFileSync(resolve(distDir, entry), 'utf8');
-    const bad = [...html.matchAll(/["'(=]\s*(\/(?:assets|src)\/[^"')\s>]*)/g)].map((m) => m[1]);
+    // Under a prefix a root "/assets/" URL misses the site; at the root it is the correct URL.
+    // A "/src/" reference is wrong everywhere: it means the source entry shipped instead of a
+    // build, which is exactly what a white screen on the live domain looked like.
+    const badRe = prefix ? /["'(=]\s*(\/(?:assets|src)\/[^"')\s>]*)/g : /["'(=]\s*(\/src\/[^"')\s>]*)/g;
+    const bad = [...html.matchAll(badRe)].map((m) => m[1]);
     const rootRefs = [...html.matchAll(/\b(?:src|href)=["'](\/[^"']*)["']/g)]
       .map((m) => m[1])
       .filter((u) => !u.startsWith(`${prefix}/`));
-    check(bad.length === 0, `dist/${entry}: no "/assets/" or "/src/" references`, bad.length ? bad.join(', ') : 'none');
+    check(bad.length === 0, prefix ? `dist/${entry}: no "/assets/" or "/src/" references` : `dist/${entry}: no "/src/" references (a build, not the source entry)`, bad.length ? bad.join(', ') : 'none');
     check(rootRefs.length === 0, `dist/${entry}: every absolute URL starts with ${prefix}/`, rootRefs.length ? rootRefs.join(', ') : 'none');
   }
   const assetsDir = resolve(distDir, 'assets');
@@ -536,6 +555,12 @@ async function browserChecks() {
   ];
 
   for (const s of scenarios) {
+    if (!prefix && s.id === 'typo-project-site') {
+      // 404.html derives the base from the first path segment on a github.io host — a
+      // project-site rule. At the root the custom-domain scenario below is the real one.
+      console.log(`  (root mode: skipping ${s.id}, a project-site-only rule)`);
+      continue;
+    }
     s.server = s.context === pagesContext ? pagesServer : rootServer;
     await runScenario(s);
   }
@@ -664,7 +689,7 @@ async function runScenario(s) {
  * 404s on every asset, which reads as a broken site rather than as leftover state.
  */
 function restoreRootBuild() {
-  if (skipBuild) return;
+  if (skipBuild || !prefix) return;
   heading('Restoring dist/ for root hosting');
   const build = spawnSync('npm run build', {
     cwd: repoRoot,

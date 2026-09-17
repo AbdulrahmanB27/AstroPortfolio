@@ -4,9 +4,18 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 
-// Base path is injected by the GitHub Pages workflow (e.g. "/AstroPortfolio/").
-// Locally it stays "/" so `vite dev` and `vite preview` behave like the root of a domain.
+// Base path is injected by the GitHub Pages workflow: "/" when public/CNAME exists (the
+// custom domain, abdulrahmanbahjat.com), "/<repo>/" for a project site. Locally it stays
+// "/" so `vite dev` and `vite preview` behave like the root of a domain.
 const base = process.env.VITE_BASE_PATH ?? '/';
+// Vite only warns about a malformed base and then ships a broken dist. The case that
+// actually happened: Git Bash on Windows rewrites a lone "/" argument into the Git
+// install path, so `VITE_BASE_PATH=/ npm run build` produced `/Program Files/Git/assets/…`
+// in every entry. Refuse instead of warning (set the variable from PowerShell, or prefix
+// the command with MSYS_NO_PATHCONV=1, or simply omit it — the default is "/").
+if (!base.startsWith('/') || !base.endsWith('/')) {
+  throw new Error(`VITE_BASE_PATH must look like "/" or "/repo/", got "${base}"`);
+}
 
 export default defineConfig({
   base,

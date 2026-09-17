@@ -16,6 +16,8 @@
     "capture": "node scripts/capture-states.mjs",
     "ui:audit": "node scripts/ui-audit.mjs",
     "pages:check": "node scripts/pages-check.mjs",
+    "pages:check:root": "node scripts/pages-check.mjs --root",
+    "publish:site": "node scripts/publish-site.mjs",
     "perf:check": "node scripts/perf-check.mjs",
     "ui:verify": "node scripts/ui-verify.mjs",
     "media:optimise": "node scripts/optimise-media.mjs"

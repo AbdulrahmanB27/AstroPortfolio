@@ -2,9 +2,9 @@
   "meta": {
     "siteTitle": "Abdulrahman Bahjat — Portfolio",
     "description": "Interactive space portfolio of Abdulrahman Bahjat, mechanical engineering student at Penn State: robotics, CAD, 3D printing, and full-stack web and mobile apps.",
-    "url": "https://abdulrahmanb27.github.io/AstroPortfolio/",
+    "url": "https://abdulrahmanbahjat.com/",
     "version": "3.0.0",
-    "updated": "2026-09-07",
+    "updated": "2026-09-16",
     "contentNotes": [
       "profile.goals — placeholder wording; replace with your own goals.",
       "profile.bio — drafted from evidence on this machine; rewrite in your voice.",
@@ -499,6 +499,7 @@
         "GitHub Pages"
       ],
       "links": {
+        "live": "https://abdulrahmanbahjat.com/",
         "repo": "https://github.com/AbdulrahmanB27/AstroPortfolio",
         "other": []
       },

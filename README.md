@@ -20,7 +20,8 @@ npm run dev          # http://localhost:5173 (add ?nointro to skip the intro, ?d
 npm test             # unit tests (layout math, content schema)
 npm run test:e2e     # Playwright end-to-end checks
 npm run build        # production build → dist/ (portfolio + dist/admin/)
-npm run pages:check  # simulate GitHub Pages hosting under /AstroPortfolio/
+npm run pages:check:root  # simulate GitHub Pages at the custom domain root (production)
+npm run pages:check  # simulate the project-site fallback under /AstroPortfolio/
 npm run build:resume # regenerate public/resume/Abdulrahman-Bahjat-Resume.pdf from the content file
 npm run perf:check   # frame timing per state and device profile
 npm run capture      # screenshots of every state into captures/
@@ -35,11 +36,13 @@ validates every change, and exports a new `portfolio.json`. Replace
 
 ## Deploy
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which runs the tests, builds with the
-right base path and publishes to GitHub Pages. One-time setup: create the repository, add it
-as `origin`, push `main`, then set Settings → Pages → Source to "GitHub Actions". The base
-path resolves itself — `/<repo>/` normally, or `/` if you add a `public/CNAME`. Details in
-`docs/DEPLOY.md`.
+Live at https://abdulrahmanbahjat.com. Pushing to `main` runs `.github/workflows/deploy.yml`,
+which typechecks, runs the unit tests, builds with the right base path and publishes to
+GitHub Pages; `e2e.yml` runs the Playwright suite on the same push without gating the
+deploy. One-time setup: Settings → Pages → Source must be "GitHub Actions" (with "Deploy
+from a branch" GitHub publishes the raw source and the site is a white screen). The base
+path resolves itself — `/` because `public/CNAME` holds the domain, `/<repo>/` without it.
+Details in `docs/DEPLOY.md`.
 
 ## What was built, and what it cost
 
