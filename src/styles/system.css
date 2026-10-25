@@ -781,7 +781,10 @@
   min-width: 0;
   max-width: 100%;
   min-height: 44px;
-  padding: 6px 12px;
+  padding: 5px 12px;
+  /* Two lines inside the old single line's 44px, so the footer keeps the height the fade and
+     the scroll cue above it are measured against. */
+  line-height: 1.2;
   border: var(--hair);
   border-radius: var(--radius-md);
   background: rgba(5, 7, 13, 0.55);
@@ -817,6 +820,24 @@
 
 .project-panel__footer {
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+/* 61px with its border, as it was with single-line pills: the fade sits at `bottom: 58px` and
+   the cue at 76px on the strength of that number. The phone keeps its own 73px. */
+@media (min-width: 821px) {
+  .project-panel__footer {
+    padding-block: 8px;
+  }
+}
+
+.project-panel__share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 26px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(207, 232, 255, 0.12);
 }
 
 /* ---------- media: enlarge ---------- */

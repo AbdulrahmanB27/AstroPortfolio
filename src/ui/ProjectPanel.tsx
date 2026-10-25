@@ -128,26 +128,25 @@ export function ProjectPanel() {
               {project.title}
             </h1>
             <p className="project-panel__tagline">{project.tagline}</p>
-            <div className="project-panel__links">
-              {project.links.live && (
-                <a className="pill pill--accent" href={project.links.live} target="_blank" rel="noopener" tabIndex={visible ? 0 : -1}>
-                  Open live site
-                </a>
-              )}
-              {project.links.repo && (
-                <a className="pill" href={project.links.repo} target="_blank" rel="noopener" tabIndex={visible ? 0 : -1}>
-                  Source on GitHub
-                </a>
-              )}
-              {project.links.other.map((l) => (
-                <a key={l.url} className="pill" href={l.url} target="_blank" rel="noopener" tabIndex={visible ? 0 : -1}>
-                  {l.label}
-                </a>
-              ))}
-              {/* The deep link to this planet, for pasting into a message. The address bar
-                  has it too, but on a phone the address bar is the last place anyone looks. */}
-              <CopyButton text={shareUrl} label="Copy link" />
-            </div>
+            {(project.links.live || project.links.repo || project.links.other.length > 0) && (
+              <div className="project-panel__links">
+                {project.links.live && (
+                  <a className="pill pill--accent" href={project.links.live} target="_blank" rel="noopener" tabIndex={visible ? 0 : -1}>
+                    Open live site
+                  </a>
+                )}
+                {project.links.repo && (
+                  <a className="pill" href={project.links.repo} target="_blank" rel="noopener" tabIndex={visible ? 0 : -1}>
+                    Source on GitHub
+                  </a>
+                )}
+                {project.links.other.map((l) => (
+                  <a key={l.url} className="pill" href={l.url} target="_blank" rel="noopener" tabIndex={visible ? 0 : -1}>
+                    {l.label}
+                  </a>
+                ))}
+              </div>
+            )}
             {current && (
               <figure className="project-media">
                 {current.type === 'video' ? (
@@ -217,6 +216,16 @@ export function ProjectPanel() {
                 </ul>
               </>
             )}
+            {/*
+              The deep link to this planet, for pasting into a message. At the end of the
+              write-up, where someone who has read it decides to pass it on — and not in the
+              links row, where on a phone a third button wrapped to a second 44px row and
+              pushed the description below the fold.
+            */}
+            <p className="project-panel__share">
+              <span className="t-mono">Share this project</span>
+              <CopyButton text={shareUrl} label="Copy link" />
+            </p>
           </div>
           <footer className="project-panel__footer">
             <button
