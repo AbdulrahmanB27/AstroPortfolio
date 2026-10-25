@@ -306,7 +306,6 @@ button {
 }
 
 .lockup__name {
-  margin: 0;
   font-family: var(--font-display);
   font-weight: 600;
   /*
@@ -348,41 +347,6 @@ button {
   line-height: 1.35;
   color: var(--star-glow);
   text-wrap: balance;
-}
-
-/* ---------- quick links ---------- */
-
-.quick-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-}
-
-.quick-links a {
-  padding: 6px 11px;
-  border: 1px solid rgba(169, 180, 199, 0.24);
-  border-radius: var(--radius-pill);
-  background: rgba(5, 7, 13, 0.62);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-100);
-  text-decoration: none;
-  transition:
-    color 0.18s var(--ease-out),
-    border-color 0.18s var(--ease-out);
-}
-
-.quick-links a:hover,
-.quick-links a:focus-visible {
-  color: var(--star-glow);
-  border-color: rgba(255, 180, 84, 0.6);
-}
-
-.lockup[data-visible='true'] .quick-links a {
-  pointer-events: auto;
 }
 
 /* Shown on a phone too. It was `display: none` below 821px, so the surface a recruiter is
@@ -766,35 +730,4 @@ button {
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-cue[data-visible='true'] { animation: none; }
-}
-
-/* ---------- keyboard hint ---------- */
-
-/*
- * The key that does the same thing as the control it sits in.
- *
- * Escape has closed the reader, left the cockpit and returned to orbit since the first build,
- * and nothing on screen ever said so: the shortcuts were discoverable only by someone who
- * already expected them. A quiet keycap inside the control teaches it at the moment it is
- * useful. Hidden on touch screens, where there is no key to press.
- */
-.kbd {
-  display: inline-block;
-  margin-left: 2px;
-  padding: 1px 5px;
-  border: 1px solid rgba(169, 180, 199, 0.28);
-  border-bottom-width: 2px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.06em;
-  line-height: 1.4;
-  text-transform: none;
-  color: var(--ink-300);
-}
-
-@media (hover: none), (pointer: coarse) {
-  .kbd {
-    display: none;
-  }
 }

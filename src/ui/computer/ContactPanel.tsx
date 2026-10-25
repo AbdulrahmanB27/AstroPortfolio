@@ -1,5 +1,4 @@
 import { portfolio } from '../../data/loadPortfolio';
-import { CopyButton } from '../CopyButton';
 
 function hostOf(url: string): string {
   try {
@@ -22,14 +21,9 @@ export function ContactPanel() {
       <ul className="contact-list">
         <li>
           <span className="contact-list__label t-mono">Email</span>
-          {/* A mailto link does nothing visible for anyone without a desktop mail client,
-              which is most people reading this on a work laptop's webmail. */}
-          <span className="contact-list__row">
-            <a className="contact-list__link" href={`mailto:${c.email}`}>
-              {c.email}
-            </a>
-            <CopyButton text={c.email} label="Copy" />
-          </span>
+          <a className="contact-list__link" href={`mailto:${c.email}`}>
+            {c.email}
+          </a>
         </li>
         <li>
           <span className="contact-list__label t-mono">GitHub</span>

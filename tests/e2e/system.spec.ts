@@ -275,7 +275,7 @@ test.describe('returning home', () => {
   test('the Home planet control flies back to the menu', async ({ page }) => {
     const errors = await open(page, '#/projects', { dev: true });
     await expect(page.locator(sel.systemHud)).toBeVisible({ timeout: 25_000 });
-    await page.locator(`${sel.systemHud} button:has-text("Home planet")`).click();
+    await page.locator('button:has-text("Home planet")').click();
     await waitForScene(page, 'home', 30_000);
     await expect(page.locator(sel.homeMenu)).toBeVisible();
     expectNoConsoleErrors(errors);
