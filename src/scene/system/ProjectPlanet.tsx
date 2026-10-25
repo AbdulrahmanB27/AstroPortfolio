@@ -1,13 +1,13 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { Color, AdditiveBlending, DoubleSide, Group, Mesh, MeshBasicMaterial, Vector3 } from 'three';
+import { Color, AdditiveBlending, DoubleSide, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, Vector3 } from 'three';
 import type { Project } from '../../data/schema';
 import type { PlanetPlacement } from '../../data/orbitLayout';
 import { orbitPosition } from '../../data/orbitLayout';
 import { PALETTE } from '../../lib/constants';
 import { useApp } from '../../state/store';
 import { orbitClock } from './orbitClock';
-import { buildRingTexture, planetMaterialFor } from './planetMaterials';
+import { ATMOSPHERE, atmosphereMaterial, buildRingTexture, createPlanetLook, sharedMoonTexture } from './planetMaterials';
 import { buildRingGeometry } from './ringGeometry';
 import { RING_INNER, RING_OUTER, moonOrbit, moonRadius } from './planetExtent';
 import { planetWorldPositions } from './planetRegistry';
@@ -23,19 +23,49 @@ interface Props {
 export function ProjectPlanet({ project, placement, onSelect }: Props) {
   const groupRef = useRef<Group>(null);
   const bodyRef = useRef<Mesh>(null);
+  const cloudRef = useRef<Mesh>(null);
   const haloRef = useRef<Mesh>(null);
   const hovered = useApp((s) => s.hoveredProjectId === project.id);
   const selected = useApp((s) => s.selectedProjectId === project.id);
   const scene = useApp((s) => s.scene);
   const setHovered = useApp((s) => s.setHoveredProject);
   const speedScale = useApp((s) => s.settings.motion.orbitSpeedScale);
+  // A phone draws these a few dozen pixels across: a quarter of the texels is plenty there.
+  const tier = useApp((s) => s.quality.tier);
+  const textureWidth = tier === 'high' ? 512 : tier === 'medium' ? 384 : 256;
   const interactive = scene === 'system';
   const seed = useMemo(() => [...project.id].reduce((a, c) => a + c.charCodeAt(0) * 31, 7), [project.id]);
 
-  const material = useMemo(
-    () => planetMaterialFor(project.planet.style, project.planet.color, project.planet.accent, seed),
-    [project.planet.style, project.planet.color, project.planet.accent, seed],
+  // The surface arrives from a worker; until then the body is its flat base colour. Clouds
+  // drift a little faster than the ground under them, which is most of what makes a world
+  // read as having weather rather than as a painted ball.
+  const look = useMemo(
+    () => createPlanetLook(project.planet.style, project.planet.color, project.planet.accent, seed, textureWidth),
+    [project.planet.style, project.planet.color, project.planet.accent, seed, textureWidth],
   );
+  const { material, cloudMaterial } = look;
+  const atmosphereStrength = ATMOSPHERE[project.planet.style];
+  const atmosphere = useMemo(
+    () => (atmosphereStrength ? atmosphereMaterial(project.planet.accent ?? project.planet.color, atmosphereStrength) : null),
+    [atmosphereStrength, project.planet.accent, project.planet.color],
+  );
+  const moonCount = project.planet.moons;
+  const moonMaterial = useMemo(
+    () => new MeshStandardMaterial({ color: project.planet.accent ?? '#cfd6e0', roughness: 0.95 }),
+    [project.planet.accent],
+  );
+  useEffect(() => {
+    if (!moonCount) return;
+    let alive = true;
+    void sharedMoonTexture().then((tex) => {
+      if (!alive) return;
+      moonMaterial.map = tex;
+      moonMaterial.needsUpdate = true;
+    });
+    return () => {
+      alive = false;
+    };
+  }, [moonMaterial, moonCount]);
   const ringTexture = useMemo(
     () => (project.planet.rings ? buildRingTexture(project.planet.accent ?? project.planet.color, seed) : null),
     [project.planet.rings, project.planet.accent, project.planet.color, seed],
@@ -56,17 +86,18 @@ export function ProjectPlanet({ project, placement, onSelect }: Props) {
   );
   useEffect(
     () => () => {
-      material.dispose();
-      material.map?.dispose();
+      look.dispose();
+      atmosphere?.dispose();
+      // The moon texture is shared across planets and outlives any one of them.
+      moonMaterial.dispose();
       ringTexture?.dispose();
       ringGeometry?.dispose();
       haloMaterial.dispose();
     },
-    [material, ringTexture, ringGeometry, haloMaterial],
+    [look, atmosphere, moonMaterial, ringTexture, ringGeometry, haloMaterial],
   );
 
   const r = placement.planetRadius;
-  const moonCount = project.planet.moons;
   const tmp = useMemo(() => new Vector3(), []);
 
   useFrame((_, delta) => {
@@ -80,6 +111,7 @@ export function ProjectPlanet({ project, placement, onSelect }: Props) {
     const emphasis = hovered || selected ? 1.05 : 1;
     g.scale.setScalar(s * emphasis);
     if (bodyRef.current) bodyRef.current.rotation.y += delta * 0.05;
+    if (cloudRef.current) cloudRef.current.rotation.y += delta * 0.075;
     if (haloRef.current) {
       const target = selected ? 0.34 : hovered ? 0.2 : 0;
       haloMaterial.opacity += (target - haloMaterial.opacity) * Math.min(1, delta * 10);
@@ -103,8 +135,18 @@ export function ProjectPlanet({ project, placement, onSelect }: Props) {
     <group ref={groupRef} name={`planet-${project.id}`}>
       <group rotation={[tilt, 0, 0.1]}>
         <mesh ref={bodyRef} material={material} name={`planet-body-${project.id}`}>
-          <sphereGeometry args={[r, 48, 32]} />
+          <sphereGeometry args={[r, 64, 40]} />
         </mesh>
+        {cloudMaterial && (
+          <mesh ref={cloudRef} material={cloudMaterial} name={`planet-clouds-${project.id}`}>
+            <sphereGeometry args={[r * 1.018, 64, 40]} />
+          </mesh>
+        )}
+        {atmosphere && (
+          <mesh material={atmosphere} name={`planet-atmosphere-${project.id}`} renderOrder={1}>
+            <sphereGeometry args={[r * 1.045, 64, 40]} />
+          </mesh>
+        )}
         {ringTexture && ringGeometry && (
           <mesh
             geometry={ringGeometry}
@@ -140,9 +182,8 @@ export function ProjectPlanet({ project, placement, onSelect }: Props) {
           <ringGeometry args={[r * haloInner, r * (haloInner + 0.035), 96]} />
         </mesh>
         {Array.from({ length: moonCount }, (_, i) => (
-          <mesh key={i} name={`moon-${i}`}>
-            <sphereGeometry args={[r * moonRadius(i), 16, 12]} />
-            <meshStandardMaterial color={project.planet.accent ?? '#cfd6e0'} roughness={0.9} />
+          <mesh key={i} name={`moon-${i}`} material={moonMaterial}>
+            <sphereGeometry args={[r * moonRadius(i), 24, 16]} />
           </mesh>
         ))}
       </group>
