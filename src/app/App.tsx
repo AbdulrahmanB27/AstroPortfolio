@@ -14,6 +14,7 @@ import { DevOverlay } from '../dev/DevOverlay';
 import { AudioToggle } from '../ui/AudioToggle';
 import { CockpitFullscreen } from '../ui/CockpitFullscreen';
 import { CockpitHud } from '../ui/CockpitHud';
+import { SceneAnnouncer } from '../ui/SceneAnnouncer';
 import { boot } from '../sequences/boot';
 import { installRouter } from './router';
 import { installDevModeHotkey } from '../lib/devMode';
@@ -90,6 +91,7 @@ export function App() {
         <AudioToggle />
         <IntroOverlay />
         <DevOverlay />
+        <SceneAnnouncer />
       </div>
       <Loader ready={ready} />
     </>

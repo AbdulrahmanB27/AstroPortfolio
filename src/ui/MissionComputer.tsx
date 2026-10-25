@@ -29,6 +29,42 @@ const TABS: { id: CockpitTab; label: string; sub: string }[] = [
 ];
 
 /**
+ * What to read after this, at the point where you finish reading.
+ *
+ * The end of a section was a dead end: the page stopped, and the way on was back up in the
+ * rail — or, on a phone, behind an unlabelled arrow in a tab row with no room for a fifth
+ * item. Someone who just read About is exactly the person ready for the projects, so the
+ * projects are offered here, beside the next section and the way home.
+ */
+function WhereNext({ tab, visible }: { tab: CockpitTab; visible: boolean }) {
+  const i = TABS.findIndex((t) => t.id === tab);
+  const next = TABS[i + 1];
+  const tabIndex = visible ? 0 : -1;
+  return (
+    <nav className="mc-next" aria-label="Where next">
+      {next && (
+        <button type="button" className="mc-next__item" onClick={() => setCockpitView('full', next.id)} tabIndex={tabIndex}>
+          <span className="t-mono">Next section</span>
+          <span className="mc-next__title">
+            {next.label} <span aria-hidden="true">→</span>
+          </span>
+        </button>
+      )}
+      <a className="mc-next__item mc-next__item--accent" href="#/projects" tabIndex={tabIndex}>
+        <span className="t-mono">See the work</span>
+        <span className="mc-next__title">
+          Projects <span aria-hidden="true">↗</span>
+        </span>
+      </a>
+      <button type="button" className="mc-next__item" onClick={exitCockpit} tabIndex={tabIndex}>
+        <span className="t-mono">Leave the cockpit</span>
+        <span className="mc-next__title">Home planet</span>
+      </button>
+    </nav>
+  );
+}
+
+/**
  * The reader: the spacecraft's personal sections, set as a page.
  *
  * The navigation is a rail down the left rather than a tab row with a cluster of pills
@@ -119,6 +155,23 @@ export function MissionComputer() {
             ))}
           </ul>
           {/*
+            The projects, from inside the ship.
+
+            Not a fifth tab: it leaves the reader, so it is a link out of the list rather than a
+            row in it, and it says where it goes. Before this the only way from About to the
+            work it describes was "Leave the rocket", then Projects — two sequences, and
+            nothing on screen said that was the route.
+          */}
+          <a className="mc__go" href="#/projects" tabIndex={visible ? 0 : -1}>
+            <span className="mc__go-text">
+              <span className="mc__tab-label">Projects</span>
+              <span className="mc__tab-sub">Launch to the orbit</span>
+            </span>
+            <span className="mc__go-arrow" aria-hidden="true">
+              ↗
+            </span>
+          </a>
+          {/*
             The resume, one click from anywhere.
 
             It is the thing a recruiter came for and it was two clicks in — open the section,
@@ -133,16 +186,27 @@ export function MissionComputer() {
           >
             <span aria-hidden="true">↓</span> Resume (PDF)
           </a>
-          {/* One way out of the reader, and one out of the ship. Escape does the first. */}
+          {/*
+            One way out of the reader, and one out of the ship. Escape does the first.
+
+            Named for where they land rather than for the ship's anatomy. "Back to the cabin"
+            and "Leave the rocket" asked a first-time visitor to know what the cabin was and
+            that the rocket was where they were; "Cockpit view" and "Home planet" are the names
+            the rest of the product already uses for those two places.
+          */}
           <div className="mc__rail-foot">
             <button
               type="button"
               className="pill mc__back"
-              aria-label="Back to the cabin"
+              aria-label="Close the reader and show the cockpit"
+              aria-keyshortcuts="Escape"
               onClick={() => setCockpitView('room')}
               tabIndex={visible ? 0 : -1}
             >
-              <span aria-hidden="true">←</span> <span className="pill__text">Back to the cabin</span>
+              <span aria-hidden="true">←</span> <span className="pill__text">Cockpit view</span>
+              <kbd className="kbd pill__text" aria-hidden="true">
+                Esc
+              </kbd>
             </button>
             <button
               type="button"
@@ -150,7 +214,7 @@ export function MissionComputer() {
               onClick={exitCockpit}
               tabIndex={visible ? 0 : -1}
             >
-              Leave the rocket
+              Back to the home planet
             </button>
           </div>
         </nav>
@@ -161,6 +225,7 @@ export function MissionComputer() {
             {tab === 'skills' && <SkillsPanel />}
             {tab === 'resume' && <ResumePanel />}
             {tab === 'contact' && <ContactPanel />}
+            <WhereNext tab={tab} visible={visible} />
           </div>
           <span className="scroll-cue" data-visible={more} aria-hidden="true" />
         </div>

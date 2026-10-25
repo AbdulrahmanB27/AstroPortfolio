@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useApp } from '../state/store';
 import { exitCockpit } from '../sequences';
+import { useRescueFocus } from './focus';
 
 /**
  * The one control the cabin needs.
@@ -19,6 +20,8 @@ export function CockpitHud() {
   const view = useApp((s) => s.cockpitView);
   const busy = useApp((s) => s.busy);
   const visible = scene === 'cockpit' && view === 'room' && !busy;
+  const exitRef = useRef<HTMLButtonElement>(null);
+  useRescueFocus(visible, exitRef);
 
   /*
    * Escape leaves the rocket from here.
@@ -40,8 +43,12 @@ export function CockpitHud() {
 
   return (
     <div className="cockpit-hud" data-visible={visible} aria-hidden={!visible}>
-      <button type="button" className="pill" onClick={exitCockpit} tabIndex={visible ? 0 : -1}>
-        <span aria-hidden="true">←</span> Leave the rocket
+      {/* "Home planet", the name the orbit's HUD uses for the same destination. */}
+      <button ref={exitRef} type="button" className="pill" onClick={exitCockpit} tabIndex={visible ? 0 : -1} aria-keyshortcuts="Escape">
+        <span aria-hidden="true">←</span> Home planet
+        <kbd className="kbd" aria-hidden="true">
+          Esc
+        </kbd>
       </button>
       <p className="cockpit-hud__hint t-mono">Select a display to read</p>
     </div>

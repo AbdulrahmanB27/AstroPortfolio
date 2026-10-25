@@ -1,4 +1,5 @@
 import { assetUrl, portfolio } from '../../data/loadPortfolio';
+import { formatMonth } from '../../lib/content';
 
 function Entries({ title, items }: { title: string; items: typeof portfolio.data.resume.activities }) {
   if (!items.length) return null;
@@ -35,7 +36,7 @@ export function ResumePanel() {
 
   return (
     <article className="mc-doc">
-      <p className="t-mono">Mission record · updated {resume.updated}</p>
+      <p className="t-mono">Mission record · updated {formatMonth(resume.updated)}</p>
       <h1 className="mc-doc__title">{profile.name}</h1>
       <p className="mc-doc__lede">{resume.headline}</p>
       <div className="resume-actions">
@@ -72,7 +73,16 @@ export function ResumePanel() {
               <ul className="mc-list">
                 {highlights.map((p) => (
                   <li key={p!.id}>
-                    <strong>{p!.title}</strong>
+                    {/* The planet is the full case study; the resume only has room for the
+                        headline. A recruiter who wants the rest should not have to go and
+                        find it in orbit. */}
+                    <a className="mc-list__title-link" href={`#/projects/${p!.id}`}>
+                      <strong>{p!.title}</strong>
+                      <span className="mc-list__go" aria-hidden="true">
+                        ↗
+                      </span>
+                      <span className="visually-hidden"> (open the project)</span>
+                    </a>
                     <span className="mc-list__meta">{p!.tagline}</span>
                     {/*
                       One unbreakable item per technology, and no separator glyph at all.
