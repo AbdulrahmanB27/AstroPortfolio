@@ -168,50 +168,6 @@
   color: var(--ink-500);
 }
 
-/*
- * The way to the projects. Shaped like a section row so it scans with the list, set apart by a
- * hairline and an arrow so it does not read as a fifth tab: it leaves the reader.
- */
-.mc__go {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 10px;
-  min-height: 52px;
-  margin-top: -8px;
-  padding: 10px 12px 10px 16px;
-  border-top: 1px solid rgba(207, 232, 255, 0.09);
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-  text-decoration: none;
-  transition: background-color 0.18s var(--ease-out);
-}
-
-.mc__go-text {
-  display: grid;
-  gap: 2px;
-}
-
-.mc__go-arrow {
-  font-size: 15px;
-  color: var(--star-glow);
-  transition: transform 0.18s var(--ease-out);
-}
-
-.mc__go:hover,
-.mc__go:focus-visible {
-  background: rgba(255, 180, 84, 0.06);
-}
-
-.mc__go:hover .mc__tab-label,
-.mc__go:focus-visible .mc__tab-label {
-  color: var(--ink-100);
-}
-
-.mc__go:hover .mc__go-arrow,
-.mc__go:focus-visible .mc__go-arrow {
-  transform: translate(2px, -2px);
-}
-
 /* Directly under the list, not above the exits: it is another thing to get from the reader,
    not another way out of it. */
 .mc__rail-cta {
@@ -468,105 +424,6 @@
   background: rgba(207, 232, 255, 0.03);
 }
 
-/* A tag with a project behind it: a control, so it looks like one — the accent border and a
-   count, and the same hover the rest of the reader's controls use. */
-.tag--linked {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  border-color: rgba(255, 180, 84, 0.42);
-  cursor: pointer;
-  transition:
-    border-color 0.18s var(--ease-out),
-    background-color 0.18s var(--ease-out);
-}
-
-.tag--linked:hover,
-.tag--linked:focus-visible,
-.tag--linked[aria-expanded='true'] {
-  border-color: var(--star-glow);
-  background: rgba(255, 180, 84, 0.1);
-}
-
-.tag__count {
-  min-width: 15px;
-  padding: 0 3px;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 180, 84, 0.18);
-  color: var(--star-glow);
-  font-size: 10px;
-  letter-spacing: 0;
-  text-align: center;
-}
-
-.mc-doc__hint {
-  color: var(--ink-300);
-  font-size: 0.86em;
-}
-
-.skill-usage {
-  display: none;
-  margin-top: 10px;
-  padding: 10px 12px;
-  border-left: 2px solid var(--star-glow);
-  background: rgba(255, 180, 84, 0.05);
-}
-
-.skill-usage[data-open='true'] {
-  display: grid;
-  gap: 6px;
-}
-
-.skill-usage__label {
-  color: var(--ink-300);
-  text-transform: none;
-  letter-spacing: 0.04em;
-}
-
-.skill-usage__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-}
-
-.skill-usage__link,
-.mc-list__title-link {
-  color: var(--ink-100);
-  text-decoration: underline;
-  text-decoration-color: rgba(255, 180, 84, 0.45);
-  text-underline-offset: 4px;
-  transition:
-    color 0.18s var(--ease-out),
-    text-decoration-color 0.18s var(--ease-out);
-}
-
-.skill-usage__link {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 15px;
-}
-
-.skill-usage__link:hover,
-.skill-usage__link:focus-visible,
-.mc-list__title-link:hover,
-.mc-list__title-link:focus-visible {
-  color: var(--star-glow);
-  text-decoration-color: var(--star-glow);
-}
-
-.mc-list__title-link {
-  justify-self: start;
-}
-
-.mc-list__go {
-  margin-left: 6px;
-  font-size: 13px;
-  color: var(--star-glow);
-}
-
 .skill-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -618,23 +475,6 @@
 
 .contact-list li:last-child {
   border-bottom: 0;
-}
-
-.contact-list__row {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 14px;
-  min-width: 0;
-}
-
-.copy-btn {
-  padding: 6px 12px;
-}
-
-.copy-btn[data-state='copied'] {
-  color: var(--star-glow);
-  border-color: rgba(255, 180, 84, 0.55);
 }
 
 .contact-list__link {
@@ -807,10 +647,7 @@
   /* Scoped through the rail so it outranks `.pill`'s own `display: inline-flex`, which sits
      later in the cascade — the first version of this rule was correct and simply lost. */
   .mc__rail .mc__rail-cta,
-  .mc__rail .mc__exit,
-  /* A third item would push the back control onto a row of its own; on a phone the way to the
-     projects is the "where next" block at the end of every section. */
-  .mc__rail .mc__go {
+  .mc__rail .mc__exit {
     display: none;
   }
   .mc__body {
@@ -1029,63 +866,4 @@
   text-shadow:
     0 0 3px rgba(5, 7, 13, 1),
     0 0 8px rgba(5, 7, 13, 0.95);
-}
-
-/* ---------- where next ---------- */
-
-/*
- * The foot of every section: the next section, the projects, and the way home. Three equal
- * cards rather than a row of links, because on a phone this is the only navigation below the
- * fold and each one has to be a thumb-sized target.
- */
-.mc-next {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 10px;
-  max-width: 880px;
-  margin-top: 40px;
-  padding-top: 22px;
-  border-top: var(--hair);
-}
-
-.mc-next__item {
-  display: grid;
-  gap: 4px;
-  min-height: 64px;
-  padding: 12px 14px;
-  border: 1px solid rgba(207, 232, 255, 0.14);
-  border-radius: var(--radius-md);
-  background: rgba(207, 232, 255, 0.025);
-  text-align: left;
-  text-decoration: none;
-  transition:
-    border-color 0.18s var(--ease-out),
-    background-color 0.18s var(--ease-out);
-}
-
-.mc-next__item .t-mono {
-  font-size: 10.5px;
-  color: var(--ink-500);
-}
-
-.mc-next__title {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 17px;
-  color: var(--ink-100);
-}
-
-.mc-next__item--accent {
-  border-color: rgba(255, 180, 84, 0.4);
-  background: rgba(255, 180, 84, 0.05);
-}
-
-.mc-next__item--accent .mc-next__title {
-  color: var(--star-glow);
-}
-
-.mc-next__item:hover,
-.mc-next__item:focus-visible {
-  border-color: rgba(255, 180, 84, 0.6);
-  background: rgba(255, 180, 84, 0.08);
 }

@@ -1,15 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { portfolio } from '../data/loadPortfolio';
 import { useApp } from '../state/store';
 import { focusProject, returnHomeFromOrbit } from '../sequences/system';
-import { useRescueFocus } from './focus';
-
-const SECTIONS = [
-  { id: 'about', label: 'About' },
-  { id: 'skills', label: 'Skills' },
-  { id: 'resume', label: 'Resume' },
-  { id: 'contact', label: 'Contact' },
-] as const;
 
 /**
  * Minimal controls while browsing the solar system: return home, and an accessible
@@ -24,19 +16,6 @@ export function SystemHud() {
   // so the index is the only place project names exist there: it opens by default.
   const [indexOpen, setIndexOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 820);
   const profile = portfolio.data.profile;
-  const indexToggleRef = useRef<HTMLButtonElement>(null);
-  const lastProjectRef = useRef<string | null>(null);
-  const selected = useApp((s) => s.selectedProjectId);
-  useEffect(() => {
-    if (selected) lastProjectRef.current = selected;
-  }, [selected]);
-  // Back from a project lands on that project's row in the index when it is open, so a
-  // keyboard visitor browsing the list keeps their place; otherwise on the index control.
-  useRescueFocus(visible, () => {
-    const last = lastProjectRef.current;
-    const row = last ? document.querySelector<HTMLElement>(`#project-index [data-project="${last}"]`) : null;
-    return row && row.tabIndex >= 0 ? row : indexToggleRef.current;
-  });
 
   useEffect(() => {
     // Closing on every invisible frame also closed the phone default, because the HUD is
@@ -55,30 +34,12 @@ export function SystemHud() {
           <div className="lockup__name">{profile.name}</div>
           <div className="lockup__title">Projects · select a planet</div>
         </div>
-        <div className="system-hud__nav">
-          {/*
-            The cockpit's sections, from orbit.
-
-            Contact and Resume were three moves away from the projects — fly home, then find
-            the menu, then wait for the cockpit — which is backwards for a visitor who has just
-            seen the work and wants to get in touch. Real links: `navigateTo` makes the same
-            trip the visitor would, and a middle-click opens the section in a new tab.
-          */}
-          <nav className="system-hud__links" aria-label="Sections" data-label-obstacle>
-            {SECTIONS.map((sct) => (
-              <a key={sct.id} href={`#/${sct.id}`} tabIndex={visible ? 0 : -1}>
-                {sct.label}
-              </a>
-            ))}
-          </nav>
-          <button type="button" className="pill" onClick={returnHomeFromOrbit} tabIndex={visible ? 0 : -1} data-label-obstacle>
-            <span aria-hidden="true">←</span> Home planet
-          </button>
-        </div>
+        <button type="button" className="pill" onClick={returnHomeFromOrbit} tabIndex={visible ? 0 : -1} data-label-obstacle>
+          <span aria-hidden="true">←</span> Home planet
+        </button>
       </div>
       <div className="system-hud__bottom">
         <button
-          ref={indexToggleRef}
           type="button"
           className="pill"
           aria-expanded={indexOpen}
@@ -96,7 +57,6 @@ export function SystemHud() {
               <li key={p.id}>
                 <button
                   type="button"
-                  data-project={p.id}
                   className="project-index__item"
                   tabIndex={visible && indexOpen ? 0 : -1}
                   onMouseEnter={() => setHovered(p.id)}

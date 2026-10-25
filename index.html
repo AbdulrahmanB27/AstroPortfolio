@@ -9,20 +9,9 @@
       content="Interactive space portfolio of Abdulrahman Bahjat, mechanical engineering student at Penn State: robotics, CAD, 3D printing, and full-stack web and mobile apps."
     />
     <meta name="theme-color" content="#05070d" />
-    <link rel="canonical" href="%SITE_URL%" />
     <meta property="og:title" content="Abdulrahman Bahjat — Portfolio" />
     <meta property="og:description" content="Meet the engineer. Prepare for the mission. Launch. Explore the work." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="%SITE_URL%" />
-    <!-- Absolute, and a JPEG: LinkedIn and Slack ignore relative and WebP preview images. -->
-    <meta property="og:image" content="%SITE_URL%og-image.jpg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="An astronaut and a rocket on a small planet under an orange star: %PROFILE_NAME%'s portfolio" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <!-- Filled from src/data/portfolio.json at build time (vite.config.ts), like the rest of
-         the %…% tokens here, so an edit in the content studio reaches search engines too. -->
-    <script type="application/ld+json">%PERSON_JSON_LD%</script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -32,19 +21,6 @@
     />
   </head>
   <body>
-    <!-- The 3D site needs JavaScript. This says so and offers the PDF, which does not. -->
-    <noscript>
-      <div style="max-width: 40rem; margin: 15vh auto; padding: 0 24px; color: #eef2f8; font: 16px/1.6 Inter, system-ui, sans-serif">
-        <h1 style="font-weight: 600">%PROFILE_NAME%</h1>
-        <p>%PROFILE_TAGLINE%</p>
-        <p>This portfolio is an interactive 3D site and needs JavaScript.</p>
-        <p>
-          <a style="color: #ffb454" href="%RESUME_FILE%">Download the resume (PDF)</a> ·
-          <a style="color: #ffb454" href="mailto:%CONTACT_EMAIL%">Email</a> ·
-          <a style="color: #ffb454" href="%CONTACT_GITHUB%">GitHub</a>
-        </p>
-      </div>
-    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

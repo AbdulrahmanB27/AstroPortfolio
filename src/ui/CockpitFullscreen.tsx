@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useApp } from '../state/store';
 import { setCockpitView } from '../sequences';
 import { MissionComputer } from './MissionComputer';
-import { useRescueFocus } from './focus';
 
 /**
  * The same content, flat.
@@ -20,8 +19,6 @@ export function CockpitFullscreen() {
   const scene = useApp((s) => s.scene);
   const view = useApp((s) => s.cockpitView);
   const open = scene === 'cockpit' && view === 'full';
-  // Into the reader, on the section that is open: the control that opened it is gone.
-  useRescueFocus(open, () => document.querySelector<HTMLElement>('.cockpit-full .mc__tab[data-active="true"]'));
 
   useEffect(() => {
     if (!open) return;

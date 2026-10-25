@@ -1,8 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
-import type { Plugin } from 'vite';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 
@@ -19,53 +17,9 @@ if (!base.startsWith('/') || !base.endsWith('/')) {
   throw new Error(`VITE_BASE_PATH must look like "/" or "/repo/", got "${base}"`);
 }
 
-/**
- * Fills the `%TOKEN%`s in index.html from the content file.
- *
- * The social card, the structured data and the no-JavaScript fallback all repeat facts the
- * content studio edits — the email, the site URL, the resume path. Written into the HTML by
- * hand they would go stale the first time the owner changed one in the studio; read from the
- * JSON at build time they cannot. Escaped for an HTML attribute or text node, and the JSON-LD
- * is serialised rather than templated so a quote in a name cannot break it.
- */
-function portfolioHtml(): Plugin {
-  const escape = (s: string) =>
-    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  return {
-    name: 'portfolio-html',
-    transformIndexHtml(html) {
-      const data = JSON.parse(readFileSync(`${root}src/data/portfolio.json`, 'utf8'));
-      const { profile, resume, meta } = data;
-      const siteUrl = String(meta.url).replace(/\/?$/, '/');
-      const person = {
-        '@context': 'https://schema.org',
-        '@type': 'Person',
-        name: profile.name,
-        url: siteUrl,
-        description: profile.tagline,
-        email: `mailto:${profile.contact.email}`,
-        alumniOf: profile.education.map((e: { institution: string }) => ({ '@type': 'EducationalOrganization', name: e.institution })),
-        knowsAbout: profile.interests,
-        sameAs: [profile.contact.github, profile.contact.linkedin].filter(Boolean),
-      };
-      const tokens: Record<string, string> = {
-        SITE_URL: escape(siteUrl),
-        PROFILE_NAME: escape(profile.name),
-        PROFILE_TAGLINE: escape(profile.tagline),
-        RESUME_FILE: escape(resume.file),
-        CONTACT_EMAIL: escape(profile.contact.email),
-        CONTACT_GITHUB: escape(profile.contact.github),
-        // `<` is the only character that can end a script element from inside JSON.
-        PERSON_JSON_LD: JSON.stringify(person).replace(/</g, '\\u003c'),
-      };
-      return html.replace(/%([A-Z_]+)%/g, (whole, key: string) => tokens[key] ?? whole);
-    },
-  };
-}
-
 export default defineConfig({
   base,
-  plugins: [react(), portfolioHtml()],
+  plugins: [react()],
   build: {
     target: 'es2022',
     sourcemap: false,
