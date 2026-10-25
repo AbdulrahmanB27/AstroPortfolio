@@ -98,15 +98,24 @@ export function installRouter(): () => void {
     { equalityFn: (a, b) => a.scene === b.scene && a.cockpitTab === b.cockpitTab && a.selectedProjectId === b.selectedProjectId },
   );
 
-  // Fragment navigations fire both events in some browsers and only one in others; going to
-  // where you already are is a no-op in `navigateTo`, so listening to both is safe.
-  const onHistory = () => navigateTo(targetFor(window.location.hash), { fromHistory: true });
-  window.addEventListener('popstate', onHistory);
-  window.addEventListener('hashchange', onHistory);
+  /*
+   * Both events, each read from its own source of truth.
+   *
+   * A fragment navigation fires `popstate` synchronously and queues `hashchange` as a task
+   * for later. The journey `popstate` starts rewrites the address bar on its very first step
+   * — leaving the cockpit for the orbit passes through home, `#/` — so by the time
+   * `hashchange` ran, `location.hash` already said home, and a link to the projects flew the
+   * visitor home and stopped there. `hashchange` carries the URL it was fired for; that is the
+   * one to go to. Going where a journey is already headed is a no-op in `navigateTo`.
+   */
+  const onPop = () => navigateTo(targetFor(window.location.hash), { fromHistory: true });
+  const onHash = (e: HashChangeEvent) => navigateTo(targetFor(new URL(e.newURL).hash), { fromHistory: true });
+  window.addEventListener('popstate', onPop);
+  window.addEventListener('hashchange', onHash);
 
   return () => {
     unsubscribe();
-    window.removeEventListener('popstate', onHistory);
-    window.removeEventListener('hashchange', onHistory);
+    window.removeEventListener('popstate', onPop);
+    window.removeEventListener('hashchange', onHash);
   };
 }
