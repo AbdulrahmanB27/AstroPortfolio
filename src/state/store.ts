@@ -110,12 +110,6 @@ export interface AppState {
   visited: VisitedInfo;
   settings: Settings;
   quality: QualityProfile;
-  /**
-   * Whether the tier may step down on its own when frames run long (see `AdaptiveQuality`).
-   * Off once someone picks a tier by hand, and under automation, where a slow software
-   * renderer would otherwise change what every test is looking at.
-   */
-  qualityAuto: boolean;
   reducedMotion: boolean;
   devMode: boolean;
   audioEnabled: boolean;
@@ -141,8 +135,6 @@ export interface AppState {
   bumpLaunches: () => void;
   updateSettings: (patch: Partial<Settings> | ((s: Settings) => Settings)) => void;
   setQualityTier: (tier: QualityTier) => void;
-  /** One tier down, for `AdaptiveQuality`. Leaves `qualityAuto` on. */
-  degradeQuality: () => void;
   setDevMode: (on: boolean) => void;
   setAudioEnabled: (on: boolean) => void;
   setComedicLaunch: (on: boolean) => void;
@@ -175,7 +167,6 @@ export const useApp = create<AppState>()(
     visited: readVisited(),
     settings: mergeSettings(portfolio.data.settings, readSettingsOverride()),
     quality: detectQuality(),
-    qualityAuto: !(typeof navigator !== 'undefined' && navigator.webdriver),
     reducedMotion: prefersReducedMotion(),
     devMode: false,
     audioEnabled: readAudio(),
@@ -218,11 +209,7 @@ export const useApp = create<AppState>()(
       }
       set({ settings: next });
     },
-    setQualityTier: (tier) => set({ quality: profileFor(tier), qualityAuto: false }),
-    degradeQuality: () => {
-      const tier = get().quality.tier;
-      if (tier !== 'low') set({ quality: profileFor(tier === 'high' ? 'medium' : 'low') });
-    },
+    setQualityTier: (tier) => set({ quality: profileFor(tier) }),
     setDevMode: (devMode) => set({ devMode }),
     setAudioEnabled: (audioEnabled) => {
       try {

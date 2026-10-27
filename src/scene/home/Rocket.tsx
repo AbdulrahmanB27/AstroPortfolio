@@ -6,6 +6,7 @@ import { PALETTE } from '../../lib/constants';
 import { handles } from '../rig';
 import { vehicleView } from './rocketState';
 import { batchStatic } from '../staticBatch';
+import { seg } from '../../lib/lowPoly';
 
 /**
  * Stylized rocket, ~7.5 units tall, standing on its pad with the origin at ground level.
@@ -100,11 +101,11 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
 
   const geo = useMemo(
     () => ({
-      fin: new RoundedBoxGeometry(0.9, 1.4, 0.18, 3, 0.05),
-      hatchFrame: new RoundedBoxGeometry(0.82, 1.22, 0.1, 3, 0.04),
-      hatchDoor: new RoundedBoxGeometry(0.7, 1.1, 0.08, 3, 0.03),
-      windowGlass: new RoundedBoxGeometry(0.9, 0.28, 0.12, 3, 0.04),
-      windowFrame: new RoundedBoxGeometry(1.0, 0.38, 0.1, 3, 0.05),
+      fin: new RoundedBoxGeometry(0.9, 1.4, 0.18, seg(3, 1), 0.05),
+      hatchFrame: new RoundedBoxGeometry(0.82, 1.22, 0.1, seg(3, 1), 0.04),
+      hatchDoor: new RoundedBoxGeometry(0.7, 1.1, 0.08, seg(3, 1), 0.03),
+      windowGlass: new RoundedBoxGeometry(0.9, 0.28, 0.12, seg(3, 1), 0.04),
+      windowFrame: new RoundedBoxGeometry(1.0, 0.38, 0.1, seg(3, 1), 0.05),
     }),
     [],
   );

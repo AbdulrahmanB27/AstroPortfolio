@@ -10,6 +10,7 @@ import { Rocks } from './Rocks';
 import { Astronaut } from './Astronaut';
 import { Rocket } from './Rocket';
 import { setStageOpacity, stageView } from './stageState';
+import { seg } from '../../lib/lowPoly';
 
 /**
  * Everything that only exists while standing on the home planet: terrain patch, rocks,
@@ -43,7 +44,7 @@ export function SurfaceStage() {
   const groundRef = useRef<Group>(null);
   const scene = useApp((s) => s.scene);
   const quality = useApp((s) => s.quality);
-  const geometry = useMemo(() => buildTerrainGeometry(quality.tier === 'low' ? 120 : 190), [quality.tier]);
+  const geometry = useMemo(() => buildTerrainGeometry(seg(quality.tier === 'low' ? 120 : 190, 40)), [quality.tier]);
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   const sceneAllows = isSurfaceScene(scene);

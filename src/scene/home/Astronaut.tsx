@@ -21,6 +21,7 @@ import { STAGE_FRAME } from '../../lib/stageFrame';
 import { useApp } from '../../state/store';
 import { handles } from '../rig';
 import { batchStatic } from '../staticBatch';
+import { seg } from '../../lib/lowPoly';
 
 /**
  * Stylized EVA suit, ~1.75 units tall, feet on the ground, facing the star.
@@ -162,7 +163,7 @@ function suitMaterials() {
 }
 
 function suitGeometry() {
-  const rb = (w: number, h: number, d: number, r: number) => new RoundedBoxGeometry(w, h, d, 3, r);
+  const rb = (w: number, h: number, d: number, r: number) => new RoundedBoxGeometry(w, h, d, seg(3, 1), r);
   // The umbilical: from the side of the pack, down round the waist, into the chest module.
   const hose = new TubeGeometry(
     new CatmullRomCurve3([
@@ -174,9 +175,9 @@ function suitGeometry() {
       new Vector3(0.2, 1.33, -0.22),
       new Vector3(0.08, 1.43, -0.29),
     ]),
-    32,
+    seg(32, 8),
     0.022,
-    8,
+    seg(8, 4),
     false,
   );
   return {

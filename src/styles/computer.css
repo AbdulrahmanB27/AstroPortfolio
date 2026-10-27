@@ -288,32 +288,6 @@
   line-height: 1.1;
 }
 
-/*
- * One-line summary of what Abdulrahman builds. Sits between the name and the longer intro so
- * the panel answers "who is this" before it asks to be read.
- *
- * It has to be LARGER than that intro. At 16px against a 16.5px lede and a 14.5px body it was
- * measurably the middle of three near-identical sizes — a reviewer measured cap heights of
- * 17px for this against 19.5px for the paragraph under it, so the amber standfirst was
- * physically smaller than the copy it introduces and only colour said otherwise. Colour
- * cannot carry rank on its own; that was the single most repeated finding of the round.
- */
-.mc-doc__deck {
-  margin: 0 0 16px;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(17px, 1.6vw, 21px);
-  line-height: 1.35;
-  letter-spacing: -0.01em;
-  color: var(--star-glow);
-  /* Three or four words on the last line rather than one; the string is three lines at most
-     on every surface it appears on, which is exactly what `balance` is for. */
-  text-wrap: balance;
-}
-
-/* Prose is capped by its own measure, not by the panel; the meta grid below still uses the
-   full container width. See --measure on .mc-doc for why this is not in `ch`. */
-.mc-doc__deck,
 .mc-doc__lede,
 .mc-doc__p {
   max-width: var(--measure);
@@ -492,6 +466,24 @@
   color: var(--star-glow);
 }
 
+/* The address and its copy control on one line, wrapping under it on a narrow column. */
+.contact-list__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  min-width: 0;
+}
+
+.contact-list__value .contact-list__link {
+  overflow-wrap: anywhere;
+}
+
+.contact-list__copy {
+  min-width: 72px;
+  justify-content: center;
+}
+
 /* Content on a narrow column. The reader's own shell is handled further down, with the rest
    of its phone layout. */
 @media (max-width: 820px) {
@@ -535,10 +527,6 @@
 .mc-doc__title {
   font-size: clamp(30px, 3.4vw, 44px);
   line-height: 1.04;
-}
-
-.mc-doc__deck {
-  font-size: clamp(18px, 1.8vw, 23px);
 }
 
 .mc-doc__lede {

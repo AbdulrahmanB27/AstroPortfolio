@@ -5,6 +5,7 @@ import { PALETTE, WORLD } from '../../lib/constants';
 import { noise3D } from '../../lib/noise';
 import { handles } from '../rig';
 import { stageView } from './stageState';
+import { seg } from '../../lib/lowPoly';
 
 /**
  * The small orbital body that represents home from space. It is not a project and has no
@@ -20,7 +21,7 @@ import { stageView } from './stageState';
 export function HomePlanet() {
   const ref = useRef<Group>(null);
   const geometry = useMemo(() => {
-    const g = new SphereGeometry(WORLD.homePlanetRadius, 72, 48);
+    const g = new SphereGeometry(WORLD.homePlanetRadius, seg(72, 24), seg(48, 16));
     const pos = g.attributes.position!;
     const v = new Vector3();
     for (let i = 0; i < pos.count; i++) {

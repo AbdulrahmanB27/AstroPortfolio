@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 /**
- * The space in the simplified version: a fixed backdrop of the star's glow plus a scatter of
+ * The space in the simple view: a fixed backdrop of the star's glow plus a scatter of
  * stars, drawn as one inline SVG.
  *
  * No canvas and no animation loop — this page exists to be fast and to work where the 3D

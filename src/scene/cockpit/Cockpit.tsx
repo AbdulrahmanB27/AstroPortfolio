@@ -11,6 +11,7 @@ import { ScreenTitle } from '../../ui/ScreenTitle';
 import { getVehicleInterior, subscribeVehicleView, vehicleView } from '../home/rocketState';
 import { setScreenPlacement } from './screenState';
 import { batchStatic } from '../staticBatch';
+import { seg } from '../../lib/lowPoly';
 import { applyPose } from '../../sequences';
 import { cockpitScreenPose } from '../poses';
 
@@ -75,15 +76,6 @@ export function Cockpit() {
   const crownLightRef = useRef<PointLight>(null);
   const scene = useApp((s) => s.scene);
   const inCockpitScene = isCockpitScene(scene);
-  /*
-   * Every lit surface in the cabin evaluates every point light in it, whether or not the light
-   * reaches that surface, so the light count is the fragment cost of the whole room. Below the
-   * top tier the two lamp glows go (they light a few centimetres of panel); on the lowest the
-   * per-display lights go too, and the displays' own glow and the panel floods carry the bank.
-   */
-  const tier = useApp((s) => s.quality.tier);
-  const lampGlows = tier === 'high';
-  const displayLights = tier !== 'low';
 
   // Only once the camera is actually through the hatch. During the approach the cabin is
   // hidden so the rocket it lives inside can be seen; see `vehicleView`.
@@ -258,9 +250,9 @@ export function Cockpit() {
         // Kept on the curved wall (the shell's forward gap, round the window, spans ±0.7 rad),
         // beside the wall panel rather than across it.
         new CatmullRomCurve3([at(0.8, CEIL_Y + 0.2), at(0.8, CEIL_Y - 0.3), at(0.8, 5.6), at(0.8, 5.0), at(0.78, 4.7)]),
-        48,
+        seg(48, 12),
         0.022 - offset * 0.2,
-        8,
+        seg(8, 4),
         false,
       );
     };
@@ -453,15 +445,13 @@ export function Cockpit() {
                   <ScreenTitle id={sc.id} />
                 </Html>
               )}
-              {displayLights && (
-                <pointLight
-                  color={PALETTE.screenGlow}
-                  intensity={active ? 1.6 : view === 'full' ? 0.25 : 0.7}
-                  distance={1.5}
-                  decay={2}
-                  position={[0, 0, 0.4]}
-                />
-              )}
+              <pointLight
+                color={PALETTE.screenGlow}
+                intensity={active ? 1.6 : view === 'full' ? 0.25 : 0.7}
+                distance={1.5}
+                decay={2}
+                position={[0, 0, 0.4]}
+              />
             </group>
           );
         })}
@@ -584,7 +574,7 @@ export function Cockpit() {
           ))}
 
           {/* Status lamps — the only saturated colour on the panel. */}
-          {lampGlows && [-0.42, 0.42].map((x) => (
+          {[-0.42, 0.42].map((x) => (
             <pointLight key={`lampglow-${x}`} color={PALETTE.starGlow} intensity={0.45} distance={0.5} decay={2} position={[x, 0.13, 0.11]} />
           ))}
           {[-0.5, -0.42, -0.34, 0.34, 0.42, 0.5].map((x, i) => (

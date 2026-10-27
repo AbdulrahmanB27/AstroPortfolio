@@ -1,6 +1,7 @@
 import { assetUrl, portfolio } from '../data/loadPortfolio';
 import { isPlaceholder, stripPlaceholder } from '../lib/content';
 import { Starfield } from './Starfield';
+import { CopyButton } from '../ui/CopyButton';
 
 /**
  * The simplified portfolio: the same universe, told flat.
@@ -27,7 +28,6 @@ export function LiteApp() {
         <p className="t-mono lite__eyebrow">Portfolio</p>
         <h1 className="lite__name">{profile.name}</h1>
         <p className="lite__title">{profile.title}</p>
-        <p className="lite__tagline">{profile.tagline}</p>
         <nav className="lite__nav" aria-label="Sections">
           <a href="#work">Work</a>
           <a href="#about">About</a>
@@ -223,9 +223,12 @@ export function LiteApp() {
           <ul className="lite__list lite__list--plain lite__contact">
             <li>
               <span className="t-mono lite__meta">Email</span>
-              <a className="lite-link" href={`mailto:${profile.contact.email}`}>
-                {profile.contact.email}
-              </a>
+              <span className="lite__contact-value">
+                <a className="lite-link" href={`mailto:${profile.contact.email}`}>
+                  {profile.contact.email}
+                </a>
+                <CopyButton value={profile.contact.email} label={`Copy email address ${profile.contact.email}`} className="lite-link" />
+              </span>
             </li>
             <li>
               <span className="t-mono lite__meta">GitHub</span>

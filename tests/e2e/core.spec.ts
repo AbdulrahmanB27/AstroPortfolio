@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const profile = JSON.parse(
   readFileSync(fileURLToPath(new URL('../../src/data/portfolio.json', import.meta.url)), 'utf8'),
-).profile as { name: string; tagline: string; intro: string };
+).profile as { name: string; intro: string };
 
 /** Loading, the opening cinematic, and the guided pre-launch experience. */
 
@@ -88,7 +88,7 @@ test.describe('cockpit', () => {
   });
 
   /**
-   * Every field the content studio offers must reach the screen. `profile.tagline` was
+   * Every field the content studio offers must reach the screen. A profile field was once
    * editable in the studio and rendered nowhere: an owner could change it, export, install,
    * and see no difference anywhere on the site. Asserting against the JSON rather than a
    * literal keeps the two bound together.
@@ -97,7 +97,7 @@ test.describe('cockpit', () => {
     const errors = await open(page, '#/about', { dev: true });
     await expect(page.locator(sel.missionComputer)).toBeVisible({ timeout: 25_000 });
     const doc = page.locator('.mc-doc');
-    for (const value of [profile.name, profile.tagline, profile.intro]) {
+    for (const value of [profile.name, profile.intro]) {
       await expect(doc).toContainText(value);
     }
     expectNoConsoleErrors(errors);

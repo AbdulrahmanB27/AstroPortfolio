@@ -24,10 +24,10 @@ test.describe('content studio', () => {
   test('exports JSON that satisfies the schema and carries the edit', async ({ page }) => {
     const errors = watchConsole(page);
     await page.goto('/admin/', { waitUntil: 'load' });
-    const tagline = page.getByLabel('Tagline', { exact: true });
-    await expect(tagline).toBeVisible({ timeout: 20_000 });
-    const edited = 'Builds complete things - verified by the end-to-end suite.';
-    await tagline.fill(edited);
+    const intro = page.getByLabel('Intro', { exact: true });
+    await expect(intro).toBeVisible({ timeout: 20_000 });
+    const edited = 'An intro verified by the end-to-end suite.';
+    await intro.fill(edited);
 
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 20_000 }),
@@ -37,7 +37,7 @@ test.describe('content studio', () => {
     expect(path).toBeTruthy();
     const raw = JSON.parse(await readFile(path!, 'utf8'));
     const parsed = PortfolioSchema.parse(raw);
-    expect(parsed.profile.tagline).toBe(edited);
+    expect(parsed.profile.intro).toBe(edited);
     expect(parsed.projects.length).toBeGreaterThan(0);
     expectNoConsoleErrors(errors);
   });
@@ -63,16 +63,16 @@ test.describe('content studio', () => {
 
   test('a draft survives a reload and can be discarded', async ({ page }) => {
     await page.goto('/admin/', { waitUntil: 'load' });
-    const tagline = page.getByLabel('Tagline', { exact: true });
-    await expect(tagline).toBeVisible({ timeout: 20_000 });
-    await tagline.fill('Draft persistence check');
+    const intro = page.getByLabel('Intro', { exact: true });
+    await expect(intro).toBeVisible({ timeout: 20_000 });
+    await intro.fill('Draft persistence check');
     await expect
       .poll(() => page.evaluate(() => localStorage.getItem('astro.admin.draft')), { timeout: 10_000 })
       .toContain('Draft persistence check');
 
     await page.reload({ waitUntil: 'load' });
-    await expect(page.getByLabel('Tagline', { exact: true })).toHaveValue('Draft persistence check', { timeout: 20_000 });
+    await expect(page.getByLabel('Intro', { exact: true })).toHaveValue('Draft persistence check', { timeout: 20_000 });
     await page.locator('button:has-text("Discard draft")').first().click();
-    await expect(page.getByLabel('Tagline', { exact: true })).not.toHaveValue('Draft persistence check');
+    await expect(page.getByLabel('Intro', { exact: true })).not.toHaveValue('Draft persistence check');
   });
 });

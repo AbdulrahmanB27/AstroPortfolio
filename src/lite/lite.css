@@ -99,22 +99,6 @@ body {
   font-size: clamp(15px, 2.2vw, 18px);
 }
 
-.lite__tagline {
-  margin: 12px 0 0;
-  font-family: var(--font-display);
-  color: var(--star-glow);
-  font-size: clamp(15px, 2.4vw, 19px);
-  line-height: 1.4;
-  /* `34ch` is the phone measure: on a 1440px screen it broke this line after "from CAD and"
-     at ~360px inside a 672px column, so the hero's strongest line was a narrow ragged block
-     aligned to nothing. In em it tracks the type at every width and fills the column here.
-     (Inter's and Space Grotesk's zero is far wider than their average prose character, which
-     is what made a `ch` cap read so much narrower than its number suggests.) */
-  max-width: 32em;
-  /* Stops the 66/5 split that left "apps." alone on a line of its own. */
-  text-wrap: balance;
-}
-
 .lite__nav {
   display: flex;
   flex-wrap: wrap;
@@ -290,6 +274,14 @@ body {
   gap: 10px;
 }
 
+.lite__contact-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .tags {
   list-style: none;
   display: flex;
@@ -463,6 +455,11 @@ body {
   color: var(--ink-100);
   text-decoration: none;
   transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+}
+
+button.lite-link {
+  background: none;
+  cursor: pointer;
 }
 
 .lite-link:hover,

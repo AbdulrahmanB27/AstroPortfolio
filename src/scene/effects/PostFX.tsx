@@ -40,10 +40,7 @@ export function PostFX() {
 
   if (!quality.bloom) return null;
   return (
-    // 4x on both tiers that bloom. The top tier already renders at 1.5-2x the display and
-    // the browser downsamples it, so 8x on top of that cost memory bandwidth on every
-    // full-screen pass for edges nobody could tell apart.
-    <EffectComposer multisampling={4}>
+    <EffectComposer multisampling={quality.tier === 'high' ? 8 : quality.tier === 'medium' ? 4 : 0}>
       <Bloom luminanceThreshold={1.0} luminanceSmoothing={0.12} intensity={0.55} mipmapBlur radius={0.72} resolutionScale={quality.bloomScale} />
       <SceneDim ref={dim} />
       <Vignette eskil={false} offset={0.22} darkness={0.55} />

@@ -15,12 +15,14 @@ import { FlightMode } from './flight/FlightMode';
 import { DevHelpers } from '../dev/DevHelpers';
 import { PostFX } from './effects/PostFX';
 import { Exposure } from './effects/Exposure';
-import { AdaptiveQuality } from './effects/AdaptiveQuality';
+import { Precompile } from './effects/Precompile';
 import { useApp } from '../state/store';
 import { returnHomeFromOrbit } from '../sequences/system';
+import { installLowPolyCatalogue } from './lowPolyCatalogue';
 
 /** Root of the single continuous scene graph. */
 export function Scene({ onFirstFrame }: { onFirstFrame: () => void }) {
+  installLowPolyCatalogue();
   const quality = useApp((s) => s.quality);
   const fired = useRef(false);
 
@@ -46,7 +48,7 @@ export function Scene({ onFirstFrame }: { onFirstFrame: () => void }) {
       <Tether />
       <LabelBridge />
       <Exposure />
-      <AdaptiveQuality />
+      <Precompile />
       <FlightMode />
       <DevHelpers />
       <PostFX />

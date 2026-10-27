@@ -1,4 +1,5 @@
 import { portfolio } from '../../data/loadPortfolio';
+import { CopyButton } from '../CopyButton';
 
 function hostOf(url: string): string {
   try {
@@ -21,9 +22,12 @@ export function ContactPanel() {
       <ul className="contact-list">
         <li>
           <span className="contact-list__label t-mono">Email</span>
-          <a className="contact-list__link" href={`mailto:${c.email}`}>
-            {c.email}
-          </a>
+          <span className="contact-list__value">
+            <a className="contact-list__link" href={`mailto:${c.email}`}>
+              {c.email}
+            </a>
+            <CopyButton value={c.email} label={`Copy email address ${c.email}`} className="pill contact-list__copy" />
+          </span>
         </li>
         <li>
           <span className="contact-list__label t-mono">GitHub</span>
