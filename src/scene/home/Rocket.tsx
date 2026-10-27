@@ -5,6 +5,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { PALETTE } from '../../lib/constants';
 import { handles } from '../rig';
 import { vehicleView } from './rocketState';
+import { batchStatic } from '../staticBatch';
 
 /**
  * Stylized rocket, ~7.5 units tall, standing on its pad with the origin at ground level.
@@ -150,6 +151,10 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
 
   useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
 
+  // Hull, legs, ladder and fasteners as one draw call per material; the door is batched on its
+  // own because it slides, and the plume is left alone because it scales. See `staticBatch`.
+  useLayoutEffect(() => (vehicleRef.current ? batchStatic(vehicleRef.current) : undefined), []);
+
   const { body, graphite, accent, nozzle, glass, flame, flameCore, pad, padRing, strip, seam, steel } = mats;
   const legAngles = [Math.PI / 6, Math.PI / 6 + (Math.PI * 2) / 3, Math.PI / 6 + (Math.PI * 4) / 3];
 
@@ -264,7 +269,7 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
               </mesh>
             )),
           )}
-          <group ref={hatchRef}>
+          <group ref={hatchRef} userData={{ batch: true }}>
             <mesh geometry={geo.hatchDoor} position={[0, 0, 1.02]} material={body} castShadow />
             {/* Door viewport in a ring. */}
             <mesh position={[0, 0.3, 1.062]} rotation={[Math.PI / 2, 0, 0]} material={glass}>
@@ -289,7 +294,7 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
               </mesh>
             ))}
           </group>
-          <mesh ref={hatchLightRef} position={[0, 0.66, 1.03]}>
+          <mesh ref={hatchLightRef} position={[0, 0.66, 1.03]} userData={{ dynamic: true }}>
             <boxGeometry args={[0.7, 0.05, 0.03]} />
             <meshBasicMaterial color={PALETTE.starGlow} transparent opacity={0.2} toneMapped={false} />
           </mesh>
@@ -297,7 +302,7 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
               Tried as a modelled recess with side walls; the walls occluded the lamp and
               the doorway went black, so this stays a lit face with the frame around it
               supplying the depth. */}
-          <mesh ref={hatchGlowRef} position={[0, 0, 0.94]}>
+          <mesh ref={hatchGlowRef} position={[0, 0, 0.94]} userData={{ dynamic: true }}>
             <planeGeometry args={[0.66, 1.06]} />
             <meshBasicMaterial color={PALETTE.screenGlow} transparent opacity={0} toneMapped={false} />
           </mesh>
@@ -353,7 +358,7 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
           <boxGeometry args={[0.5, 0.03, 0.02]} />
         </mesh>
         {/* Engine flame (scaled by thrust) */}
-        <group position={[0, 0.3, 0]}>
+        <group position={[0, 0.3, 0]} userData={{ dynamic: true }}>
           <mesh ref={flameRef} position={[0, -1.1, 0]} rotation={[Math.PI, 0, 0]} material={flame}>
             <coneGeometry args={[0.5, 2.4, 32, 1, true]} />
           </mesh>

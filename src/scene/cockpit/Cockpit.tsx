@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import { BackSide, CatmullRomCurve3, Color, DoubleSide, Group, MeshBasicMaterial, MeshStandardMaterial, PointLight, TubeGeometry, Vector3 } from 'three';
@@ -10,6 +10,7 @@ import { consoleScreens } from '../poses';
 import { ScreenTitle } from '../../ui/ScreenTitle';
 import { getVehicleInterior, subscribeVehicleView, vehicleView } from '../home/rocketState';
 import { setScreenPlacement } from './screenState';
+import { batchStatic } from '../staticBatch';
 import { applyPose } from '../../sequences';
 import { cockpitScreenPose } from '../poses';
 
@@ -65,7 +66,6 @@ export function Cockpit() {
   // derived fallback. Re-apply it once the real transforms are known.
   const correctedRef = useRef(false);
   const anchorRef = useRef<Group>(null);
-  const screenLightRef = useRef<PointLight>(null);
   const stripLightA = useRef<PointLight>(null);
   const stripLightB = useRef<PointLight>(null);
   const cabinLightRef = useRef<PointLight>(null);
@@ -73,10 +73,17 @@ export function Cockpit() {
   const dashLightRef = useRef<PointLight>(null);
   const dashLightB = useRef<PointLight>(null);
   const crownLightRef = useRef<PointLight>(null);
-  const sideLightA = useRef<PointLight>(null);
-  const sideLightB = useRef<PointLight>(null);
   const scene = useApp((s) => s.scene);
   const inCockpitScene = isCockpitScene(scene);
+  /*
+   * Every lit surface in the cabin evaluates every point light in it, whether or not the light
+   * reaches that surface, so the light count is the fragment cost of the whole room. Below the
+   * top tier the two lamp glows go (they light a few centimetres of panel); on the lowest the
+   * per-display lights go too, and the displays' own glow and the panel floods carry the bank.
+   */
+  const tier = useApp((s) => s.quality.tier);
+  const lampGlows = tier === 'high';
+  const displayLights = tier !== 'low';
 
   // Only once the camera is actually through the hatch. During the approach the cabin is
   // hidden so the rocket it lives inside can be seen; see `vehicleView`.
@@ -186,9 +193,6 @@ export function Cockpit() {
         // over distance 5 and a 3.4 cabin lamp over distance 7 — every surface in the cabin
         // sat in the falloff of something, and a room built from #14171d graphite rendered
         // as flat pale grey. A spacecraft interior is mostly dark with a few things lit.
-        if (screenLightRef.current) screenLightRef.current.intensity = k * 4.5;
-        if (sideLightA.current) sideLightA.current.intensity = k * 1.6;
-        if (sideLightB.current) sideLightB.current.intensity = k * 1.6;
         if (stripLightA.current) stripLightA.current.intensity = k * 3.4;
         if (stripLightB.current) stripLightB.current.intensity = k * 3.4;
         if (cabinLightRef.current) cabinLightRef.current.intensity = k * 1.1 * (portraitBank ? 0.55 : 1);
@@ -236,6 +240,11 @@ export function Cockpit() {
   }, [mats]);
 
   useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
+
+  // The cabin's structure never changes after mount: one draw call per material instead of
+  // one per bolt. The displays are left out — they resize with the viewport and swap
+  // material when a sibling is being read. See `staticBatch`.
+  useLayoutEffect(() => (groupRef.current ? batchStatic(groupRef.current) : undefined), []);
 
   /*
    * Cable runs: from the crown down each wall to the console, where everything in a cockpit
@@ -413,7 +422,7 @@ export function Cockpit() {
           const contentH = Math.round((sc.height / sc.width) * px);
           const scale = (sc.width * HTML_PX_PER_UNIT) / px;
           return (
-            <group key={sc.id} name={`screen-${sc.id}`} position={sc.local} rotation={[sc.pitch, sc.yaw, 0]}>
+            <group key={sc.id} name={`screen-${sc.id}`} position={sc.local} rotation={[sc.pitch, sc.yaw, 0]} userData={{ dynamic: true }}>
               {/* Bezel, with a lip that catches the panel flood. */}
               <mesh material={rib} position={[0, 0, -0.035]} castShadow>
                 <boxGeometry args={[sc.width + 0.1, sc.height + 0.1, 0.06]} />
@@ -444,13 +453,15 @@ export function Cockpit() {
                   <ScreenTitle id={sc.id} />
                 </Html>
               )}
-              <pointLight
-                color={PALETTE.screenGlow}
-                intensity={active ? 1.6 : view === 'full' ? 0.25 : 0.7}
-                distance={1.5}
-                decay={2}
-                position={[0, 0, 0.4]}
-              />
+              {displayLights && (
+                <pointLight
+                  color={PALETTE.screenGlow}
+                  intensity={active ? 1.6 : view === 'full' ? 0.25 : 0.7}
+                  distance={1.5}
+                  decay={2}
+                  position={[0, 0, 0.4]}
+                />
+              )}
             </group>
           );
         })}
@@ -573,7 +584,7 @@ export function Cockpit() {
           ))}
 
           {/* Status lamps — the only saturated colour on the panel. */}
-          {[-0.42, 0.42].map((x) => (
+          {lampGlows && [-0.42, 0.42].map((x) => (
             <pointLight key={`lampglow-${x}`} color={PALETTE.starGlow} intensity={0.45} distance={0.5} decay={2} position={[x, 0.13, 0.11]} />
           ))}
           {[-0.5, -0.42, -0.34, 0.34, 0.42, 0.5].map((x, i) => (

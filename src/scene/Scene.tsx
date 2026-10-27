@@ -15,6 +15,7 @@ import { FlightMode } from './flight/FlightMode';
 import { DevHelpers } from '../dev/DevHelpers';
 import { PostFX } from './effects/PostFX';
 import { Exposure } from './effects/Exposure';
+import { AdaptiveQuality } from './effects/AdaptiveQuality';
 import { useApp } from '../state/store';
 import { returnHomeFromOrbit } from '../sequences/system';
 
@@ -45,6 +46,7 @@ export function Scene({ onFirstFrame }: { onFirstFrame: () => void }) {
       <Tether />
       <LabelBridge />
       <Exposure />
+      <AdaptiveQuality />
       <FlightMode />
       <DevHelpers />
       <PostFX />

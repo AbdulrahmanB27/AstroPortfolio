@@ -101,9 +101,21 @@ export interface AppState {
   cockpitView: CockpitView;
   selectedProjectId: string | null;
   hoveredProjectId: string | null;
+  /**
+   * The open project's write-up fills the screen instead of sitting in the side panel.
+   * Selecting the planet you are looking at turns it on; it survives Previous/Next, and goes
+   * off whenever you leave the project view.
+   */
+  projectFull: boolean;
   visited: VisitedInfo;
   settings: Settings;
   quality: QualityProfile;
+  /**
+   * Whether the tier may step down on its own when frames run long (see `AdaptiveQuality`).
+   * Off once someone picks a tier by hand, and under automation, where a slow software
+   * renderer would otherwise change what every test is looking at.
+   */
+  qualityAuto: boolean;
   reducedMotion: boolean;
   devMode: boolean;
   audioEnabled: boolean;
@@ -123,11 +135,14 @@ export interface AppState {
   setCockpitView: (view: CockpitView) => void;
   setSelectedProject: (id: string | null) => void;
   setHoveredProject: (id: string | null) => void;
+  setProjectFull: (full: boolean) => void;
   markIntroSeen: () => void;
   bumpCockpitEntries: () => void;
   bumpLaunches: () => void;
   updateSettings: (patch: Partial<Settings> | ((s: Settings) => Settings)) => void;
   setQualityTier: (tier: QualityTier) => void;
+  /** One tier down, for `AdaptiveQuality`. Leaves `qualityAuto` on. */
+  degradeQuality: () => void;
   setDevMode: (on: boolean) => void;
   setAudioEnabled: (on: boolean) => void;
   setComedicLaunch: (on: boolean) => void;
@@ -156,9 +171,11 @@ export const useApp = create<AppState>()(
     cockpitView: 'room',
     selectedProjectId: null,
     hoveredProjectId: null,
+    projectFull: false,
     visited: readVisited(),
     settings: mergeSettings(portfolio.data.settings, readSettingsOverride()),
     quality: detectQuality(),
+    qualityAuto: !(typeof navigator !== 'undefined' && navigator.webdriver),
     reducedMotion: prefersReducedMotion(),
     devMode: false,
     audioEnabled: readAudio(),
@@ -169,12 +186,14 @@ export const useApp = create<AppState>()(
     deathStarFound: false,
     bootTarget: null,
 
-    setScene: (scene) => set({ scene }),
+    setScene: (scene) =>
+      set(scene === 'project' || scene === 'focusingProject' ? { scene } : { scene, projectFull: false }),
     setBusy: (busy) => set({ busy }),
     setCockpitTab: (cockpitTab) => set({ cockpitTab }),
     setCockpitView: (cockpitView) => set({ cockpitView }),
     setSelectedProject: (selectedProjectId) => set({ selectedProjectId }),
     setHoveredProject: (hoveredProjectId) => set({ hoveredProjectId }),
+    setProjectFull: (projectFull) => set({ projectFull }),
     markIntroSeen: () => {
       const visited = { ...get().visited, intro: true };
       writeVisited(visited);
@@ -199,7 +218,11 @@ export const useApp = create<AppState>()(
       }
       set({ settings: next });
     },
-    setQualityTier: (tier) => set({ quality: profileFor(tier) }),
+    setQualityTier: (tier) => set({ quality: profileFor(tier), qualityAuto: false }),
+    degradeQuality: () => {
+      const tier = get().quality.tier;
+      if (tier !== 'low') set({ quality: profileFor(tier === 'high' ? 'medium' : 'low') });
+    },
     setDevMode: (devMode) => set({ devMode }),
     setAudioEnabled: (audioEnabled) => {
       try {

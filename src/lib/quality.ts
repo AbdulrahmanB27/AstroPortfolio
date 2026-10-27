@@ -9,6 +9,12 @@ export interface QualityProfile {
   shadowMapSize: number;
   starCount: number;
   rockCount: number;
+  /**
+   * The canvas's own multisampling. Only the tier without bloom wants it: with bloom on, the
+   * scene is drawn into the effect composer's multisampled target and the canvas only ever
+   * receives one full-screen triangle, so a multisampled canvas was memory spent on nothing —
+   * at 2x on a 1440p display, a lot of it.
+   */
   antialias: boolean;
 }
 
@@ -44,7 +50,7 @@ export function profileFor(tier: QualityTier): QualityProfile {
         shadowMapSize: 2048,
         starCount: 4200,
         rockCount: 90,
-        antialias: true,
+        antialias: false,
       };
     case 'medium':
       return {
@@ -56,7 +62,7 @@ export function profileFor(tier: QualityTier): QualityProfile {
         shadowMapSize: 1024,
         starCount: 2600,
         rockCount: 60,
-        antialias: true,
+        antialias: false,
       };
     case 'low':
       return {
@@ -68,7 +74,9 @@ export function profileFor(tier: QualityTier): QualityProfile {
         shadowMapSize: 512,
         starCount: 1600,
         rockCount: 40,
-        antialias: false,
+        // Nothing else smooths an edge on this tier, and on the tile-based GPUs phones use,
+        // 4x MSAA is close to free.
+        antialias: true,
       };
   }
 }

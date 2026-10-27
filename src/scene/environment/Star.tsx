@@ -1,8 +1,9 @@
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useSyncExternalStore } from 'react';
 import { AdditiveBlending, BackSide, Color, Group, Mesh, ShaderMaterial, Vector3 } from 'three';
 import { PALETTE, WORLD } from '../../lib/constants';
-import { isCockpitScene, useApp } from '../../state/store';
+import { useApp } from '../../state/store';
+import { getVehicleInterior, subscribeVehicleView } from '../home/rocketState';
 
 /**
  * The central star: an HDR emissive sphere (blooms), a slowly boiling surface shader,
@@ -131,7 +132,12 @@ export function Star({ onSelect }: { onSelect?: () => void }) {
   // straight through the cabin walls and washed the cockpit floor to a sandy warm grey.
   // Inside, the room is lit by its own practicals (see `Lights`, which dims the key for
   // the same reason); the star still reads through the window on its own emission.
-  const interior = isCockpitScene(scene);
+  //
+  // Keyed to where the camera actually is, not to the scene name: `enteringCockpit` begins
+  // with the click, while the camera is still outside flying to the hatch, so the whole
+  // planet went dark before the door had opened — and stayed dark through the glide home
+  // until the exit sequence ended. `vehicleView.interior` flips at the cut, under the black.
+  const interior = useSyncExternalStore(subscribeVehicleView, getVehicleInterior, getVehicleInterior);
 
   const surfaceUniforms = useMemo(
     () => ({

@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { useThree } from '@react-three/fiber';
 import { DirectionalLight, Vector3 } from 'three';
 import { PALETTE } from '../../lib/constants';
 import { STAGE_FRAME, stageToWorld } from '../../lib/stageFrame';
-import { isCockpitScene, useApp } from '../../state/store';
+import { useApp } from '../../state/store';
+import { getVehicleInterior, subscribeVehicleView } from '../home/rocketState';
 
 /**
  * Scene lighting. The star itself carries a point light for the orbital bodies; this
@@ -16,14 +17,38 @@ export function Lights() {
   const fillRef = useRef<DirectionalLight>(null);
   const scene = useThree((s) => s.scene);
   const quality = useApp((s) => s.quality);
-  const appScene = useApp((s) => s.scene);
+
   // Inside the cockpit the room is lit by its own practicals; the exterior key would
   // otherwise wash the interior to a flat warm grey.
-  const interior = isCockpitScene(appScene);
+  // Where the camera is, not what the scene is called: see the note on `interior` in Star.
+  const interior = useSyncExternalStore(subscribeVehicleView, getVehicleInterior, getVehicleInterior);
   // Inside, the star reaches the cabin only through the forward window, so the exterior key
   // is a shaft rather than a room light. At 0.22 it was still lifting every wall to a flat
   // warm grey and cancelling the practicals it was supposed to sit behind.
   const k = interior ? 0.09 : 1;
+
+  /*
+   * Inside, the sun's shadow map stops re-rendering. Nothing it covers moves while the camera
+   * is in the cabin, and redrawing it was 113 of the cabin's 434 draw calls a frame. Holding
+   * the last map rather than switching shadows off keeps every material's shader as it is, so
+   * crossing the hatch does not recompile the scene.
+   */
+  useEffect(() => {
+    const key = keyRef.current;
+    if (!key) return;
+    key.shadow.autoUpdate = !interior;
+    key.shadow.needsUpdate = true;
+  }, [interior]);
+
+  // three allocates the shadow map once and never resizes it, so a tier stepping down from
+  // 2048 to 1024 kept rendering 2048. Dropping the map makes the next frame allocate the new size.
+  useEffect(() => {
+    const key = keyRef.current;
+    if (!key?.shadow.map) return;
+    key.shadow.map.dispose();
+    key.shadow.map = null;
+    key.shadow.needsUpdate = true;
+  }, [quality.shadowMapSize]);
 
   useEffect(() => {
     const key = keyRef.current;

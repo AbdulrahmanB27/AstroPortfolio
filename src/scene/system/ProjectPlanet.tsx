@@ -29,7 +29,14 @@ export function ProjectPlanet({ project, placement, onSelect }: Props) {
   const scene = useApp((s) => s.scene);
   const setHovered = useApp((s) => s.setHoveredProject);
   const speedScale = useApp((s) => s.settings.motion.orbitSpeedScale);
-  const interactive = scene === 'system';
+  const setProjectFull = useApp((s) => s.setProjectFull);
+  /*
+   * In orbit, a planet opens its project. Up close it still answers: the planet you are
+   * looking at opens its write-up full screen, and any other planet in the frame flies to its
+   * own project. Clicking empty space goes back out (see `onPointerMissed` in App).
+   */
+  const inProject = scene === 'project';
+  const interactive = scene === 'system' || inProject;
   const seed = useMemo(() => [...project.id].reduce((a, c) => a + c.charCodeAt(0) * 31, 7), [project.id]);
 
   const material = useMemo(
@@ -153,7 +160,15 @@ export function ProjectPlanet({ project, placement, onSelect }: Props) {
         visible={false}
         onPointerOver={interactive ? (e) => { e.stopPropagation(); setHovered(project.id); document.body.style.cursor = 'pointer'; } : undefined}
         onPointerOut={interactive ? () => { setHovered(null); document.body.style.cursor = ''; } : undefined}
-        onClick={interactive ? (e) => { e.stopPropagation(); onSelect(project.id); } : undefined}
+        onClick={
+          interactive
+            ? (e) => {
+                e.stopPropagation();
+                if (inProject && selected) setProjectFull(true);
+                else onSelect(project.id);
+              }
+            : undefined
+        }
       >
         <sphereGeometry args={[Math.max(r * 1.7, 22), 12, 8]} />
         <meshBasicMaterial />

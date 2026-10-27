@@ -6,6 +6,11 @@
    one in the same row. See --hud-inset. */
 .pill.audio-toggle {
   position: absolute;
+  /* A round icon button, the same 36px on every screen. */
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
   right: calc(var(--hud-inset) + var(--safe-right));
   bottom: calc(var(--hud-inset-bottom) + var(--safe-bottom));
   opacity: 0;
@@ -34,8 +39,8 @@
 
 .audio-toggle__icon {
   flex: none;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   color: var(--ink-500);
   transition: color 0.18s var(--ease-out);
 }
@@ -57,10 +62,6 @@
 @media (max-width: 820px) {
   /* Compact, icon-only control; the label stays for assistive tech. */
   .pill.audio-toggle {
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    justify-content: center;
     right: calc(16px + var(--safe-right));
     bottom: auto;
     top: calc(12px + var(--safe-top));
@@ -74,22 +75,10 @@
     top: auto;
     bottom: calc(16px + var(--safe-bottom));
   }
-  .audio-toggle__icon {
-    width: 14px;
-    height: 14px;
-  }
-  .audio-toggle__text {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
 }
 
 /* Short landscape phones: the bottom-right corner belongs to the navigation, so the
-   control moves to the opposite corner and drops its label. */
+   control moves to the opposite corner. */
 @media (max-height: 460px) and (orientation: landscape) {
   .pill.audio-toggle,
   .pill.audio-toggle[data-scene='project'],
