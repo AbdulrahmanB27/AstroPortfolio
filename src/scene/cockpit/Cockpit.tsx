@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
-import { BackSide, Color, DoubleSide, Group, MeshBasicMaterial, MeshStandardMaterial, PointLight, Vector3 } from 'three';
+import { BackSide, CatmullRomCurve3, Color, DoubleSide, Group, MeshBasicMaterial, MeshStandardMaterial, PointLight, TubeGeometry, Vector3 } from 'three';
 import { PALETTE, STAGE } from '../../lib/constants';
 import { STAGE_FRAME } from '../../lib/stageFrame';
 import { handles } from '../rig';
@@ -149,7 +149,16 @@ export function Cockpit() {
     // value these read as flat discs of identical pixels with nothing around them.
     const lampWarm = new MeshBasicMaterial({ color: new Color(PALETTE.starGlow).multiplyScalar(0.8), toneMapped: false, transparent: true, opacity: 0 });
     const lampCool = new MeshBasicMaterial({ color: new Color(PALETTE.screenGlow).multiplyScalar(0.72), toneMapped: false, transparent: true, opacity: 0 });
-    return { shell, panel, rib, floor, seat, strip, screen, sideScreen, sideScreenOff, glass, grip, lampWarm, lampCool, trace };
+    // Equipment the cabin carries rather than is built from: a red extinguisher, cable
+    // conduit, the pale placards that label a panel, and a small amber readout.
+    const extinguisher = new MeshStandardMaterial({ color: '#8f2a22', roughness: 0.45, metalness: 0.2 });
+    const conduit = new MeshStandardMaterial({ color: '#24282f', roughness: 0.7, metalness: 0.2 });
+    // Dark and matte: the wall panels sit beside the amber strip lights, and at the cabin's
+    // own panel values they flooded to a pale board that out-shouted the displays.
+    const placard = new MeshStandardMaterial({ color: '#4d4a44', roughness: 0.9, metalness: 0 });
+    const wallFace = new MeshStandardMaterial({ color: '#1c2026', roughness: 0.85, metalness: 0.15 });
+    const readout = new MeshBasicMaterial({ color: new Color(PALETTE.starGlow).multiplyScalar(0.4), toneMapped: false, transparent: true, opacity: 0 });
+    return { shell, panel, rib, floor, seat, strip, screen, sideScreen, sideScreenOff, glass, grip, lampWarm, lampCool, trace, extinguisher, conduit, placard, wallFace, readout };
   }, []);
 
   useEffect(() => {
@@ -217,6 +226,7 @@ export function Cockpit() {
         // Indicator lamps come up last and stay dim: they are punctuation, not lighting.
         mats.lampWarm.opacity = Math.pow(k, 2.4) * 0.95;
         mats.lampCool.opacity = Math.pow(k, 2.4) * 0.9;
+        mats.readout.opacity = Math.pow(k, 2) * 0.6;
       },
     };
     handles.cockpit.setPower(0);
@@ -227,7 +237,29 @@ export function Cockpit() {
 
   useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
 
-  const { shell, panel, rib, floor, seat, strip, sideScreen, sideScreenOff, glass, grip, lampWarm, lampCool } = mats;
+  /*
+   * Cable runs: from the crown down each wall to the console, where everything in a cockpit
+   * is wired to. Without them the walls were bare shell between the ribs, and the cabin read
+   * as a room someone had put instruments into rather than a vehicle built around them.
+   */
+  const conduits = useMemo(() => {
+    const run = (side: number, offset: number) => {
+      const at = (a: number, y: number) => new Vector3(-Math.sin(side * a) * (CABIN_R - 0.06 - offset), y, -Math.cos(side * a) * (CABIN_R - 0.06 - offset));
+      return new TubeGeometry(
+        // Kept on the curved wall (the shell's forward gap, round the window, spans ±0.7 rad),
+        // beside the wall panel rather than across it.
+        new CatmullRomCurve3([at(0.8, CEIL_Y + 0.2), at(0.8, CEIL_Y - 0.3), at(0.8, 5.6), at(0.8, 5.0), at(0.78, 4.7)]),
+        48,
+        0.022 - offset * 0.2,
+        8,
+        false,
+      );
+    };
+    return [run(1, 0), run(1, 0.05), run(-1, 0), run(-1, 0.05)];
+  }, []);
+  useEffect(() => () => conduits.forEach((g) => g.dispose()), [conduits]);
+
+  const { shell, panel, rib, floor, seat, strip, sideScreen, sideScreenOff, glass, grip, lampWarm, lampCool, extinguisher, conduit, placard, wallFace, readout } = mats;
   const ribAngles = [-1.35, -0.75, 0.75, 1.35, 2.2, -2.2, Math.PI];
 
   return (
@@ -318,6 +350,14 @@ export function Cockpit() {
           <mesh material={strip} position={[0, -0.5, 0.09]}>
             <boxGeometry args={[2.9, 0.012, 0.01]} />
           </mesh>
+          {/* Bolts along the top and bottom of the frame: the glass is held in, not floating. */}
+          {[-0.56, 0.56].map((y) =>
+            Array.from({ length: 11 }, (_, i) => (
+              <mesh key={`wb-${y}-${i}`} position={[-1.35 + i * 0.27, y, 0.085]} rotation={[Math.PI / 2, 0, 0]} material={grip}>
+                <cylinderGeometry args={[0.016, 0.016, 0.014, 6]} />
+              </mesh>
+            )),
+          )}
         </group>
         {/* Header panel above the window closes the shell gap up to the ceiling */}
         <mesh position={[0, 6.42, -CABIN_R + 0.06]} material={panel}>
@@ -606,6 +646,152 @@ export function Cockpit() {
             </mesh>
           </group>
         ))}
+
+        {/*
+          Wall equipment.
+
+          Between the window posts and the side ribs the walls were bare graphite shell: the
+          two largest unlit areas in the cabin view. Each now carries a systems panel turned to
+          face the seat — a grid of guarded toggles, two rotary selectors, a small amber
+          readout and a placard strip — which is what the side walls of a real cockpit are
+          covered in, and which gives the panel flood something to land on.
+        */}
+        {[-1, 1].map((side) => {
+          const a = side * 1.02;
+          const r = CABIN_R - 0.05;
+          return (
+            <group key={`wall-${side}`} position={[-Math.sin(a) * r, 5.42, -Math.cos(a) * r]} rotation={[0, a, 0]}>
+              <mesh material={rib} castShadow receiveShadow>
+                <boxGeometry args={[0.62, 0.78, 0.05]} />
+              </mesh>
+              <mesh position={[0, 0, 0.028]} material={wallFace}>
+                <boxGeometry args={[0.56, 0.72, 0.008]} />
+              </mesh>
+              {/* Toggle grid, three rows of four, each with its guard bar. */}
+              {[0, 1, 2].map((row) =>
+                [0, 1, 2, 3].map((col) => (
+                  <group key={`t-${row}-${col}`} position={[-0.18 + col * 0.12, 0.2 - row * 0.12, 0.04]}>
+                    <mesh material={grip}>
+                      <boxGeometry args={[0.03, 0.03, 0.02]} />
+                    </mesh>
+                    <mesh position={[0, 0.012, 0.02]} rotation={[0.5, 0, 0]} material={rib}>
+                      <cylinderGeometry args={[0.006, 0.006, 0.04, 6]} />
+                    </mesh>
+                    <mesh position={[0, -0.03, 0.006]} material={placard}>
+                      <boxGeometry args={[0.05, 0.009, 0.003]} />
+                    </mesh>
+                  </group>
+                )),
+              )}
+              {/* Two rotary selectors. */}
+              {[-0.12, 0.12].map((x) => (
+                <group key={`knob-${x}`} position={[x, -0.18, 0.045]}>
+                  <mesh rotation={[Math.PI / 2, 0, 0]} material={rib}>
+                    <torusGeometry args={[0.042, 0.007, 6, 18]} />
+                  </mesh>
+                  <mesh rotation={[Math.PI / 2, 0, 0]} material={grip}>
+                    <cylinderGeometry args={[0.032, 0.036, 0.03, 16]} />
+                  </mesh>
+                  <mesh position={[0, 0.016, 0.018]} material={lampWarm}>
+                    <boxGeometry args={[0.005, 0.022, 0.002]} />
+                  </mesh>
+                </group>
+              ))}
+              {/* Readout and its bezel. */}
+              <mesh position={[0, -0.31, 0.034]} material={grip}>
+                <boxGeometry args={[0.36, 0.08, 0.012]} />
+              </mesh>
+              <mesh position={[0, -0.31, 0.041]} material={readout}>
+                <planeGeometry args={[0.26, 0.032]} />
+              </mesh>
+              {/* Placard strip across the top. */}
+              <mesh position={[0, 0.33, 0.034]} material={placard}>
+                <boxGeometry args={[0.36, 0.024, 0.004]} />
+              </mesh>
+              {/* Corner fasteners. */}
+              {[-0.27, 0.27].map((fx) =>
+                [-0.35, 0.35].map((fy) => (
+                  <mesh key={`wf-${fx}-${fy}`} position={[fx, fy, 0.03]} rotation={[Math.PI / 2, 0, 0]} material={grip}>
+                    <cylinderGeometry args={[0.014, 0.014, 0.01, 6]} />
+                  </mesh>
+                )),
+              )}
+            </group>
+          );
+        })}
+
+        {/* Grab bars over the wall panels: in a cabin that can be weightless, every wall has
+            something to hold. Steel bars on two standoffs. */}
+        {[-1, 1].map((side) => {
+          const a = side * 1.02;
+          const r = CABIN_R - 0.09;
+          return (
+            <group key={`grab-${side}`} position={[-Math.sin(a) * r, 6.02, -Math.cos(a) * r]} rotation={[0, a, 0]}>
+              <mesh rotation={[0, 0, Math.PI / 2]} material={rib}>
+                <cylinderGeometry args={[0.018, 0.018, 0.46, 10]} />
+              </mesh>
+              {[-0.2, 0.2].map((x) => (
+                <mesh key={x} position={[x, 0, -0.035]} rotation={[Math.PI / 2, 0, 0]} material={rib}>
+                  <cylinderGeometry args={[0.012, 0.012, 0.07, 8]} />
+                </mesh>
+              ))}
+            </group>
+          );
+        })}
+
+        {/* Cable conduits down both walls, clipped to the shell. */}
+        {conduits.map((g, i) => (
+          <mesh key={`conduit-${i}`} geometry={g} material={conduit} castShadow />
+        ))}
+
+        {/* Fire extinguisher in its bracket, low on the right wall below the systems panel. */}
+        <group position={[-Math.sin(-1.22) * 1.78, 4.72, -Math.cos(-1.22) * 1.78]} rotation={[0, -1.22, 0]}>
+          <mesh material={extinguisher} castShadow>
+            <capsuleGeometry args={[0.07, 0.3, 6, 16]} />
+          </mesh>
+          <mesh position={[0, 0.27, 0]} material={grip}>
+            <cylinderGeometry args={[0.03, 0.04, 0.06, 10]} />
+          </mesh>
+          <mesh position={[0.04, 0.3, 0]} rotation={[0, 0, -1.1]} material={grip}>
+            <boxGeometry args={[0.1, 0.018, 0.03]} />
+          </mesh>
+          {[-0.08, 0.1].map((y) => (
+            <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]} material={rib}>
+              <torusGeometry args={[0.074, 0.01, 6, 20]} />
+            </mesh>
+          ))}
+        </group>
+
+        {/* Throttle quadrant on the left armrest, opposite the stick: two levers in a slotted
+            housing. On the desk it sat behind the coaming where the camera never reaches. */}
+        <group position={[-0.74, 4.37, 0.04]}>
+          <mesh material={grip} castShadow>
+            <boxGeometry args={[0.13, 0.05, 0.2]} />
+          </mesh>
+          {[-0.05, 0.05].map((x, i) => (
+            <group key={x} position={[x * 0.6, 0.02, i === 0 ? -0.02 : 0.03]} rotation={[i === 0 ? -0.35 : -0.1, 0, 0]}>
+              <mesh position={[0, 0.08, 0]} material={rib}>
+                <cylinderGeometry args={[0.009, 0.009, 0.16, 8]} />
+              </mesh>
+              <mesh position={[0, 0.17, 0]} rotation={[0, 0, Math.PI / 2]} material={i === 0 ? extinguisher : grip}>
+                <capsuleGeometry args={[0.018, 0.04, 4, 10]} />
+              </mesh>
+            </group>
+          ))}
+        </group>
+
+        {/* Side stick at the front of the right armrest. */}
+        <group position={[0.74, 4.36, 0.02]}>
+          <mesh material={rib}>
+            <cylinderGeometry args={[0.03, 0.04, 0.03, 12]} />
+          </mesh>
+          <mesh position={[0, 0.08, 0]} rotation={[-0.15, 0, 0]} material={grip} castShadow>
+            <capsuleGeometry args={[0.024, 0.11, 6, 12]} />
+          </mesh>
+          <mesh position={[0, 0.15, -0.014]} material={lampWarm}>
+            <sphereGeometry args={[0.009, 8, 6]} />
+          </mesh>
+        </group>
       </group>
     </group>
   );
