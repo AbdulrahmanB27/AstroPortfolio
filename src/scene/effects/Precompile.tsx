@@ -67,9 +67,16 @@ export function Precompile() {
         const previous = gl.getRenderTarget();
         const target = bloom ? new WebGLRenderTarget(1, 1, { type: HalfFloatType }) : null;
         gl.setRenderTarget(target);
-        let done: Promise<unknown> = Promise.resolve();
+        /*
+         * `compile`, not `compileAsync`. The async form polls every material it compiled on a
+         * timer until each program reports ready, and reads `currentProgram` without checking
+         * it: a material disposed in the meantime (the developer helpers make and drop their
+         * own) threw from inside that timer, where nothing can catch it. The plain call issues
+         * the same compiles, and where the browser has `KHR_parallel_shader_compile` they still
+         * finish in the background; three waits on a program only when it is first drawn.
+         */
         try {
-          done = gl.compileAsync(scene, camera);
+          gl.compile(scene, camera);
         } finally {
           gl.setRenderTarget(previous);
           for (const [o, parent, index] of lifted.reverse()) {
@@ -78,7 +85,6 @@ export function Precompile() {
           }
           for (const [o, v] of shown) o.visible = v;
         }
-        await done.catch(() => {});
         target?.dispose();
         // The same for textures: the planets' maps upload on first sight otherwise.
         for (const name of state.show) {
