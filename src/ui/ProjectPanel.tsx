@@ -4,6 +4,22 @@ import { assetUrl, portfolio } from '../data/loadPortfolio';
 import { useApp } from '../state/store';
 import { focusProject, returnToOrbit } from '../sequences/system';
 
+/** Four corners pointing out (expand) or in (collapse). */
+function ExpandIcon({ full }: { full: boolean }) {
+  return (
+    <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true" focusable="false">
+      <path
+        d={full ? 'M5 1v4H1M9 1v4h4M5 13V9H1M9 13V9h4' : 'M1 5V1h4M13 5V1H9M1 9v4h4M13 9v4H9'}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /**
  * Project display attached to the orbital probe. Conventional, readable content in a
  * thin-framed panel; the 3D probe and planet ground it in the world.
@@ -11,7 +27,11 @@ import { focusProject, returnToOrbit } from '../sequences/system';
 export function ProjectPanel() {
   const scene = useApp((s) => s.scene);
   const selectedId = useApp((s) => s.selectedProjectId);
-  const visible = scene === 'project' && !!selectedId;
+  const full = useApp((s) => s.projectFull);
+  const setFull = useApp((s) => s.setProjectFull);
+  // Full screen stays up while Previous/Next flies to the neighbouring planet: the camera move
+  // is behind the page, and dropping the page for it and bringing it back read as a flicker.
+  const visible = (scene === 'project' || (scene === 'focusingProject' && full)) && !!selectedId;
   const project = selectedId ? portfolio.projectById.get(selectedId) : undefined;
   const category = project ? portfolio.categoryById.get(project.category) : undefined;
   const [mediaIndex, setMediaIndex] = useState(0);
@@ -25,7 +45,11 @@ export function ProjectPanel() {
   useEffect(() => {
     if (!visible) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') returnToOrbit();
+      // One step out at a time: full screen to the side panel, then the panel to orbit.
+      if (e.key === 'Escape') {
+        if (useApp.getState().projectFull) setFull(false);
+        else returnToOrbit();
+      }
       if (e.key === 'ArrowRight') step(1);
       if (e.key === 'ArrowLeft') step(-1);
     };
@@ -45,7 +69,7 @@ export function ProjectPanel() {
   const current = media[mediaIndex];
 
   return (
-    <aside className="project-panel" data-visible={visible} aria-hidden={!visible} aria-label="Project details">
+    <aside className="project-panel" data-visible={visible} data-full={full} aria-hidden={!visible} aria-label="Project details">
       {project && (
         <div className="project-panel__frame" data-more={more}>
           <header className="project-panel__header">
@@ -55,9 +79,22 @@ export function ProjectPanel() {
               {project.year ? ` · ${project.year}` : ''}
               {project.status !== 'live' ? ` · ${project.status.replace('-', ' ')}` : ''}
             </span>
-            <button type="button" className="pill" onClick={returnToOrbit} tabIndex={visible ? 0 : -1}>
-              <span aria-hidden="true">←</span> Back to orbit
-            </button>
+            <span className="project-panel__controls">
+              <button
+                type="button"
+                className="pill project-panel__expand"
+                onClick={() => setFull(!full)}
+                tabIndex={visible ? 0 : -1}
+                aria-pressed={full}
+                aria-label={full ? 'Exit full screen' : 'Full screen'}
+                title={full ? 'Exit full screen' : 'Full screen'}
+              >
+                <ExpandIcon full={full} />
+              </button>
+              <button type="button" className="pill" onClick={returnToOrbit} tabIndex={visible ? 0 : -1}>
+                <span aria-hidden="true">←</span> Back to orbit
+              </button>
+            </span>
           </header>
           <div className="project-panel__body" ref={bodyRef}>
             <h1 className="project-panel__title">{project.title}</h1>

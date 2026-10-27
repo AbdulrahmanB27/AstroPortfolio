@@ -156,7 +156,7 @@ test.describe('audio', () => {
     await expect(page.locator(sel.homeMenu)).toBeVisible({ timeout: 25_000 });
     // Nothing may create an AudioContext before the toggle is used.
     expect(await page.evaluate(() => !!(window as { __astroAudio?: unknown }).__astroAudio)).toBe(false);
-    const toggle = page.locator('button:has-text("Sound")');
+    const toggle = page.getByRole('button', { name: /^Sound (on|off)$/ });
     await expect(toggle).toBeVisible();
     await toggle.click();
     await expect

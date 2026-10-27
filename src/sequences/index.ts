@@ -227,23 +227,28 @@ export function setCockpitView(view: CockpitView, tab?: CockpitTab): void {
   const target = tab ?? app.cockpitTab;
   if (app.cockpitView === view && target === app.cockpitTab) return;
   if (tab) app.setCockpitTab(tab);
-  app.setCockpitView(view);
 
   /*
-   * Opening the reader is a move INTO a display, so the camera makes that move.
+   * Opening the reader is a move INTO a display, so the camera makes that move — and then the
+   * reader opens.
    *
-   * The reader fades and scales up over the same window (see the `cockpit-full-in` keyframes),
-   * which is what makes it read as the display growing to fill the frame rather than as a
-   * dialog appearing over it. Switching section while the reader is open keeps it open and
-   * still moves the camera underneath, so closing it lands on the display you were reading.
+   * It used to open on the click, with its own fade running over the camera's flight, so the
+   * move into the display happened behind a page that was already up and nobody saw it. The
+   * flight now plays first, with the cabin's controls stood down (`busy`), and the reader
+   * opens when the camera arrives; its `cockpit-full-in` scale-up then reads as the display
+   * filling the frame. Closing is the reverse: the reader goes first, then the camera pulls
+   * back to the cabin. Switching section inside the reader keeps it open and moves the camera
+   * underneath, so closing it lands on the display you were reading.
    *
    * The reading dim lives in `Exposure`, derived from this state — a deep link never runs this
    * function, so that rule cannot live here.
    */
   const pose = view === 'full' ? cockpitScreenPose(target) : cockpitPose();
+  const opening = view === 'full' && app.cockpitView !== 'full';
   // Switching section inside the reader: nobody is looking at the camera, so do not spend a
   // transition on it.
-  if (view === 'full' && app.cockpitView === 'full') {
+  if (!opening || reduced()) app.setCockpitView(view);
+  if (view === 'full' && !opening) {
     applyPose(pose);
     rig.sway = 0;
     return;
@@ -257,8 +262,13 @@ export function setCockpitView(view: CockpitView, tab?: CockpitTab): void {
   const tl = gsap.timeline();
   current = tl;
   rig.sway = 0;
+  if (opening) app.setBusy(true);
   tweenPose(tl, pose, DURATIONS.cockpitView, EASES.glide, 0);
   tl.eventCallback('onComplete', () => {
+    if (opening) {
+      useApp.getState().setCockpitView('full');
+      useApp.getState().setBusy(false);
+    }
     rig.sway = 0;
     current = null;
   });

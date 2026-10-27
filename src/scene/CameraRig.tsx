@@ -17,6 +17,7 @@ export function CameraRig() {
   const t = useRef(0);
 
   const scene = useThree((s) => s.scene);
+  const gl = useThree((s) => s.gl);
 
   useEffect(() => {
     camera.near = 0.2;
@@ -27,11 +28,13 @@ export function CameraRig() {
   useEffect(() => {
     live.camera = camera;
     live.scene = scene;
+    live.gl = gl;
     return () => {
       delete live.camera;
       delete live.scene;
+      delete live.gl;
     };
-  }, [camera, scene]);
+  }, [camera, scene, gl]);
 
   useFrame((_, delta) => {
     t.current += delta;

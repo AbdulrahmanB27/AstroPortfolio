@@ -324,6 +324,53 @@ body {
   gap: 22px;
 }
 
+/*
+ * The work gets the width; the writing keeps its measure.
+ *
+ * Every section shared one 720px column, which is right for paragraphs and wrong for a set of
+ * cards: on a desktop the projects ran down a narrow strip with most of the screen empty either
+ * side. The Work section alone widens to two columns, and the first project — the one the owner
+ * leads with — runs the full width with its picture beside its text, so the grid has a head
+ * rather than starting on two equal cards.
+ */
+@media (min-width: 900px) {
+  /* One left edge for the whole page: the container widens with the grid, and the prose
+     inside it keeps its own measure in ch, so paragraphs do not stretch with it. */
+  .lite__hero,
+  .lite__section,
+  .lite__footer {
+    max-width: 1160px;
+  }
+  .lite__projects {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lite-card {
+    display: flex;
+    flex-direction: column;
+  }
+  .lite-card__shot {
+    aspect-ratio: 16 / 9;
+    max-height: none;
+    height: auto;
+  }
+  .lite-card:first-child {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+  .lite-card:first-child .lite-card__shot {
+    height: 100%;
+    aspect-ratio: auto;
+    min-height: 300px;
+    border-bottom: 0;
+    border-right: var(--hair);
+  }
+  .lite-card:first-child .lite-card__body {
+    align-self: center;
+    padding: 26px 28px;
+  }
+}
+
 .lite-card {
   border: var(--hair);
   border-radius: var(--radius-md);

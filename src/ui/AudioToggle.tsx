@@ -12,7 +12,7 @@ const VISIBLE_IN = new Set(['home', 'cockpit', 'system', 'project']);
 
 function Icon({ on }: { on: boolean }) {
   return (
-    <svg className="audio-toggle__icon" viewBox="0 0 14 14" width="12" height="12" aria-hidden="true" focusable="false">
+    <svg className="audio-toggle__icon" viewBox="0 0 14 14" width="14" height="14" aria-hidden="true" focusable="false">
       <path d="M2 5.2h2.4L7.6 2.6v8.8L4.4 8.8H2z" fill="currentColor" />
       {on ? (
         <>
@@ -31,8 +31,10 @@ export function AudioToggle() {
   const busy = useApp((s) => s.busy);
   const enabled = useApp((s) => s.audioEnabled);
   const siteEnabled = useApp((s) => s.settings.audio.enabled);
+  const projectFull = useApp((s) => s.projectFull);
   if (!siteEnabled || !isAudioSupported()) return null;
-  const visible = VISIBLE_IN.has(scene) && !busy;
+  // Stood down while a project is full screen: the page covers its corner.
+  const visible = VISIBLE_IN.has(scene) && !busy && !projectFull;
   return (
     <button
       type="button"
@@ -40,13 +42,16 @@ export function AudioToggle() {
       data-visible={visible}
       data-scene={scene}
       aria-pressed={enabled}
+      // Icon only, everywhere: the speaker says what the control is, and its state is the
+      // waves or the cross. The words stay for assistive tech and as the hover tooltip.
+      aria-label={enabled ? 'Sound on' : 'Sound off'}
+      title={enabled ? 'Sound on' : 'Sound off'}
       aria-hidden={!visible}
       tabIndex={visible ? 0 : -1}
       onClick={toggleAudio}
       data-label-obstacle
     >
       <Icon on={enabled} />
-      <span className="audio-toggle__text">{enabled ? 'Sound on' : 'Sound off'}</span>
     </button>
   );
 }

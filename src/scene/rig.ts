@@ -62,10 +62,15 @@ export interface SceneHandles {
 export const handles: SceneHandles = {};
 
 /**
- * The live three.js camera and scene, registered by `CameraRig` on mount.
+ * The live three.js camera, scene and renderer, registered by `CameraRig` on mount.
  *
  * Dev mode exposes these on `window.__astro` so framing questions ("is the star actually
  * inside the window aperture?") can be answered by projecting real world positions rather
  * than by eyeballing a screenshot. Nothing in the product reads them.
  */
-export const live: { camera?: import('three').PerspectiveCamera; scene?: import('three').Scene } = {};
+export const live: {
+  camera?: import('three').PerspectiveCamera;
+  scene?: import('three').Scene;
+  /** For `gl.info`: draw calls and triangles per frame, measured rather than estimated. */
+  gl?: import('three').WebGLRenderer;
+} = {};

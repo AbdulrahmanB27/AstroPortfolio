@@ -305,7 +305,59 @@
   transition:
     opacity 0.45s var(--ease-out),
     transform 0.45s var(--ease-out),
+    right 0.45s var(--ease-out),
+    width 0.45s var(--ease-out),
+    top 0.45s var(--ease-out),
     visibility 0s;
+}
+
+/*
+ * Full screen: the same panel, centred and widened, with room for the pictures.
+ *
+ * Grown from the side panel rather than swapped for a second component, so the write-up keeps
+ * its scroll position and there is one copy of the project in the document. Centred by right
+ * 50% and a half-width shift, which — unlike left/right insets from `auto` — the transition can
+ * interpolate, so the panel visibly slides out of its column into the middle.
+ */
+.project-panel[data-visible='true'][data-full='true'] {
+  right: 50%;
+  width: min(1080px, calc(100vw - 56px));
+  transform: translateX(50%);
+}
+
+.project-panel[data-full='true'] .project-panel__frame {
+  background: rgba(8, 12, 22, 0.94);
+}
+
+.project-panel[data-full='true'] .project-panel__body {
+  padding: 30px clamp(26px, 4vw, 56px) 56px;
+}
+
+.project-panel[data-full='true'] .project-panel__summary,
+.project-panel[data-full='true'] .project-panel__p,
+.project-panel[data-full='true'] .project-panel__tagline {
+  max-width: 680px;
+}
+
+/* The point of full screen is mostly the evidence: pictures at a size you can read. */
+.project-panel[data-full='true'] .project-media img,
+.project-panel[data-full='true'] .project-media video {
+  max-height: min(58vh, 600px);
+  object-fit: contain;
+  filter: none;
+}
+
+.project-panel__controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.project-panel__expand {
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
 }
 
 .project-panel__frame {
@@ -317,6 +369,22 @@
   background: rgba(8, 12, 22, 0.72);
   border: 1px solid rgba(207, 232, 255, 0.14);
   backdrop-filter: blur(12px);
+}
+
+/*
+ * The low tier draws its panels without a live blur. A blur over a canvas that redraws every
+ * frame is a fresh blur of everything behind the panel every frame — with the planets turning
+ * behind it, that is the heaviest single job a weak phone's GPU gets here. A denser ground keeps
+ * the text as legible.
+ */
+:root[data-quality='low'] .project-panel__frame {
+  backdrop-filter: none;
+  background: rgba(8, 12, 22, 0.9);
+}
+
+:root[data-quality='low'] .project-index {
+  backdrop-filter: none;
+  background: rgba(11, 16, 32, 0.92);
 }
 
 .project-panel__header,
@@ -718,6 +786,17 @@
   }
   .project-panel__header .pill {
     min-width: 0;
+  }
+  .project-panel__expand {
+    width: 44px;
+    height: 44px;
+  }
+  /* On a phone the sheet already fills most of the screen; full screen takes the rest. */
+  .project-panel[data-visible='true'][data-full='true'] {
+    top: var(--safe-top);
+    right: 0;
+    width: auto;
+    transform: none;
   }
   /* No size override here. The rule above owns this geometry, and a second one expressing it
      differently is what made the dots disappear. */
