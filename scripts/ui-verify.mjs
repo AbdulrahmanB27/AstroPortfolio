@@ -226,7 +226,6 @@ const browser = await chromium.launch();
   const home = await page.evaluate(() => {
     const lite = document.querySelector('.home-menu__lite');
     const sub = document.querySelector('.home-menu__sub');
-    const tag = document.querySelector('.lockup__tagline');
     const cs = getComputedStyle(lite);
     return {
       liteMono: cs.fontFamily.includes('Mono'),
@@ -238,7 +237,6 @@ const browser = await chromium.launch();
       subBordered: parseFloat(getComputedStyle(sub).borderTopWidth) > 0,
       liteW: Math.round(lite.getBoundingClientRect().width),
       menuW: Math.round(document.querySelector('.home-menu').getBoundingClientRect().width),
-      tagline: tag ? `${getComputedStyle(tag).display} "${tag.textContent.slice(0, 40)}"` : 'absent',
     };
   });
   /*
@@ -259,7 +257,6 @@ const browser = await chromium.launch();
   );
   check('lite doorway hugs its label', home.liteW < 190, `${home.liteW}px wide in a ${home.menuW}px column`);
   check('lite doorway has its own ground', /rgba?\(/.test(home.litePlate) && home.litePlate !== 'rgba(0, 0, 0, 0)', home.litePlate);
-  check('home states what he builds', home.tagline.startsWith('block'), home.tagline);
 
   await ctx.close();
 }
@@ -336,12 +333,12 @@ const browser = await chromium.launch();
       const e = document.querySelector(s);
       return e ? parseFloat(getComputedStyle(e).fontSize) : null;
     };
-    return { title: size('.mc-doc__title'), deck: size('.mc-doc__deck'), lede: size('.mc-doc__lede'), body: size('.mc-doc__p') };
+    return { title: size('.mc-doc__title'), lede: size('.mc-doc__lede'), body: size('.mc-doc__p') };
   });
   check(
     'about type scale steps down, not sideways',
-    steps.title > steps.deck && steps.deck > steps.lede && steps.lede > steps.body,
-    `title ${steps.title} > deck ${steps.deck} > lede ${steps.lede} > body ${steps.body}`,
+    steps.title > steps.lede && steps.lede > steps.body,
+    `title ${steps.title} > lede ${steps.lede} > body ${steps.body}`,
   );
 
   /*
@@ -567,15 +564,12 @@ const browser = await chromium.launch();
         const e = document.querySelector(s);
         return e ? parseFloat(getComputedStyle(e).fontSize) : null;
       };
-      const tag = document.querySelector('.lockup__tagline');
       return {
         name: size('.lockup__name'),
         nav: size('.home-menu__label'),
-        taglineShown: tag ? getComputedStyle(tag).display !== 'none' : false,
       };
     });
     check(`${vp.tag} the name outranks a menu item`, r.name > r.nav * 1.15, `name ${r.name}px vs nav ${r.nav}px`);
-    check(`${vp.tag} the landing frame says what he builds`, r.taglineShown, `tagline shown ${r.taglineShown}`);
     await c.close();
   }
   await ctx.close();

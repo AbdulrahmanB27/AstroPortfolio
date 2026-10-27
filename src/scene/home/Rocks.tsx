@@ -3,6 +3,7 @@ import { Color, Euler, IcosahedronGeometry, InstancedMesh, Matrix4, Quaternion, 
 import { STAGE, WORLD } from '../../lib/constants';
 import { mulberry32, noise3D } from '../../lib/noise';
 import { terrainHeight } from './terrainGeometry';
+import { LOW_POLY } from '../../lib/lowPoly';
 
 /**
  * Scattered boulders plus three composed hero rocks. One shared perturbed icosahedron,
@@ -10,7 +11,8 @@ import { terrainHeight } from './terrainGeometry';
  */
 
 function buildRockGeometry(seed: number, detail = 2): IcosahedronGeometry {
-  const g = new IcosahedronGeometry(1, detail);
+  // Low-poly keeps the noise but drops a subdivision, so each rock is a handful of big facets.
+  const g = new IcosahedronGeometry(1, LOW_POLY ? Math.max(0, detail - 1) : detail);
   const pos = g.attributes.position!;
   const v = new Vector3();
   for (let i = 0; i < pos.count; i++) {

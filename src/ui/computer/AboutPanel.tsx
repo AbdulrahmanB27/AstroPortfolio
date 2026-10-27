@@ -11,7 +11,6 @@ export function AboutPanel() {
     <article className="mc-doc">
       <p className="t-mono">Mission profile</p>
       <h1 className="mc-doc__title">{profile.name}</h1>
-      <p className="mc-doc__deck">{profile.tagline}</p>
       <p className="mc-doc__lede">{profile.intro}</p>
       {profile.bio.map((p, i) => (
         <p key={i} className="mc-doc__p">

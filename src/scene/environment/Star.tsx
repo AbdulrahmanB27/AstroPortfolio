@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef, useSyncExternalStore } from 'react';
-import { AdditiveBlending, BackSide, Color, Group, Mesh, ShaderMaterial, Vector3 } from 'three';
+import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { AdditiveBlending, BackSide, Color, Group, Mesh, ShaderMaterial, SphereGeometry, Vector3 } from 'three';
 import { PALETTE, WORLD } from '../../lib/constants';
 import { useApp } from '../../state/store';
 import { getVehicleInterior, subscribeVehicleView } from '../home/rocketState';
@@ -169,6 +169,10 @@ export function Star({ onSelect }: { onSelect?: () => void }) {
   });
 
   const r = WORLD.starRadius;
+  // Built here rather than as `<sphereGeometry>` so `?lowpoly` leaves the star round: it is a
+  // glow, not a lit surface, and a faceted rim on a glow reads as a rendering fault.
+  const sphere = useMemo(() => ({ surface: new SphereGeometry(r, 64, 48), shell: new SphereGeometry(r, 48, 32) }), [r]);
+  useEffect(() => () => Object.values(sphere).forEach((g) => g.dispose()), [sphere]);
 
   return (
     <group name="star">
@@ -178,13 +182,12 @@ export function Star({ onSelect }: { onSelect?: () => void }) {
         onClick={interactive ? (e) => { e.stopPropagation(); onSelect?.(); } : undefined}
         onPointerOver={interactive ? () => (document.body.style.cursor = 'pointer') : undefined}
         onPointerOut={interactive ? () => (document.body.style.cursor = '') : undefined}
+        geometry={sphere.surface}
       >
-        <sphereGeometry args={[r, 64, 48]} />
         <shaderMaterial ref={surfaceRef} vertexShader={surfaceVertex} fragmentShader={surfaceFragment} uniforms={surfaceUniforms} toneMapped={false} />
       </mesh>
       {/* Soft outer shell for a luminous limb when seen against space. */}
-      <mesh name="star-shell" scale={1.11}>
-        <sphereGeometry args={[r, 48, 32]} />
+      <mesh name="star-shell" scale={1.11} geometry={sphere.shell}>
         <meshBasicMaterial color={PALETTE.starGlow} transparent opacity={0.16} side={BackSide} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
       </mesh>
       <group ref={coronaGroup} name="star-corona">

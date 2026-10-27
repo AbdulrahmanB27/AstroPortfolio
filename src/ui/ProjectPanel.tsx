@@ -75,9 +75,11 @@ export function ProjectPanel() {
           <header className="project-panel__header">
             <span className="t-mono project-panel__meta">
               <i className="project-panel__cat-dot" style={{ background: category?.color }} aria-hidden="true" />
-              {category?.name}
-              {project.year ? ` · ${project.year}` : ''}
-              {project.status !== 'live' ? ` · ${project.status.replace('-', ' ')}` : ''}
+              <span className="project-panel__meta-text">
+                {category?.name}
+                {project.year ? ` · ${project.year}` : ''}
+                {project.status !== 'live' ? ` · ${project.status.replace('-', ' ')}` : ''}
+              </span>
             </span>
             <span className="project-panel__controls">
               <button
@@ -86,13 +88,15 @@ export function ProjectPanel() {
                 onClick={() => setFull(!full)}
                 tabIndex={visible ? 0 : -1}
                 aria-pressed={full}
-                aria-label={full ? 'Exit full screen' : 'Full screen'}
                 title={full ? 'Exit full screen' : 'Full screen'}
               >
                 <ExpandIcon full={full} />
+                {/* Words beside the icon where there is room: four corners alone was the one
+                    control in the panel nobody could name. On a phone the icon carries it. */}
+                <span className="project-panel__expand-text">{full ? 'Exit full screen' : 'Full screen'}</span>
               </button>
-              <button type="button" className="pill" onClick={returnToOrbit} tabIndex={visible ? 0 : -1}>
-                <span aria-hidden="true">←</span> Back to orbit
+              <button type="button" className="pill" onClick={returnToOrbit} tabIndex={visible ? 0 : -1} aria-label="Back to orbit">
+                <span aria-hidden="true">←</span> Back<span className="project-panel__back-rest"> to orbit</span>
               </button>
             </span>
           </header>

@@ -64,17 +64,21 @@ function useRenderPaused(): boolean {
   useEffect(() => {
     setCovered(false);
     if (!reading) return;
-    let settled = false;
+    /*
+     * Checked again every second rather than once. On a deep link the reader is open from the
+     * first frame, while the loader still holds the overlay back, so a single look found
+     * nothing covering the canvas and the loop never stopped. Polling also follows a phone
+     * turning to landscape, which can uncover the canvas.
+     */
+    let interval = 0;
+    const check = () => setCovered(canvasCovered());
     const id = window.setTimeout(() => {
-      settled = true;
-      setCovered(canvasCovered());
+      check();
+      interval = window.setInterval(check, 1000);
     }, 1500);
-    // A phone turned to landscape can uncover the canvas, or a window narrowed can cover it.
-    const onResize = () => settled && setCovered(canvasCovered());
-    window.addEventListener('resize', onResize);
     return () => {
       window.clearTimeout(id);
-      window.removeEventListener('resize', onResize);
+      window.clearInterval(interval);
     };
   }, [reading]);
   return reading && covered;
@@ -88,11 +92,6 @@ export function App() {
   useEffect(() => {
     if (!CAN_RENDER) redirectToLite();
   }, []);
-
-  // For the stylesheet: the low tier trades the panels' live blur for a denser background.
-  useEffect(() => {
-    document.documentElement.dataset.quality = quality.tier;
-  }, [quality.tier]);
 
   useEffect(() => {
     const uninstallRouter = installRouter();

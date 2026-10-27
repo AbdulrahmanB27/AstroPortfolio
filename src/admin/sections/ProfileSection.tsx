@@ -31,12 +31,6 @@ export function ProfileSection({ draft, set }: SectionProps) {
         onChange={(v) => set(['profile', 'title'], v ?? '')}
         hint="One line under the name, e.g. degree · school."
       />
-      <TextInput
-        label="Tagline"
-        value={profile.tagline}
-        onChange={(v) => set(['profile', 'tagline'], v ?? '')}
-        hint="One sentence about what you build."
-      />
       <TextArea
         label="Intro"
         value={profile.intro}

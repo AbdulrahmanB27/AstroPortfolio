@@ -48,7 +48,6 @@ export const ProfileSchema = z.object({
   name: z.string().min(1),
   shortName: z.string().min(1),
   title: z.string().min(1),
-  tagline: z.string().min(1),
   intro: z.string().min(1),
   bio: z.array(z.string()).default([]),
   location: z.string().optional(),

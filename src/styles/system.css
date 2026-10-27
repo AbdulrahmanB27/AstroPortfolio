@@ -354,10 +354,7 @@
 }
 
 .project-panel__expand {
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
+  gap: 8px;
 }
 
 .project-panel__frame {
@@ -369,22 +366,6 @@
   background: rgba(8, 12, 22, 0.72);
   border: 1px solid rgba(207, 232, 255, 0.14);
   backdrop-filter: blur(12px);
-}
-
-/*
- * The low tier draws its panels without a live blur. A blur over a canvas that redraws every
- * frame is a fresh blur of everything behind the panel every frame — with the planets turning
- * behind it, that is the heaviest single job a weak phone's GPU gets here. A denser ground keeps
- * the text as legible.
- */
-:root[data-quality='low'] .project-panel__frame {
-  backdrop-filter: none;
-  background: rgba(8, 12, 22, 0.9);
-}
-
-:root[data-quality='low'] .project-index {
-  backdrop-filter: none;
-  background: rgba(11, 16, 32, 0.92);
 }
 
 .project-panel__header,
@@ -416,6 +397,10 @@
 }
 
 .project-panel__header {
+  /* Two tracks, not the footer's three: the header has two items, and in the shared
+     `1fr auto 1fr` the controls landed in the middle track with an empty one beside them, so
+     they stopped short of the edge and the category line got a third of the width. */
+  grid-template-columns: minmax(0, 1fr) auto;
   border-bottom: 1px solid rgba(207, 232, 255, 0.12);
 }
 
@@ -743,6 +728,13 @@
   .project-panel__header .project-panel__meta {
     min-width: 0;
     overflow: hidden;
+    /* Tighter tracking so "Hardware · 2026 · concept" fits beside the controls on a 390px
+       phone; the ellipsis is for anything longer, rather than a word cut in half. */
+    letter-spacing: 0.06em;
+  }
+  .project-panel__meta-text {
+    min-width: 0;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -788,8 +780,24 @@
     min-width: 0;
   }
   .project-panel__expand {
+    justify-content: center;
     width: 44px;
     height: 44px;
+    padding: 0;
+  }
+  /* "Back" on a phone: with the full-screen control beside it, the whole label pushed the
+     category line out of the header, cut to "SOFTWAR". The accessible name keeps all three
+     words. */
+  .project-panel__back-rest {
+    display: none;
+  }
+  .project-panel__expand-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   /* On a phone the sheet already fills most of the screen; full screen takes the rest. */
   .project-panel[data-visible='true'][data-full='true'] {
