@@ -1,9 +1,8 @@
 import { chromium } from '@playwright/test';
 const out = 'C:/Dev/PortfolioV3/public/media/projects/';
 const sites = [
-  ['https://abdulrahmanb27.github.io/SweetMoment/', 'sweet-moment-home.jpg'],
+  ['https://sweetmomentchocolate.com/', 'sweet-moment-home.jpg'],
   ['https://abdulrahmanb27.github.io/MyKitchenCloudflare/', 'mykitchen-dashboard.jpg'],
-  ['https://abdulrahmanb27.github.io/RecipeStash/', 'recipe-stash.jpg'],
 ];
 const browser = await chromium.launch();
 for (const [url, file] of sites) {

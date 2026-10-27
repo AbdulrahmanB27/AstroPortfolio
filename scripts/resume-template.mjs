@@ -30,6 +30,15 @@ export function escapeHtml(text) {
 const SEPARATOR = ' · ';
 
 /**
+ * A URL as it should read on paper: "github.com/AbdulrahmanB27", not
+ * "https://github.com/AbdulrahmanB27". The scheme and "www." are noise to a reader, ATS parsers
+ * recognise the bare form, and on a one-page resume the LinkedIn address alone was costing a line.
+ */
+export function displayUrl(url) {
+  return String(url).trim().replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
+}
+
+/**
  * Build the resume as plain data first (sections in the required order) so the HTML and
  * the console summary agree. Empty sections and placeholder text are dropped here.
  */
@@ -39,14 +48,15 @@ export function buildResumeModel(data) {
   const placeholderEntries = [];
   const note = (path, text) => skipped.push(`${path}: ${String(text).slice(0, 60)}`);
 
-  // Contact line: title · location · email · github · linkedin · other links (plain text).
+  // Contact line: title · email · portfolio · github · linkedin · other links (plain text).
   const contact = [];
   for (const [path, value] of [
     ['profile.title', profile.title],
-    ['profile.location', profile.location],
+    // No location: the education line already says where, and the header has to fit one line.
     ['profile.contact.email', profile.contact?.email],
-    ['profile.contact.github', profile.contact?.github],
-    ['profile.contact.linkedin', profile.contact?.linkedin],
+    ['meta.url', meta?.url && displayUrl(meta.url)],
+    ['profile.contact.github', profile.contact?.github && displayUrl(profile.contact.github)],
+    ['profile.contact.linkedin', profile.contact?.linkedin && displayUrl(profile.contact.linkedin)],
   ]) {
     if (value === undefined || value === null || value === '') continue;
     if (isPlaceholder(value)) note(path, value);
@@ -55,7 +65,7 @@ export function buildResumeModel(data) {
   for (const link of profile.contact?.links ?? []) {
     if (!link?.url) continue;
     if (isPlaceholder(link.url) || isPlaceholder(link.label)) note('profile.contact.links', link.url);
-    else contact.push(String(link.url).trim());
+    else contact.push(displayUrl(link.url));
   }
 
   const summary = realString(resume.summary);
@@ -107,10 +117,10 @@ export function buildResumeModel(data) {
     }
     if (p.placeholder) placeholderEntries.push(`projects.${id} (placeholder: true)`);
     const links = [];
-    if (realString(p.links?.live)) links.push({ label: 'Live', url: p.links.live.trim() });
-    if (realString(p.links?.repo)) links.push({ label: 'Code', url: p.links.repo.trim() });
+    if (realString(p.links?.live)) links.push({ label: 'Live', url: displayUrl(p.links.live) });
+    if (realString(p.links?.repo)) links.push({ label: 'Code', url: displayUrl(p.links.repo) });
     for (const other of p.links?.other ?? []) {
-      if (realString(other?.url) && realString(other?.label)) links.push({ label: other.label.trim(), url: other.url.trim() });
+      if (realString(other?.url) && realString(other?.label)) links.push({ label: other.label.trim(), url: displayUrl(other.url) });
     }
     highlights.push({
       title,
@@ -134,7 +144,7 @@ export function buildResumeModel(data) {
   if (skillGroups.length) sections.push({ id: 'skills', title: 'Skills', kind: 'skills', items: skillGroups });
 
   const footer = [];
-  if (realString(meta?.url)) footer.push(`Portfolio: ${meta.url.trim()}`);
+  // The portfolio now leads the contact line, where a reader looks for it; the footer keeps the date.
   if (realString(resume.updated)) footer.push(`Updated ${resume.updated.trim()}`);
 
   return {
