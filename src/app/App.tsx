@@ -54,9 +54,9 @@ function canvasCovered(): boolean {
  * heat spent on nothing, during the longest time anyone spends on the site.
  *
  * Measured rather than assumed: on a desktop the full-screen project leaves the system visible
- * either side, with its planets moving, so there the loop keeps running. The wait lets the
- * reading dim and the page's own entrance finish before the last frame is kept; leaving starts
- * the loop again at once.
+ * either side, with its planets moving, so there the loop keeps running. The wait (0.7 s) lets
+ * the reading dim and the page's own entrance (0.42 s) finish before the last frame is kept;
+ * leaving starts the loop again at once.
  */
 function useRenderPaused(): boolean {
   const reading = useApp((s) => !s.busy && ((s.scene === 'cockpit' && s.cockpitView === 'full') || (s.scene === 'project' && s.projectFull)));
@@ -75,7 +75,7 @@ function useRenderPaused(): boolean {
     const id = window.setTimeout(() => {
       check();
       interval = window.setInterval(check, 1000);
-    }, 1500);
+    }, 700);
     return () => {
       window.clearTimeout(id);
       window.clearInterval(interval);
@@ -145,6 +145,8 @@ export function App() {
         <Scene onFirstFrame={onFirstFrame} />
       </Canvas>
       <div id="blackout" className="blackout" aria-hidden="true" />
+      {/* Holds the last frame while the cockpit cuts in or out; see `crossfade`. */}
+      <canvas id="crossfade" className="crossfade" width={1} height={1} aria-hidden="true" />
       <div className="overlay-root">
         <PlanetLabels />
         <HomeMenu />

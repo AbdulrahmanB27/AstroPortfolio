@@ -11,8 +11,8 @@ import { LOW_POLY } from '../../lib/lowPoly';
  */
 
 function buildRockGeometry(seed: number, detail = 2): IcosahedronGeometry {
-  // Low-poly keeps the noise but drops a subdivision, so each rock is a handful of big facets.
-  const g = new IcosahedronGeometry(1, LOW_POLY ? Math.max(0, detail - 1) : detail);
+  // Low-poly keeps the noise but drops the subdivisions: each rock is a handful of big facets.
+  const g = new IcosahedronGeometry(1, LOW_POLY ? 0 : detail);
   const pos = g.attributes.position!;
   const v = new Vector3();
   for (let i = 0; i < pos.count; i++) {

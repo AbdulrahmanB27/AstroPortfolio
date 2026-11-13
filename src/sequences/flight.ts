@@ -31,14 +31,14 @@ export function enterFlight(): void {
   if (reduced()) {
     setLabelsAlpha(0);
     applyPose(pose);
-    finish('flight', 0);
+    finish('flight');
     return;
   }
   const tl = begin('flight');
   const labels = { value: 1 };
   tl.to(labels, { value: 0, duration: 0.3, onUpdate: () => setLabelsAlpha(labels.value) }, 0);
   tweenPose(tl, pose, ENTER_DURATION, EASES.glide, 0);
-  tl.eventCallback('onComplete', () => finish('flight', 0));
+  tl.eventCallback('onComplete', () => finish('flight'));
 }
 
 export function exitFlight(): void {
@@ -51,7 +51,7 @@ export function exitFlight(): void {
     setLabelsAlpha(1);
     applyPose(target);
     app.setSelectedProject(null);
-    finish('system', 0.6);
+    finish('system');
     return;
   }
   const tl = begin('flight');
@@ -63,7 +63,7 @@ export function exitFlight(): void {
     flight.active = false;
     setLabelsAlpha(1);
     useApp.getState().setSelectedProject(null);
-    finish('system', 0.6);
+    finish('system');
   });
 }
 

@@ -37,7 +37,7 @@ export function jumpToSystem(): void {
   setLabelsAlpha(1);
   applyPose(systemPose(portfolio.layout.outerRadius));
   useApp.getState().setSelectedProject(null);
-  finish('system', 0.6);
+  finish('system');
 }
 
 /**
@@ -93,7 +93,7 @@ export function jumpToProject(id: string): void {
   const pos = planetPosition(id);
   applyPose(projectPose(pos, visualRadius(id), drawnRadiusOf(id)));
   setProbeOpacity(1);
-  finish('project', 0.15);
+  finish('project');
 }
 
 export function focusProject(id: string): void {
@@ -123,7 +123,7 @@ export function focusProject(id: string): void {
   tl.to(dim, { value: 1, duration: d * 0.8, ease: 'power2.out', onUpdate: () => setSystemDim(dim.value) }, d * 0.1);
   tl.to(exposure, { value: PROJECT_DIM, duration: d * 0.8, ease: 'power2.out', onUpdate: () => handles.exposure?.setLevel(exposure.value) }, d * 0.1);
   tl.to(probe, { value: 1, duration: d * 0.5, ease: 'power2.out', onUpdate: () => setProbeOpacity(probe.value) }, d * 0.55);
-  tl.eventCallback('onComplete', () => finish('project', 0.15));
+  tl.eventCallback('onComplete', () => finish('project'));
 }
 
 export function returnToOrbit(): void {
@@ -147,7 +147,7 @@ export function returnToOrbit(): void {
   tl.to(labels, { value: 1, duration: d * 0.5, onUpdate: () => setLabelsAlpha(labels.value) }, d * 0.5);
   tl.eventCallback('onComplete', () => {
     app.setSelectedProject(null);
-    finish('system', 0.6);
+    finish('system');
   });
 }
 

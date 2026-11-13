@@ -94,6 +94,17 @@ button {
   pointer-events: none;
 }
 
+/* The held frame of a dissolve: the canvas's own pixels, stretched exactly over it. */
+.crossfade {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  visibility: hidden;
+}
+
 /* ---------- typography helpers ---------- */
 
 .t-display {
@@ -208,31 +219,23 @@ button {
     opacity 0.55s var(--ease-out),
     transform 0.55s var(--ease-out),
     color 0.2s var(--ease-out),
-    border-color 0.2s var(--ease-out);
+    background-color 0.2s var(--ease-out);
   /*
-   * The pill voice, because it is a pill.
-   *
-   * Round 10 found this set in the menu sublabels' exact mono caption voice, in their column,
-   * at their size, and reading as the caption of a sixth menu item. The answer then was to
-   * change the voice to body text — which fixed that and made it the only pill in the product
-   * not in mono uppercase, out of fourteen. What actually stops it reading as a caption is the
-   * plate and the border, which no caption has; the voice can match the control system. Same
-   * treatment as its counterpart on /lite/, from the other side of the door.
+   * A control, not a caption, by its ground rather than by a border: the same dark, soft
+   * rectangle as every other control that sits on the scene (`.pill--glass`). Opaque enough to
+   * plate the terrain behind it — at 0.62 a rock's diagonal edge showed through the words.
    */
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-100);
-  text-decoration: none;
-  /* Opaque enough to PLATE the scene rather than half-reveal it. At 0.62 the rock's hard
-     diagonal silhouette showed through between the two words — measured 28 luminance inside
-     the pill against 92 on the lit terrain just outside its left edge — so the control had a
-     scene edge running across it. */
-  background: rgba(5, 7, 13, 0.9);
-  border: 1px solid rgba(255, 180, 84, 0.45);
-  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 9px 14px;
+  border-radius: var(--radius-control);
+  background: rgba(8, 11, 19, 0.82);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-200);
+  text-decoration: none;
 }
 
 .home-menu[data-visible='true'] .home-menu__lite {
@@ -243,8 +246,7 @@ button {
 .home-menu__lite:hover,
 .home-menu__lite:focus-visible {
   color: var(--ink-100);
-  border-color: rgba(255, 180, 84, 0.6);
-  background: rgba(5, 7, 13, 0.85);
+  background: rgba(20, 26, 40, 0.92);
 }
 
 /* ---------- name lockup ---------- */
@@ -455,71 +457,154 @@ button {
   position: absolute;
   right: calc(28px + var(--safe-right));
   bottom: calc(24px + var(--safe-bottom));
-  padding: 10px 14px;
-  border: var(--hair);
-  border-radius: var(--radius-pill);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-300);
-  background: rgba(5, 7, 13, 0.5);
+  padding: 9px 14px;
+  border-radius: var(--radius-control);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-200);
+  background: rgba(8, 11, 19, 0.62);
   opacity: 0;
-  transition: opacity 0.5s var(--ease-out);
+  transition:
+    opacity 0.5s var(--ease-out),
+    color 0.2s var(--ease-out),
+    background-color 0.2s var(--ease-out);
 }
 
 .intro-skip[data-visible='true'] {
   opacity: 1;
 }
 
-.intro-skip:hover {
+.intro-skip:hover,
+.intro-skip:focus-visible {
   color: var(--ink-100);
-  border-color: rgba(255, 180, 84, 0.5);
+  background: rgba(20, 26, 40, 0.82);
 }
 
-/* ---------- generic pill button ---------- */
+/* ---------- controls ---------- */
 
+/*
+ * One control, no outlines.
+ *
+ * Every button used to be an outlined capsule in letter-spaced mono capitals, which made each
+ * control on a surface as loud as every other and put a hairline round all of them. A control
+ * is now its words — sentence case, in the body face — with a soft fill that appears only when
+ * it is pointed at. The one action a surface exists for (download the résumé, open the live
+ * site) is a filled block in the accent. The class keeps its old name; every surface already
+ * uses it.
+ */
 .pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 14px;
-  border: var(--hair);
-  border-radius: var(--radius-pill);
-  background: rgba(5, 7, 13, 0.55);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.2;
   color: var(--ink-300);
   text-decoration: none;
   transition:
-    color 0.18s var(--ease-out),
-    border-color 0.18s var(--ease-out),
-    background-color 0.18s var(--ease-out);
+    color 0.2s var(--ease-out),
+    background-color 0.2s var(--ease-out);
 }
 
 .pill:hover,
 .pill:focus-visible {
   color: var(--ink-100);
-  border-color: rgba(255, 180, 84, 0.55);
+  background: rgba(207, 232, 255, 0.08);
+}
+
+.pill .icon {
+  flex: none;
+  opacity: 0.85;
 }
 
 .pill--accent {
-  color: var(--space-900);
+  padding: 9px 16px;
+  color: #1a1206;
   background: var(--star-glow);
-  border-color: var(--star-glow);
 }
 
 .pill--accent:hover,
 .pill--accent:focus-visible {
-  color: var(--space-900);
+  color: #1a1206;
   background: #ffc576;
+}
+
+/*
+ * On the scene itself — the exit from the cabin, the flight controls — a control has nothing
+ * behind it but the render, so it carries a dark, soft ground of its own instead of a line.
+ */
+.pill--glass {
+  color: var(--ink-200);
+  background: rgba(8, 11, 19, 0.62);
+}
+
+.pill--glass:hover,
+.pill--glass:focus-visible {
+  color: var(--ink-100);
+  background: rgba(20, 26, 40, 0.82);
+}
+
+/* A control that is only an icon: a round, dark, borderless button, named by its label. */
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ink-200);
+  background: rgba(8, 11, 19, 0.62);
+  transition:
+    color 0.2s var(--ease-out),
+    background-color 0.2s var(--ease-out);
+}
+
+.icon-btn:hover,
+.icon-btn:focus-visible,
+.icon-btn[aria-expanded='true'],
+.icon-btn[aria-pressed='true'] {
+  color: var(--ink-100);
+  background: rgba(24, 31, 48, 0.88);
+}
+
+.icon-btn:focus-visible {
+  border-radius: 50%;
+}
+
+/* Inside a panel: no ground of its own until it is pointed at. */
+.icon-btn--quiet {
+  width: 36px;
+  height: 36px;
+  color: var(--ink-300);
+  background: transparent;
+}
+
+.icon-btn--quiet:hover,
+.icon-btn--quiet:focus-visible,
+.icon-btn--quiet[aria-pressed='true'] {
+  color: var(--ink-100);
+  background: rgba(207, 232, 255, 0.08);
 }
 
 /* ---------- responsive ---------- */
 
 @media (max-width: 820px) {
+  /* Touch targets. */
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+  }
   .lockup {
     top: calc(18px + var(--safe-top));
     left: calc(18px + var(--safe-left));
@@ -657,8 +742,7 @@ button {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba(207, 232, 255, 0.1);
-  border: 1px solid rgba(207, 232, 255, 0.22);
+  background: rgba(207, 232, 255, 0.12);
   opacity: 0;
   transition: opacity 0.25s var(--ease-out);
   pointer-events: none;

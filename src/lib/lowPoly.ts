@@ -5,16 +5,16 @@ import { MeshLambertMaterial, MeshPhongMaterial, MeshStandardMaterial } from 'th
  * side by side and compared. Add it to any address on the site — `/?lowpoly`,
  * `/?lowpoly#/projects` — and every hash route keeps it.
  *
- * Two things make the look. Curved forms are built from about a quarter of the segments, so a
+ * Two things make the look. Curved forms are built from about an eighth of the segments, so a
  * sphere or a cylinder shows its facets, and every lit material is flat-shaded, so each facet
  * catches the light as one plane instead of being smoothed into a curve. Nothing else about
  * the scene changes: the same layout, palette, lighting and motion.
  */
 export const LOW_POLY = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('lowpoly');
 
-/** A segment count for the current style: about a quarter in low-poly, never below `min`. */
+/** A segment count for the current style: about an eighth in low-poly, never below `min`. */
 export function seg(n: number, min: number): number {
-  return LOW_POLY ? Math.max(min, Math.round(n / 4)) : n;
+  return LOW_POLY ? Math.max(min, Math.round(n / 8)) : n;
 }
 
 /*

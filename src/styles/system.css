@@ -159,13 +159,13 @@
     visibility 0s;
 }
 
-.system-hud[data-visible='true'] .pill,
+.system-hud[data-visible='true'] .icon-btn,
 .system-hud[data-visible='true'] .project-index__item {
   pointer-events: auto;
 }
 
 /* All four edges from the shared token. These were 28/32/32 against the sound toggle's
-   28/24, which put two pills in the same row 2px apart vertically and 4px apart
+   28/24, which put two controls in the same row 2px apart vertically and 4px apart
    horizontally — three insets on one screen, none of them chosen. See --hud-inset. */
 .system-hud__top {
   position: absolute;
@@ -231,6 +231,7 @@
   gap: 2px;
   min-width: 260px;
   border: var(--hair);
+  border-radius: 14px;
   backdrop-filter: blur(var(--panel-blur));
   opacity: 0;
   transform: translateY(6px);
@@ -253,7 +254,7 @@
   gap: 10px;
   width: 100%;
   padding: 8px 10px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   text-align: left;
 }
 
@@ -350,10 +351,6 @@
 .project-panel__controls {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-
-.project-panel__expand {
   gap: 8px;
 }
 
@@ -685,13 +682,6 @@
     height: auto;
     transform: translateY(16px);
   }
-  /* The corner brackets go with the border they bracket. With all four edges removed here,
-     two of them sat at the sheet's top corners as bright ticks attached to nothing — a
-     reviewer read them as image defects, which is exactly what a mark with no line to mark
-     looks like. */
-  .project-panel__frame .mc__corner {
-    display: none;
-  }
   .project-panel__frame {
     border-left: 0;
     border-right: 0;
@@ -716,7 +706,7 @@
   .project-panel__body {
     padding: 16px 16px 22px;
   }
-  /* The header wrapped: the category line took one row and the return pill took another,
+  /* The header wrapped: the category line took one row and the return control another,
      so the chrome above the case study measured 102px on a 390px screen. Held on one row
      it costs 64px, and the 44px tap target survives. The description was getting 25px of
      the viewport - one clipped line, mid-sentence - and every pixel here goes to it. */
@@ -768,35 +758,11 @@
   .project-panel__frame .scroll-cue {
     bottom: 80px;
   }
-  .project-panel__header .pill,
   .project-panel__footer .pill {
     padding: 12px 14px;
     min-height: 44px;
     min-width: 112px;
     justify-content: center;
-    white-space: nowrap;
-  }
-  .project-panel__header .pill {
-    min-width: 0;
-  }
-  .project-panel__expand {
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    padding: 0;
-  }
-  /* "Back" on a phone: with the full-screen control beside it, the whole label pushed the
-     category line out of the header, cut to "SOFTWAR". The accessible name keeps all three
-     words. */
-  .project-panel__back-rest {
-    display: none;
-  }
-  .project-panel__expand-text {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
     white-space: nowrap;
   }
   /* On a phone the sheet already fills most of the screen; full screen takes the rest. */
@@ -811,18 +777,13 @@
 }
 
 /*
- * Unavailable, not broken.
- *
- * At 0.35 opacity on both the label and the border, "← PREVIOUS" on the first project
- * measured 1.73:1 against its own fill — at 1x a grey smudge inside a grey outline, and a
- * visitor cannot tell what the control is. One signal instead of two: the border goes, the
- * label stays legible at about 3:1, which is the floor for a disabled control.
+ * Unavailable, not broken: "Previous" on the first project stays legible at about 3:1, the
+ * floor for a disabled control, rather than fading to a smudge nobody can name.
  */
 .pill[disabled],
 .pill[aria-disabled='true'] {
   opacity: 1;
   color: #5f6675;
-  border-color: transparent;
   background: transparent;
   pointer-events: none;
 }

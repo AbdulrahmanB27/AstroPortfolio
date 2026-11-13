@@ -12,7 +12,7 @@ const VISIBLE_IN = new Set(['home', 'cockpit', 'system', 'project']);
 
 function Icon({ on }: { on: boolean }) {
   return (
-    <svg className="audio-toggle__icon" viewBox="0 0 14 14" width="14" height="14" aria-hidden="true" focusable="false">
+    <svg className="audio-toggle__icon" viewBox="0 0 14 14" width="18" height="18" aria-hidden="true" focusable="false">
       <path d="M2 5.2h2.4L7.6 2.6v8.8L4.4 8.8H2z" fill="currentColor" />
       {on ? (
         <>
@@ -38,7 +38,7 @@ export function AudioToggle() {
   return (
     <button
       type="button"
-      className="pill audio-toggle"
+      className="icon-btn audio-toggle"
       data-visible={visible}
       data-scene={scene}
       aria-pressed={enabled}

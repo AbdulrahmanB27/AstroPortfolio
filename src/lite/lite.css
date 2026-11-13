@@ -110,25 +110,22 @@ body {
    "PORTFOLIO" kicker above them — the navigation was the smallest type on the surface and
    shared a voice with decoration. */
 .lite__nav a {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-100);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-300);
   text-decoration: none;
-  border: var(--hair);
-  border-radius: var(--radius-pill);
-  /* 44px tall including the border: a real tap target on a phone. */
-  padding: 13px 16px;
+  border-radius: var(--radius-control);
+  /* 44px tall: a real tap target on a phone. */
+  padding: 14px 14px;
   line-height: 1;
-  background: rgba(11, 16, 32, 0.5);
-  transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+  transition: color 0.2s var(--ease-out), background-color 0.2s var(--ease-out);
 }
 
 .lite__nav a:hover,
 .lite__nav a:focus-visible {
-  border-color: rgba(255, 180, 84, 0.6);
-  background: rgba(11, 16, 32, 0.8);
+  color: var(--ink-100);
+  background: rgba(207, 232, 255, 0.08);
 }
 
 .lite__switch {
@@ -142,8 +139,8 @@ body {
  * It was a plain underlined Inter link at --ink-300 sitting below five bordered pills whose
  * only job is to scroll the page you are already on — the most consequential link on the
  * surface wearing the weakest form of anything on it, and the only underlined link in the
- * product. It is a pill now, and it carries the accent border that nothing else on the page
- * does, so it outranks the jump row without the jump row having to be weakened back down.
+ * product. It carries a soft accent ground that nothing else on the page does, so it outranks
+ * the jump row without the jump row having to be weakened back down.
  *
  * Its counterpart on the 3D home screen gets the same treatment from the other side, so the
  * two doors between the versions look like each other.
@@ -153,22 +150,19 @@ body {
   align-items: center;
   min-height: 44px;
   padding: 0 18px;
-  border: 1px solid rgba(255, 180, 84, 0.55);
-  border-radius: var(--radius-pill);
-  background: rgba(255, 180, 84, 0.08);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  border-radius: var(--radius-control);
+  background: rgba(255, 180, 84, 0.14);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
   color: var(--ink-100);
   text-decoration: none;
-  transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+  transition: background-color 0.2s var(--ease-out);
 }
 
 .lite__switch a:hover,
 .lite__switch a:focus-visible {
-  border-color: var(--star-glow);
-  background: rgba(255, 180, 84, 0.16);
+  background: rgba(255, 180, 84, 0.24);
 }
 
 /* A real target, not a 17px-tall line of text. */
@@ -292,14 +286,13 @@ body {
 }
 
 .tag {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
   color: var(--ink-300);
-  border: var(--hair);
+  background: rgba(207, 232, 255, 0.07);
   border-radius: var(--radius-sm);
-  padding: 5px 9px;
+  padding: 5px 10px;
 }
 
 .nowrap {
@@ -445,16 +438,15 @@ body {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 16px;
-  border: var(--hair);
-  border-radius: var(--radius-pill);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  padding: 0 14px;
+  border-radius: var(--radius-control);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
   color: var(--ink-100);
   text-decoration: none;
-  transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+  background: rgba(207, 232, 255, 0.07);
+  transition: background-color 0.2s var(--ease-out);
 }
 
 button.lite-link {
@@ -464,21 +456,17 @@ button.lite-link {
 
 .lite-link:hover,
 .lite-link:focus-visible {
-  border-color: rgba(255, 180, 84, 0.6);
-  background: rgba(255, 180, 84, 0.08);
+  background: rgba(207, 232, 255, 0.13);
 }
 
 .lite-link--accent {
   background: var(--star-glow);
-  border-color: var(--star-glow);
   color: #1a1206;
-  font-weight: 500;
 }
 
 .lite-link--accent:hover,
 .lite-link--accent:focus-visible {
   background: #ffc476;
-  border-color: #ffc476;
 }
 
 /* Marks an entry the owner still has to confirm. Never hidden — a placeholder that looks
@@ -487,14 +475,13 @@ button.lite-link {
   content: 'Placeholder';
   margin-left: 10px;
   vertical-align: middle;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
   color: var(--star-glow);
-  border: 1px solid rgba(255, 180, 84, 0.5);
+  background: rgba(255, 180, 84, 0.12);
   border-radius: var(--radius-sm);
-  padding: 3px 7px;
+  padding: 3px 8px;
 }
 
 .lite__footer {

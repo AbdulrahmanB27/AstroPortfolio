@@ -4,6 +4,7 @@ import { exitFlight } from '../sequences/flight';
 import { input } from '../scene/flight/controls';
 import { DEATH_STAR_POSITION, FLIGHT, flight, forwardOf, onFlightToast, rightOf } from '../scene/flight/flightState';
 import { useApp } from '../state/store';
+import { Icon } from './Icon';
 
 /**
  * Flight-mode overlay: a one-line controls hint, the exit control, a faint compass tick
@@ -93,8 +94,8 @@ export function FlightHud() {
           Flight mode
           <span className="flight-hud__keys"> - W A S D / arrows - Shift boost - Esc exit{falconUnlocked ? ' - T switch ship' : ''}</span>
         </p>
-        <button type="button" className="pill flight-hud__exit" onClick={exitFlight} tabIndex={visible ? 0 : -1}>
-          <span aria-hidden="true">←</span> Exit flight
+        <button type="button" className="pill pill--glass flight-hud__exit" onClick={exitFlight} tabIndex={visible ? 0 : -1}>
+          <Icon name="arrowLeft" size={16} /> Exit flight
         </button>
       </div>
       <div ref={compassRef} className="flight-compass" data-visible="false" aria-hidden="true">

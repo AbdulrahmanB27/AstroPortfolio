@@ -7,6 +7,7 @@ import { AboutPanel } from './computer/AboutPanel';
 import { SkillsPanel } from './computer/SkillsPanel';
 import { ResumePanel } from './computer/ResumePanel';
 import { ContactPanel } from './computer/ContactPanel';
+import { Icon } from './Icon';
 
 /*
  * No numbers on these.
@@ -131,7 +132,7 @@ export function MissionComputer() {
             download={resume.file.split('/').pop() ?? 'resume.pdf'}
             tabIndex={visible ? 0 : -1}
           >
-            <span aria-hidden="true">↓</span> Resume (PDF)
+            <Icon name="download" size={16} /> Resume (PDF)
           </a>
           {/* One way out of the reader, and one out of the ship. Escape does the first. */}
           <div className="mc__rail-foot">
@@ -142,7 +143,7 @@ export function MissionComputer() {
               onClick={() => setCockpitView('room')}
               tabIndex={visible ? 0 : -1}
             >
-              <span aria-hidden="true">←</span> <span className="pill__text">Back to the cabin</span>
+              <Icon name="arrowLeft" size={16} /> <span className="pill__text">Back to the cabin</span>
             </button>
             <button
               type="button"

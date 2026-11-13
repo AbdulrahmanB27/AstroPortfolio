@@ -9,8 +9,6 @@ export interface CameraRigState {
   position: Vector3;
   target: Vector3;
   fov: number;
-  /** 0 = no idle sway, 1 = full sway (home/system idle). */
-  sway: number;
   /** Extra roll in radians (used lightly during launch). */
   roll: number;
   /**
@@ -27,7 +25,6 @@ export const rig: CameraRigState = {
   position: new Vector3(0, 400, 1400),
   target: new Vector3(0, 0, 0),
   fov: 42,
-  sway: 0,
   roll: 0,
   /** Camera up. Reset to world up by every pose that does not specify one. */
   up: new Vector3(0, 1, 0),

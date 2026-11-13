@@ -3,24 +3,20 @@ import { useFrame } from '@react-three/fiber';
 import {
   CatmullRomCurve3,
   Color,
-  DataTexture,
   DoubleSide,
-  EquirectangularReflectionMapping,
   Group,
-  LinearFilter,
   MeshBasicMaterial,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
-  SRGBColorSpace,
   TubeGeometry,
   Vector3,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { PALETTE } from '../../lib/constants';
-import { STAGE_FRAME } from '../../lib/stageFrame';
 import { useApp } from '../../state/store';
 import { handles } from '../rig';
 import { batchStatic } from '../staticBatch';
+import { stageEnvironment } from './stageEnvironment';
 import { seg } from '../../lib/lowPoly';
 
 /**
@@ -34,17 +30,19 @@ import { seg } from '../../lib/lowPoly';
  *  - operated at: chest control module with switches, the umbilical hose that feeds it, and
  *                 a wrist computer on the left forearm
  *  - handled by : gloves with a palm pad, the fingers held together and a thumb
- *  - carries    : thigh pockets, and pouches on a belt at the waist
- *  - breathes   : a pack with vent slats, a side control box, valve caps and straps on the tanks
+ *  - carries    : thigh pockets
+ *  - breathes   : a pack with a side control box and capped tanks
  *  - protected  : a gold visor framed by the helmet's hard shell, over the clear bubble
  *  - lit by     : helmet lamps either side, and a helmet camera
- *  - walks on   : boots with a heel block and tread under the sole
+ *  - walks on   : boots with a heel block
  *  - secured by : a hip tether ring (the same ring the comedic launch hooks onto)
  *
  * Every cuff and ring is a torus and every hard box is rounded, so edges take a highlight
  * instead of terminating in a zero-width seam. The figure is seen mostly from behind and at
  * a hundred pixels tall, so the detail that matters is the silhouette: the pack's antenna, the
- * hose looping round the waist, the lamps on the helmet.
+ * hose round the waist, the lamps on the helmet. Anything smaller — tread bars, buckles, vent
+ * slats, tank straps, belt pouches — was a pixel or two wide at that size, and flickered as the
+ * camera moved, so it went.
  *
  * It also breathes. A figure that holds perfectly still for as long as someone reads the menu
  * reads as a statue; a slow rise and fall, a shift of weight and an occasional look along the
@@ -70,66 +68,6 @@ const HELMET_SHELL: [number, number, number, number, number, number][] = [
   [-Math.PI / 2 - VISOR_HALF, VISOR_HALF * 2, 0, VISOR_TOP, 16, 4],
   [-Math.PI / 2 - VISOR_HALF, VISOR_HALF * 2, VISOR_BOTTOM, Math.PI - VISOR_BOTTOM, 16, 8],
 ];
-
-/**
- * What the visor and the suit's metal reflect: a dark sky, the warm line of the horizon, the
- * ground, and the star.
- *
- * Without anything to reflect, a metal surface renders as its specular highlight on black. The
- * gold visor was a flat dark-grey dome, and the shoulder bearings read as two black balls. The
- * figure stands still, so a fixed picture of where it stands is all the reflection it needs:
- * painted once into a small texture, in world space, rather than rendered by a cube camera.
- */
-function suitEnvironment(toStar: Vector3, up: Vector3): DataTexture {
-  const w = 256;
-  const h = 128;
-  const data = new Uint8Array(w * h * 4);
-  const d = new Vector3();
-  const mix = (a: number, b: number, t: number) => a + (b - a) * Math.max(0, Math.min(1, t));
-  for (let j = 0; j < h; j++) {
-    // Row 0 is the bottom of the texture (DataTexture is not flipped): elevation -90 degrees.
-    const lat = ((j + 0.5) / h - 0.5) * Math.PI;
-    for (let i = 0; i < w; i++) {
-      // The inverse of three's equirect lookup: u = atan2(z, x) / 2pi + 0.5, v = asin(y) / pi + 0.5.
-      const lon = ((i + 0.5) / w - 0.5) * Math.PI * 2;
-      d.set(Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon));
-      const e = d.dot(up);
-      let r: number, g: number, b: number;
-      if (e >= 0) {
-        // Sky: a warm haze on the horizon, navy above it, near black overhead.
-        const k = Math.pow(e, 0.45);
-        r = mix(120, 8, k);
-        g = mix(84, 12, k);
-        b = mix(52, 26, k);
-      } else {
-        // Ground: lit regolith near the horizon, falling into shadow underfoot.
-        const k = Math.pow(-e, 0.6);
-        r = mix(96, 26, k);
-        g = mix(72, 20, k);
-        b = mix(50, 15, k);
-      }
-      // The star, and the glow it throws round itself.
-      const s = d.dot(toStar);
-      const core = Math.max(0, (s - 0.985) / 0.015);
-      const halo = Math.pow(Math.max(0, s), 18) * 0.7;
-      r = Math.min(255, r + 255 * (core + halo));
-      g = Math.min(255, g + 230 * core + 170 * halo);
-      b = Math.min(255, b + 200 * core + 90 * halo);
-      const o = (j * w + i) * 4;
-      data[o] = r;
-      data[o + 1] = g;
-      data[o + 2] = b;
-      data[o + 3] = 255;
-    }
-  }
-  const tex = new DataTexture(data, w, h);
-  tex.mapping = EquirectangularReflectionMapping;
-  tex.colorSpace = SRGBColorSpace;
-  tex.magFilter = LinearFilter;
-  tex.minFilter = LinearFilter;
-  tex.needsUpdate = true;
-  return tex;
-}
 
 function suitMaterials() {
   const suit = new MeshStandardMaterial({ color: PALETTE.suitWhite, roughness: 0.66, metalness: 0.02 });
@@ -185,7 +123,6 @@ function suitGeometry() {
     fingers: rb(0.055, 0.075, 0.125, 0.024),
     wristPad: rb(0.1, 0.07, 0.035, 0.012),
     pocket: rb(0.06, 0.15, 0.13, 0.02),
-    pouch: rb(0.09, 0.08, 0.05, 0.015),
     heel: rb(0.2, 0.05, 0.1, 0.015),
     sideBox: rb(0.05, 0.16, 0.12, 0.015),
     sole: rb(0.225, 0.052, 0.38, 0.02),
@@ -215,20 +152,8 @@ function Leg({ side, stance, m, geo }: { side: number; stance: number; m: SuitMa
       {/* Boot upper: one form, tapering to the toe, with a rolled cuff on top. */}
       <mesh geometry={geo.boot} position={[0, 0.115, -0.02]} material={suit} castShadow receiveShadow />
       <mesh geometry={geo.toe} position={[0, 0.1, -0.19]} rotation={[0.42, 0, 0]} material={suit} castShadow />
-      {/* Heel block, and tread grooves across the sole. */}
+      {/* Heel block. */}
       <mesh geometry={geo.heel} position={[0, 0.03, 0.12]} material={dark} castShadow />
-      {[-0.17, -0.09, -0.01].map((z) => (
-        <mesh key={z} position={[0, 0.004, z]} material={metal}>
-          <boxGeometry args={[0.2, 0.008, 0.018]} />
-        </mesh>
-      ))}
-      {/* Ankle strap over the boot, buckled at the side. */}
-      <mesh position={[0, 0.165, -0.02]} rotation={[Math.PI / 2, 0, 0]} material={soft}>
-        <torusGeometry args={[0.115, 0.012, 8, 28]} />
-      </mesh>
-      <mesh position={[side * 0.118, 0.165, -0.02]} material={metal}>
-        <boxGeometry args={[0.012, 0.035, 0.045]} />
-      </mesh>
       {/* Ankle cuff: joins boot to shin, no gap. */}
       <mesh position={[0, 0.2, 0.01]} rotation={[Math.PI / 2, 0, 0]} material={metal} castShadow>
         <torusGeometry args={[0.1, 0.022, 12, 28]} />
@@ -238,8 +163,8 @@ function Leg({ side, stance, m, geo }: { side: number; stance: number; m: SuitMa
       <mesh position={[0, 0.43, 0.01]} material={suit} castShadow>
         <capsuleGeometry args={[0.1, 0.3, 8, 20]} />
       </mesh>
-      {/* Knee convolute: three close rings, the way a pressure joint actually flexes. */}
-      {[0.655, 0.7, 0.745].map((y) => (
+      {/* Knee convolute: two rings, the way a pressure joint flexes. */}
+      {[0.675, 0.725].map((y) => (
         <mesh key={y} position={[0, y, 0.005]} rotation={[Math.PI / 2, 0, 0]} material={soft} castShadow>
           <torusGeometry args={[0.105, 0.02, 10, 24]} />
         </mesh>
@@ -254,9 +179,6 @@ function Leg({ side, stance, m, geo }: { side: number; stance: number; m: SuitMa
         <cylinderGeometry args={[0.1195, 0.1195, 0.04, 24, 1, true]} />
       </mesh>
       <mesh geometry={geo.pocket} position={[side * 0.113, 0.93, 0.01]} material={soft} castShadow />
-      <mesh position={[side * 0.145, 0.985, 0.01]} material={dark}>
-        <boxGeometry args={[0.006, 0.025, 0.1]} />
-      </mesh>
     </group>
   );
 }
@@ -357,25 +279,21 @@ export function Astronaut(props: { position: readonly [number, number, number]; 
 
   useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
 
-  // The visor and the metal fittings reflect where the figure is actually standing.
+  // The suit reflects where it is standing: soft light on the white shell, a real gold visor.
   useEffect(() => {
-    const group = ref.current;
-    if (!group) return;
-    group.updateWorldMatrix(true, false);
-    // The star sits at the world origin.
-    const toStar = group.getWorldPosition(new Vector3()).negate().normalize();
-    const env = suitEnvironment(toStar, STAGE_FRAME.up);
-    mats.visor.envMap = env;
-    mats.visor.envMapIntensity = 2.1;
-    mats.metal.envMap = env;
-    mats.metal.envMapIntensity = 0.9;
-    mats.visor.needsUpdate = true;
-    mats.metal.needsUpdate = true;
-    return () => {
-      mats.visor.envMap = null;
-      mats.metal.envMap = null;
-      env.dispose();
-    };
+    const env = stageEnvironment();
+    const set: [MeshStandardMaterial, number][] = [
+      [mats.suit, 0.55],
+      [mats.soft, 0.4],
+      [mats.dark, 0.5],
+      [mats.metal, 0.9],
+      [mats.visor, 2.1],
+    ];
+    for (const [m, intensity] of set) {
+      m.envMap = env;
+      m.envMapIntensity = intensity;
+      m.needsUpdate = true;
+    }
   }, [mats]);
   // A hundred-odd parts, drawn twice a frame (once for the sun's shadow), in five groups that
   // move: one draw call per material per group. See `staticBatch`.
@@ -430,15 +348,6 @@ export function Astronaut(props: { position: readonly [number, number, number]; 
           <mesh position={[0.215, 1.2, 0.02]} rotation={[0, 0, Math.PI / 2]} material={metal} castShadow>
             <torusGeometry args={[0.045, 0.014, 10, 20]} />
           </mesh>
-          {/* Belt pouches at the back and left hip. */}
-          {[
-            { x: -0.21, z: 0.02, r: -Math.PI / 2 },
-            { x: -0.11, z: 0.14, r: -0.5 },
-            { x: 0.11, z: 0.14, r: 0.5 },
-          ].map((p) => (
-            <mesh key={p.x} geometry={geo.pouch} position={[p.x, 1.16, p.z]} rotation={[0, p.r, 0]} material={soft} castShadow />
-          ))}
-
           <group ref={upperRef} userData={{ batch: true }}>
             {/* Hard upper torso: tapered shell, not a bare capsule. */}
             <mesh position={[0, 1.5, 0]} material={suit} castShadow receiveShadow>
@@ -475,33 +384,14 @@ export function Astronaut(props: { position: readonly [number, number, number]; 
             <mesh position={[0, 1.78, 0.3]} material={metal} castShadow>
               <cylinderGeometry args={[0.028, 0.028, 0.055, 14]} />
             </mesh>
-            {/* Valve caps on the tanks, and the straps that hold them. */}
+            {/* Valve caps on the tanks. */}
             {[-0.105, 0.105].map((x) => (
-              <group key={`tank-${x}`}>
-                <mesh position={[x, 1.715, 0.395]} material={dark} castShadow>
-                  <cylinderGeometry args={[0.022, 0.03, 0.04, 12]} />
-                </mesh>
-                {[1.42, 1.6].map((y) => (
-                  <mesh key={y} position={[x, y, 0.395]} rotation={[Math.PI / 2, 0, 0]} material={dark}>
-                    <torusGeometry args={[0.055, 0.008, 6, 20]} />
-                  </mesh>
-                ))}
-              </group>
-            ))}
-            {/* Vent slats on the pack, between the tanks. */}
-            {[1.36, 1.39, 1.42, 1.45].map((y) => (
-              <mesh key={y} position={[0, y, 0.343]} material={dark}>
-                <boxGeometry args={[0.07, 0.012, 0.006]} />
+              <mesh key={`cap-${x}`} position={[x, 1.715, 0.395]} material={dark} castShadow>
+                <cylinderGeometry args={[0.022, 0.03, 0.04, 12]} />
               </mesh>
             ))}
-            {/* Control box on the pack's right side, with a dial. */}
+            {/* Control box on the pack's right side. */}
             <mesh geometry={geo.sideBox} position={[0.2, 1.5, 0.25]} material={dark} castShadow />
-            <mesh position={[0.228, 1.53, 0.25]} rotation={[0, 0, Math.PI / 2]} material={metal}>
-              <cylinderGeometry args={[0.022, 0.022, 0.014, 14]} />
-            </mesh>
-            <mesh position={[0.227, 1.46, 0.25]} rotation={[0, Math.PI / 2, 0]} material={accent}>
-              <planeGeometry args={[0.03, 0.02]} />
-            </mesh>
             {/* Antenna off the pack's top corner, with a beacon that blinks. It is the one
                 feature that breaks the figure's outline against the sky. */}
             <mesh position={[-0.14, 1.95, 0.3]} rotation={[0.08, 0, 0.06]} material={dark} castShadow>
