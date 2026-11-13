@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useApp } from '../state/store';
 import { exitCockpit } from '../sequences';
+import { Icon } from './Icon';
 
 /**
  * The one control the cabin needs.
@@ -11,7 +12,7 @@ import { exitCockpit } from '../sequences';
  * that before any check did, because nothing here tests for the absence of a control.
  *
  * `docs/ART_DIRECTION.md` allows exactly this much: "No text outside the screens except the
- * exit control." One pill, bottom left, in the same form and at the same inset as every other
+ * exit control." One control, bottom left, in the same form and at the same inset as every other
  * piece of persistent chrome in the product. Escape does the same thing from the keyboard.
  */
 export function CockpitHud() {
@@ -26,7 +27,7 @@ export function CockpitHud() {
    * The reader's own Escape steps back to the cabin, so in the cabin Escape has to do the next
    * thing out or the key stops working halfway. It lived on the reader before the reader moved
    * off the console, and moving it left the cabin with no keyboard exit at all — the same
-   * absence as the missing pill, one layer down.
+   * absence as the missing control, one layer down.
    */
   useEffect(() => {
     if (!visible) return;
@@ -40,8 +41,8 @@ export function CockpitHud() {
 
   return (
     <div className="cockpit-hud" data-visible={visible} aria-hidden={!visible}>
-      <button type="button" className="pill" onClick={exitCockpit} tabIndex={visible ? 0 : -1}>
-        <span aria-hidden="true">←</span> Leave the rocket
+      <button type="button" className="pill pill--glass" onClick={exitCockpit} tabIndex={visible ? 0 : -1}>
+        <Icon name="arrowLeft" size={16} /> Leave the rocket
       </button>
       <p className="cockpit-hud__hint t-mono">Select a display to read</p>
     </div>

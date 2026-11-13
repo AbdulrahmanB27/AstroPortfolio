@@ -20,7 +20,7 @@ import { LOW_POLY, seg } from '../lib/lowPoly';
  */
 class LowSphere extends SphereGeometry {
   constructor(radius?: number, w = 32, h = 16, phiStart?: number, phiLength?: number, thetaStart?: number, thetaLength?: number) {
-    super(radius, seg(w, 7), seg(h, 5), phiStart, phiLength, thetaStart, thetaLength);
+    super(radius, seg(w, 6), seg(h, 4), phiStart, phiLength, thetaStart, thetaLength);
   }
 }
 class LowCylinder extends CylinderGeometry {
@@ -35,12 +35,12 @@ class LowCone extends ConeGeometry {
 }
 class LowCapsule extends CapsuleGeometry {
   constructor(radius?: number, length?: number, cap = 4, radial = 8, heightSegs?: number) {
-    super(radius, length, seg(cap, 2), seg(radial, 6), heightSegs);
+    super(radius, length, seg(cap, 1), seg(radial, 5), heightSegs);
   }
 }
 class LowTorus extends TorusGeometry {
   constructor(radius?: number, tube?: number, radial = 12, tubular = 48, arc?: number) {
-    super(radius, tube, seg(radial, 4), seg(tubular, 8), arc);
+    super(radius, tube, seg(radial, 3), seg(tubular, 6), arc);
   }
 }
 class LowCircle extends CircleGeometry {
@@ -50,7 +50,7 @@ class LowCircle extends CircleGeometry {
 }
 class LowRing extends RingGeometry {
   constructor(inner?: number, outer?: number, theta = 32, phi?: number, thetaStart?: number, thetaLength?: number) {
-    super(inner, outer, seg(theta, 8), phi, thetaStart, thetaLength);
+    super(inner, outer, seg(theta, 6), phi, thetaStart, thetaLength);
   }
 }
 class LowLathe extends LatheGeometry {

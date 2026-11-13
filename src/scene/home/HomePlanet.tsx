@@ -21,7 +21,7 @@ import { seg } from '../../lib/lowPoly';
 export function HomePlanet() {
   const ref = useRef<Group>(null);
   const geometry = useMemo(() => {
-    const g = new SphereGeometry(WORLD.homePlanetRadius, seg(72, 24), seg(48, 16));
+    const g = new SphereGeometry(WORLD.homePlanetRadius, seg(72, 12), seg(48, 8));
     const pos = g.attributes.position!;
     const v = new Vector3();
     for (let i = 0; i < pos.count; i++) {

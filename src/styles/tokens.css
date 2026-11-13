@@ -4,6 +4,7 @@
   --space-900: #05070d;
   --space-700: #0b1020;
   --ink-100: #eef2f8;
+  --ink-200: #d2d9e5;
   --ink-300: #a9b4c7;
   /*
    * Lifted from #67718a, which measured 4.13:1 against the page ground — under the 4.5 AA
@@ -50,6 +51,8 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-pill: 999px;
+  /* Buttons: a soft rectangle, not a capsule. */
+  --radius-control: 10px;
 
   --hair: 1px solid rgba(169, 180, 199, 0.18);
   --panel-bg: rgba(11, 16, 32, 0.72);

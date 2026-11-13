@@ -32,7 +32,7 @@ const STATES = [
   { id: 'launch', url: '/?nointro#/', wait: 2200, click: 'button:has-text("Projects")', frames: [700, 1500, 2400, 3300, 4400, 5600, 7200], viewports: ['desktop'] },
   { id: 'launch-comedic', url: '/?nointro#/', wait: 2200, click: 'button:has-text("Projects")', clickModifiers: ['Shift'], frames: [1600, 2400, 3000, 3600, 4400], viewports: ['desktop'] },
   { id: 'enter-cockpit', url: '/?nointro#/', wait: 2200, click: 'button:has-text("About")', frames: [500, 1100, 1600, 2000, 2600, 3400], viewports: ['desktop'] },
-  { id: 'return-home', url: '/?nointro#/projects', wait: 2600, click: 'button:has-text("Home planet")', frames: [600, 1300, 2000, 2600, 3200], viewports: ['desktop'] },
+  { id: 'return-home', url: '/?nointro#/projects', wait: 2600, click: 'button[aria-label="Home planet"]', frames: [600, 1300, 2000, 2600, 3200], viewports: ['desktop'] },
   { id: 'home-dev', url: '/?nointro&dev=true#/', wait: 2600, viewports: ['desktop'] },
   { id: 'home', url: '/?nointro#/', wait: 2600, viewports: ['desktop', 'wide', 'laptop', 'mobile', 'mobileLandscape'] },
   { id: 'cockpit-about', url: '/?nointro#/about', wait: 2600, viewports: ['desktop', 'mobile'] },

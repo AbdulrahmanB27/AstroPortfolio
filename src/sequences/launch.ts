@@ -189,6 +189,6 @@ export function launch(options: { comedic?: boolean } = {}): void {
     rig.target.copy(systemCam.target);
     rig.fov = systemCam.fov;
     useApp.getState().setComedicLaunch(false);
-    finish('system', 0.6);
+    finish('system');
   });
 }

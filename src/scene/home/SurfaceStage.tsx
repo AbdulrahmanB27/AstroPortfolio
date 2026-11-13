@@ -44,7 +44,7 @@ export function SurfaceStage() {
   const groundRef = useRef<Group>(null);
   const scene = useApp((s) => s.scene);
   const quality = useApp((s) => s.quality);
-  const geometry = useMemo(() => buildTerrainGeometry(seg(quality.tier === 'low' ? 120 : 190, 40)), [quality.tier]);
+  const geometry = useMemo(() => buildTerrainGeometry(seg(quality.tier === 'low' ? 120 : 190, 28)), [quality.tier]);
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   const sceneAllows = isSurfaceScene(scene);

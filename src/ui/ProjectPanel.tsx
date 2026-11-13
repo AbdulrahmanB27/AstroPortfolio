@@ -3,22 +3,7 @@ import { useHasMoreBelow } from './useHasMoreBelow';
 import { assetUrl, portfolio } from '../data/loadPortfolio';
 import { useApp } from '../state/store';
 import { focusProject, returnToOrbit } from '../sequences/system';
-
-/** Four corners pointing out (expand) or in (collapse). */
-function ExpandIcon({ full }: { full: boolean }) {
-  return (
-    <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true" focusable="false">
-      <path
-        d={full ? 'M5 1v4H1M9 1v4h4M5 13V9H1M9 13V9h4' : 'M1 5V1h4M13 5V1H9M1 9v4h4M13 9v4H9'}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+import { Icon } from './Icon';
 
 /**
  * Project display attached to the orbital probe. Conventional, readable content in a
@@ -81,22 +66,29 @@ export function ProjectPanel() {
                 {project.status !== 'live' ? ` · ${project.status.replace('-', ' ')}` : ''}
               </span>
             </span>
+            {/* Two icons, the way a window carries its controls: grow to full screen, and close
+                back to the orbit. Each is named for assistive tech and shows its name on hover. */}
             <span className="project-panel__controls">
               <button
                 type="button"
-                className="pill project-panel__expand"
+                className="icon-btn icon-btn--quiet"
                 onClick={() => setFull(!full)}
                 tabIndex={visible ? 0 : -1}
                 aria-pressed={full}
+                aria-label="Full screen"
                 title={full ? 'Exit full screen' : 'Full screen'}
               >
-                <ExpandIcon full={full} />
-                {/* Words beside the icon where there is room: four corners alone was the one
-                    control in the panel nobody could name. On a phone the icon carries it. */}
-                <span className="project-panel__expand-text">{full ? 'Exit full screen' : 'Full screen'}</span>
+                <Icon name={full ? 'collapse' : 'expand'} />
               </button>
-              <button type="button" className="pill" onClick={returnToOrbit} tabIndex={visible ? 0 : -1} aria-label="Back to orbit">
-                <span aria-hidden="true">←</span> Back<span className="project-panel__back-rest"> to orbit</span>
+              <button
+                type="button"
+                className="icon-btn icon-btn--quiet"
+                onClick={returnToOrbit}
+                tabIndex={visible ? 0 : -1}
+                aria-label="Back to orbit"
+                title="Back to orbit"
+              >
+                <Icon name="close" />
               </button>
             </span>
           </header>
@@ -112,12 +104,12 @@ export function ProjectPanel() {
                 )}
                 {project.links.repo && (
                   <a className="pill" href={project.links.repo} target="_blank" rel="noopener" tabIndex={visible ? 0 : -1}>
-                    Source on GitHub
+                    Source on GitHub <Icon name="external" size={16} />
                   </a>
                 )}
                 {project.links.other.map((l) => (
                   <a key={l.url} className="pill" href={l.url} target="_blank" rel="noopener" tabIndex={visible ? 0 : -1}>
-                    {l.label}
+                    {l.label} <Icon name="external" size={16} />
                   </a>
                 ))}
               </div>
@@ -190,7 +182,7 @@ export function ProjectPanel() {
               disabled={idx <= 0}
               aria-disabled={idx <= 0}
             >
-              <span aria-hidden="true">←</span> Previous
+              <Icon name="arrowLeft" size={16} /> Previous
             </button>
             <span className="t-mono">
               {idx + 1} / {ordered.length}
@@ -203,14 +195,10 @@ export function ProjectPanel() {
               disabled={idx >= ordered.length - 1}
               aria-disabled={idx >= ordered.length - 1}
             >
-              Next <span aria-hidden="true">→</span>
+              Next <Icon name="arrowRight" size={16} />
             </button>
           </footer>
           <span className="scroll-cue" data-visible={more} aria-hidden="true" />
-          <i className="mc__corner mc__corner--tl" aria-hidden="true" />
-          <i className="mc__corner mc__corner--tr" aria-hidden="true" />
-          <i className="mc__corner mc__corner--bl" aria-hidden="true" />
-          <i className="mc__corner mc__corner--br" aria-hidden="true" />
         </div>
       )}
     </aside>

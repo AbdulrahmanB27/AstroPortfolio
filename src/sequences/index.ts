@@ -10,6 +10,7 @@ import { DURATIONS, EASES } from '../lib/motion';
 import { rocketLocalToWorld } from '../lib/stageFrame';
 import { setVehicleInterior } from '../scene/home/rocketState';
 import { setStageOpacity } from '../scene/home/stageState';
+import { crossfade } from '../scene/crossfade';
 
 /**
  * Camera + world sequences. Each one owns the rig for its duration, flips the scene
@@ -24,18 +25,16 @@ export function begin(scene: SceneState): gsap.core.Timeline {
   const app = useApp.getState();
   app.setScene(scene);
   app.setBusy(true);
-  rig.sway = 0;
   rig.shake = 0;
   const tl = gsap.timeline();
   current = tl;
   return tl;
 }
 
-export function finish(scene: SceneState, sway = 1): void {
+export function finish(scene: SceneState): void {
   const app = useApp.getState();
   app.setScene(scene);
   app.setBusy(false);
-  rig.sway = sway;
   rig.roll = 0;
   rig.shake = 0;
   current = null;
@@ -48,6 +47,12 @@ export function applyPose(pose: CameraPose): void {
   // Poses that do not name an up get world up back, so a reading pose's roll cannot leak
   // into the next shot.
   rig.up.copy(pose.up ?? WORLD_UP);
+}
+
+/** The same shot, `by` units further back along its line of sight and a little wider. */
+function backedOff(pose: CameraPose, by: number): CameraPose {
+  const back = pose.position.clone().sub(pose.target).normalize().multiplyScalar(by);
+  return { ...pose, position: pose.position.clone().add(back), fov: pose.fov + 3 };
 }
 
 function tweenPose(tl: gsap.core.Timeline, pose: CameraPose, duration: number, ease: string, at: number | string): void {
@@ -89,7 +94,7 @@ export function jumpTo(scene: 'home' | 'cockpit', tab?: CockpitTab): void {
     handles.cockpit?.setPower(1);
     setVehicleInterior(true);
     applyPose(cockpitScreenPose(tab ?? app.cockpitTab));
-    finish('cockpit', 0);
+    finish('cockpit');
   }
 }
 
@@ -192,25 +197,35 @@ export function enterCockpit(tab: CockpitTab): void {
   const power = { value: 0 };
   handles.cockpit?.setPower(0);
 
-  // Fly to the hatch (it slides open as we arrive), cut to black at the frame, power on
-  // inside. The blackout is deliberately brief: at a 12% fade starting at 62% there was
-  // most of a second in a 2.2s move with nothing on screen at all, which reads as a stall
-  // rather than as a cut. It now covers only the frame either side of the jump, and the
-  // cabin lights come up under the black so the interior is already lit when it lifts.
+  /*
+   * Fly to the hatch (it slides open as we arrive) and keep accelerating into it; at the door
+   * the view dissolves into the cabin, already moving, and settles on the display.
+   *
+   * The cut used to dip to black either side, which read as the screen flashing. Now the
+   * timeline pauses at the door while `crossfade` holds the last frame outside, switches to
+   * the cabin underneath it and resumes once the switch has happened, so the push-in inside
+   * starts from where the camera really is. The cabin lights come up as it dissolves.
+   */
+  const settleFrom = backedOff(cockpit, 0.42);
   tweenPose(tl, { position: door.approach, target: door.look, fov: 44 }, total * 0.44, 'power2.inOut', 0);
   tl.to(hatch, { open: 1, duration: total * 0.3, ease: 'power2.out', onUpdate: () => handles.rocketHatch?.setOpen(hatch.open) }, total * 0.22);
-  tweenPose(tl, { position: door.close, target: door.look, fov: 40 }, total * 0.32, 'power2.in', total * 0.44);
-  fadeBlackout(tl, 1, total * 0.07, total * 0.72);
-  tl.add(() => {
-    applyPose(cockpit);
-    handles.rocketHatch?.setOpen(0);
-    setVehicleInterior(true);
-  }, total * 0.8);
-  fadeBlackout(tl, 0, total * 0.1, total * 0.82);
-  tl.to(power, { value: 1, duration: total * 0.26, ease: 'power2.out', onUpdate: () => handles.cockpit?.setPower(power.value) }, total * 0.7);
+  tweenPose(tl, { position: door.close, target: door.look, fov: 40 }, total * 0.3, 'power2.in', total * 0.44);
+  tl.addPause(total * 0.74, () =>
+    crossfade(() => {
+      // Replaced by another move while the frame was being held: leave the view to that one.
+      if (current !== tl) return;
+      applyPose(settleFrom);
+      handles.rocketHatch?.setOpen(0);
+      setVehicleInterior(true);
+      tl.resume();
+    }, 0.55),
+  );
+  // Just after the pause, so its start values are read once the switch has happened.
+  tweenPose(tl, cockpit, total * 0.26, 'power3.out', total * 0.74 + 0.01);
+  tl.to(power, { value: 1, duration: total * 0.3, ease: 'power2.out', onUpdate: () => handles.cockpit?.setPower(power.value) }, total * 0.7);
   tl.eventCallback('onComplete', () => {
     handles.cockpit?.setPower(1);
-    finish('cockpit', 0);
+    finish('cockpit');
   });
 }
 
@@ -250,18 +265,15 @@ export function setCockpitView(view: CockpitView, tab?: CockpitTab): void {
   if (!opening || reduced()) app.setCockpitView(view);
   if (view === 'full' && !opening) {
     applyPose(pose);
-    rig.sway = 0;
     return;
   }
   if (reduced()) {
     applyPose(pose);
-    rig.sway = 0;
     return;
   }
   current?.kill();
   const tl = gsap.timeline();
   current = tl;
-  rig.sway = 0;
   if (opening) app.setBusy(true);
   tweenPose(tl, pose, DURATIONS.cockpitView, EASES.glide, 0);
   tl.eventCallback('onComplete', () => {
@@ -269,7 +281,6 @@ export function setCockpitView(view: CockpitView, tab?: CockpitTab): void {
       useApp.getState().setCockpitView('full');
       useApp.getState().setBusy(false);
     }
-    rig.sway = 0;
     current = null;
   });
 }
@@ -290,16 +301,23 @@ export function exitCockpit(): void {
   const door = rocketDoorWorld();
   const home = homePose();
   const power = { value: 1 };
+  const hatch = { open: 1 };
 
+  // The reverse: the cabin powers down, dissolves to the open door from outside, and the
+  // camera pulls back home while the door slides shut behind it.
   tl.to(power, { value: 0.12, duration: total * 0.3, ease: 'power2.in', onUpdate: () => handles.cockpit?.setPower(power.value) }, 0);
-  fadeBlackout(tl, 1, total * 0.14, total * 0.26);
-  tl.add(() => {
-    applyPose({ position: door.approach, target: door.look, fov: 44 });
-    handles.cockpit?.setPower(0);
-    setVehicleInterior(false);
-  }, total * 0.42);
-  fadeBlackout(tl, 0, total * 0.18, total * 0.44);
-  tweenPose(tl, home, total * 0.56, EASES.glide, total * 0.44);
+  tl.addPause(total * 0.3, () =>
+    crossfade(() => {
+      if (current !== tl) return;
+      applyPose({ position: door.close, target: door.look, fov: 40 });
+      handles.cockpit?.setPower(0);
+      handles.rocketHatch?.setOpen(1);
+      setVehicleInterior(false);
+      tl.resume();
+    }, 0.5),
+  );
+  tweenPose(tl, home, total * 0.7, EASES.glide, total * 0.3 + 0.01);
+  tl.to(hatch, { open: 0, duration: total * 0.4, ease: 'power2.inOut', onUpdate: () => handles.rocketHatch?.setOpen(hatch.open) }, total * 0.4);
   tl.eventCallback('onComplete', () => finish('home'));
 }
 

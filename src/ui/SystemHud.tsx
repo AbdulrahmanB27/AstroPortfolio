@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { portfolio } from '../data/loadPortfolio';
 import { useApp } from '../state/store';
 import { focusProject, returnHomeFromOrbit } from '../sequences/system';
+import { Icon } from './Icon';
 
 /**
  * Minimal controls while browsing the solar system: return home, and an accessible
@@ -34,21 +35,31 @@ export function SystemHud() {
           <div className="lockup__name">{profile.name}</div>
           <div className="lockup__title">Projects · select a planet</div>
         </div>
-        <button type="button" className="pill" onClick={returnHomeFromOrbit} tabIndex={visible ? 0 : -1} data-label-obstacle>
-          <span aria-hidden="true">←</span> Home planet
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={returnHomeFromOrbit}
+          tabIndex={visible ? 0 : -1}
+          aria-label="Home planet"
+          title="Home planet"
+          data-label-obstacle
+        >
+          <Icon name="home" />
         </button>
       </div>
       <div className="system-hud__bottom">
         <button
           type="button"
-          className="pill"
+          className="icon-btn"
           aria-expanded={indexOpen}
           aria-controls="project-index"
+          aria-label="Project index"
+          title={indexOpen ? 'Hide the project index' : 'Project index'}
           onClick={() => setIndexOpen((v) => !v)}
           tabIndex={visible ? 0 : -1}
           data-label-obstacle
         >
-          {indexOpen ? 'Hide index' : 'Project index'}
+          <Icon name={indexOpen ? 'close' : 'list'} />
         </button>
         <ul id="project-index" className="project-index" data-open={indexOpen} aria-label="All projects">
           {portfolio.data.projects.map((p) => {

@@ -1,4 +1,5 @@
 import { assetUrl, portfolio } from '../../data/loadPortfolio';
+import { Icon } from '../Icon';
 
 function Entries({ title, items }: { title: string; items: typeof portfolio.data.resume.activities }) {
   if (!items.length) return null;
@@ -40,10 +41,10 @@ export function ResumePanel() {
       <p className="mc-doc__lede">{resume.headline}</p>
       <div className="resume-actions">
         <a className="pill pill--accent" href={pdf} download={fileName}>
-          Download resume (PDF)
+          <Icon name="download" size={16} /> Download resume (PDF)
         </a>
         <a className="pill" href={pdf} target="_blank" rel="noopener">
-          Open in new tab
+          Open in new tab <Icon name="external" size={16} />
         </a>
       </div>
       <p className="mc-doc__p">{resume.summary}</p>

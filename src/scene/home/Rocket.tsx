@@ -1,11 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { AdditiveBlending, Color, DoubleSide, Group, InstancedMesh, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PointLight } from 'three';
+import { AdditiveBlending, Color, DoubleSide, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PointLight } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { PALETTE } from '../../lib/constants';
 import { handles } from '../rig';
 import { vehicleView } from './rocketState';
 import { batchStatic } from '../staticBatch';
+import { stageEnvironment } from './stageEnvironment';
 import { seg } from '../../lib/lowPoly';
 
 /**
@@ -15,11 +16,16 @@ import { seg } from '../../lib/lowPoly';
  *
  * Refined, not redesigned. The silhouette — the cone and its pointed amber tip, the angled
  * fins, the proportions — is the owner's and stays exactly as it was; a version that swapped
- * the cone for a rounded ogive and the fins for swept plates was rejected. What changed is
- * finish: twice the radial segments so the curves stop faceting, bevelled fins and frames so
- * edges take a highlight instead of ending in a zero-width seam, and the small hardware that
- * says the thing was assembled — rivet rows at the bands, panel seams, a bolted porthole, a
- * hatch with hinges and a lever, ladder rails, cooling rings on the nozzle, pistons in the legs.
+ * the cone for a rounded ogive and the fins for swept plates was rejected.
+ *
+ * Clean rather than busy. An earlier pass added the hardware that says a thing was assembled:
+ * rivet rows, hairline panel seams, cooling rings on the nozzle, bolts round the porthole and
+ * the hatch. At the distance anyone sees the rocket those were one or two pixels wide, and
+ * thin features alias — as the camera moved they crawled and flickered, and the seams, a few
+ * millimetres off the hull, fought it for depth. What stays is what reads as form: the bands,
+ * the window, the porthole ring, the hatch and its lever, the ladder, the legs and their
+ * pistons, the bell and its lip. The finish comes from the light instead: satin materials and
+ * a painted environment (`stageEnvironment`) that gives the white hull its soft gradient.
  */
 
 type Vec3 = [number, number, number];
@@ -27,41 +33,6 @@ type Vec3 = [number, number, number];
 /** Body radius, and the radial segments every turned part of the hull uses. */
 const R = 1.0;
 const SEG = 64;
-
-/** Rivet rows: (height, radius it sits on). Each row is SEG rivets around the hull. */
-const RIVET_ROWS: [number, number][] = [
-  [1.76, R],
-  [2.09, R + 0.012],
-  [2.31, R + 0.012],
-  [5.22, R],
-];
-
-/** Rivets as one instanced mesh: a few hundred bumps, one draw call. */
-function Rivets({ material }: { material: MeshStandardMaterial }) {
-  const ref = useRef<InstancedMesh>(null);
-  const count = RIVET_ROWS.length * SEG;
-  useLayoutEffect(() => {
-    const mesh = ref.current;
-    if (!mesh) return;
-    const o = new Object3D();
-    let i = 0;
-    for (const [y, r] of RIVET_ROWS) {
-      for (let k = 0; k < SEG; k++) {
-        const a = (k / SEG) * Math.PI * 2;
-        o.position.set(Math.sin(a) * r, y, Math.cos(a) * r);
-        o.rotation.set(0, a, 0);
-        o.updateMatrix();
-        mesh.setMatrixAt(i++, o.matrix);
-      }
-    }
-    mesh.instanceMatrix.needsUpdate = true;
-  }, []);
-  return (
-    <instancedMesh ref={ref} args={[undefined, material, count]}>
-      <sphereGeometry args={[0.014, 6, 4, 0, Math.PI * 2, 0, Math.PI / 2]} />
-    </instancedMesh>
-  );
-}
 
 export function Rocket(props: { position: readonly [number, number, number]; rotation?: Vec3 }) {
   const vehicleRef = useRef<Group>(null);
@@ -79,10 +50,12 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
     // 4,000 pixels — a strip of white tape stuck to a cylinder. A broader, dimmer highlight
     // wraps the form and keeps the star's cream in it.
     const body = new MeshStandardMaterial({ color: PALETTE.rocketWhite, roughness: 0.72, metalness: 0.03 });
-    const graphite = new MeshStandardMaterial({ color: PALETTE.graphite, roughness: 0.55, metalness: 0.45 });
+    // Satin, not polished: a shiny dark metal on small parts throws pinpoint highlights that
+    // shimmer as soon as anything moves.
+    const graphite = new MeshStandardMaterial({ color: PALETTE.graphite, roughness: 0.62, metalness: 0.25 });
     const accent = new MeshStandardMaterial({ color: PALETTE.starGlow, roughness: 0.5, metalness: 0.1 });
     // Double-sided so the inside of the bell reads as the inside of a nozzle, not a hole.
-    const nozzle = new MeshStandardMaterial({ color: '#1b1e25', roughness: 0.4, metalness: 0.7, side: DoubleSide });
+    const nozzle = new MeshStandardMaterial({ color: '#1b1e25', roughness: 0.5, metalness: 0.55, side: DoubleSide });
     const glass = new MeshStandardMaterial({ color: '#0f1622', roughness: 0.2, metalness: 0.6, emissive: '#2a3a55', emissiveIntensity: 0.4 });
     // Above 1.0 on purpose: these materials are not tone mapped, so the bloom threshold of
     // 1.0 is a real ceiling. At the plain token value the plume sat exactly at the
@@ -92,11 +65,8 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
     const pad = new MeshStandardMaterial({ color: '#3a3733', roughness: 0.95 });
     const padRing = new MeshStandardMaterial({ color: '#5a554f', roughness: 0.9 });
     const strip = new MeshBasicMaterial({ color: new Color(PALETTE.starGlow).multiplyScalar(1.5), toneMapped: false });
-    // Seams and fastener heads: a shade under the hull, so they read as joins in it rather
-    // than as lines painted on it.
-    const seam = new MeshStandardMaterial({ color: '#b9b4ab', roughness: 0.8, metalness: 0.05 });
-    const steel = new MeshStandardMaterial({ color: '#8d939c', roughness: 0.38, metalness: 0.75 });
-    return { body, graphite, accent, nozzle, glass, flame, flameCore, pad, padRing, strip, seam, steel };
+    const steel = new MeshStandardMaterial({ color: '#8d939c', roughness: 0.45, metalness: 0.6 });
+    return { body, graphite, accent, nozzle, glass, flame, flameCore, pad, padRing, strip, steel };
   }, []);
 
   const geo = useMemo(
@@ -152,11 +122,30 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
 
   useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
 
-  // Hull, legs, ladder and fasteners as one draw call per material; the door is batched on its
+  // Lit by where it stands as well as by the lights: the shaded side of the hull picks up the
+  // ground and the horizon instead of falling to a flat grey.
+  useEffect(() => {
+    const env = stageEnvironment();
+    const set: [MeshStandardMaterial, number][] = [
+      [mats.body, 0.55],
+      [mats.accent, 0.45],
+      [mats.graphite, 0.6],
+      [mats.nozzle, 0.7],
+      [mats.steel, 0.9],
+      [mats.glass, 1.2],
+    ];
+    for (const [m, intensity] of set) {
+      m.envMap = env;
+      m.envMapIntensity = intensity;
+      m.needsUpdate = true;
+    }
+  }, [mats]);
+
+  // Hull, legs and ladder as one draw call per material; the door is batched on its
   // own because it slides, and the plume is left alone because it scales. See `staticBatch`.
   useLayoutEffect(() => (vehicleRef.current ? batchStatic(vehicleRef.current) : undefined), []);
 
-  const { body, graphite, accent, nozzle, glass, flame, flameCore, pad, padRing, strip, seam, steel } = mats;
+  const { body, graphite, accent, nozzle, glass, flame, flameCore, pad, padRing, strip, steel } = mats;
   const legAngles = [Math.PI / 6, Math.PI / 6 + (Math.PI * 2) / 3, Math.PI / 6 + (Math.PI * 4) / 3];
 
   return (
@@ -180,10 +169,6 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
             <mesh position={[1.12, 1.07, 0]} rotation={[0, 0, 0.62]} material={steel} castShadow>
               <cylinderGeometry args={[0.085, 0.085, 0.5, 16]} />
             </mesh>
-            {/* Hinge pin where the strut meets the skirt. */}
-            <mesh position={[0.93, 1.38, 0]} rotation={[Math.PI / 2, 0, 0]} material={steel}>
-              <cylinderGeometry args={[0.045, 0.045, 0.2, 12]} />
-            </mesh>
             {/* Upper stay: starts outside the hull radius so it never pokes through it. */}
             <mesh position={[1.28, 1.18, 0]} rotation={[0, 0, -0.52]} material={graphite} castShadow>
               <cylinderGeometry args={[0.045, 0.045, 0.78, 8]} />
@@ -191,23 +176,15 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
             <mesh position={[1.75, 0.16, 0]} material={graphite} castShadow receiveShadow>
               <cylinderGeometry args={[0.26, 0.3, 0.1, 28]} />
             </mesh>
-            <mesh position={[1.75, 0.215, 0]} rotation={[Math.PI / 2, 0, 0]} material={steel}>
-              <torusGeometry args={[0.25, 0.012, 8, 28]} />
-            </mesh>
           </group>
         ))}
         {/* Engine bell + skirt */}
         <mesh position={[0, 0.62, 0]} material={nozzle} castShadow>
           <cylinderGeometry args={[0.34, 0.6, 0.7, 48, 1, true]} />
         </mesh>
-        {/* Cooling rings round the bell, and a lip at its exit. */}
-        {[0.42, 0.62, 0.82].map((y) => (
-          <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]} material={graphite}>
-            <torusGeometry args={[0.34 + ((0.97 - y) / 0.7) * 0.26 + 0.008, 0.016, 8, 48]} />
-          </mesh>
-        ))}
+        {/* The lip at the bell's exit. */}
         <mesh position={[0, 0.275, 0]} rotation={[Math.PI / 2, 0, 0]} material={steel}>
-          <torusGeometry args={[0.6, 0.022, 8, 48]} />
+          <torusGeometry args={[0.6, 0.03, 10, 48]} />
         </mesh>
         <mesh position={[0, 0.98, 0]} material={graphite} castShadow>
           <cylinderGeometry args={[0.55, 0.42, 0.3, 48]} />
@@ -228,13 +205,6 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
         <mesh position={[0, 7.3, 0]} material={accent} castShadow>
           <coneGeometry args={[0.2, 0.4, 32]} />
         </mesh>
-        {/* Seam where the shoulder meets the cone, and a collar under the amber tip. */}
-        <mesh position={[0, 5.945, 0]} rotation={[Math.PI / 2, 0, 0]} material={graphite}>
-          <torusGeometry args={[0.722, 0.012, 6, SEG]} />
-        </mesh>
-        <mesh position={[0, 7.105, 0]} rotation={[Math.PI / 2, 0, 0]} material={graphite}>
-          <torusGeometry args={[0.2, 0.012, 6, 32]} />
-        </mesh>
         {/* Accent bands */}
         <mesh position={[0, 2.2, 0]} material={accent}>
           <cylinderGeometry args={[1.012, 1.012, 0.16, SEG, 1, true]} />
@@ -242,17 +212,6 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
         <mesh position={[0, 5.3, 0]} material={graphite}>
           <cylinderGeometry args={[1.012, 1.012, 0.08, SEG, 1, true]} />
         </mesh>
-        {/* Panel seams: one ring clear of the hatch and the porthole, and three vertical joins
-            on the sides and back, away from everything on the front face. */}
-        <mesh position={[0, 3.92, 0]} material={seam}>
-          <cylinderGeometry args={[R + 0.003, R + 0.003, 0.016, SEG, 1, true]} />
-        </mesh>
-        {[Math.PI / 2, Math.PI, -Math.PI / 2].map((a) => (
-          <mesh key={a} position={[Math.sin(a) * (R + 0.003), 3.49, Math.cos(a) * (R + 0.003)]} rotation={[0, a, 0]} material={seam}>
-            <planeGeometry args={[0.016, 3.46]} />
-          </mesh>
-        ))}
-        <Rivets material={steel} />
         {/* Fins */}
         {[0, 1, 2, 3].map((i) => (
           <group key={i} rotation={[0, (i * Math.PI) / 2 + Math.PI / 4, 0]}>
@@ -262,14 +221,6 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
         {/* Hatch (slides sideways when opened) */}
         <group position={[0, 3.15, 0]}>
           <mesh geometry={geo.hatchFrame} position={[0, 0, 0.97]} material={graphite} />
-          {/* Fasteners round the frame. */}
-          {[-0.36, 0.36].map((x) =>
-            [-0.5, -0.17, 0.17, 0.5].map((y) => (
-              <mesh key={`${x}${y}`} position={[x, y, 1.025]} rotation={[Math.PI / 2, 0, 0]} material={steel}>
-                <cylinderGeometry args={[0.014, 0.014, 0.012, 8]} />
-              </mesh>
-            )),
-          )}
           <group ref={hatchRef} userData={{ batch: true }}>
             <mesh geometry={geo.hatchDoor} position={[0, 0, 1.02]} material={body} castShadow />
             {/* Door viewport in a ring. */}
@@ -286,12 +237,6 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
             {[-0.13, 0.05].map((y) => (
               <mesh key={y} position={[0.22, y, 1.08]} rotation={[Math.PI / 2, 0, 0]} material={graphite}>
                 <cylinderGeometry args={[0.014, 0.014, 0.05, 8]} />
-              </mesh>
-            ))}
-            {/* Hinge knuckles on the opening edge. */}
-            {[-0.38, 0, 0.38].map((y) => (
-              <mesh key={y} position={[-0.355, y, 1.05]} material={graphite}>
-                <cylinderGeometry args={[0.022, 0.022, 0.12, 10]} />
               </mesh>
             ))}
           </group>
@@ -337,14 +282,6 @@ export function Rocket(props: { position: readonly [number, number, number]; rot
         <mesh position={[0, 4.55, 1.02]} rotation={[Math.PI / 2, 0, 0]} material={glass}>
           <cylinderGeometry args={[0.22, 0.22, 0.06, 40]} />
         </mesh>
-        {Array.from({ length: 8 }, (_, i) => {
-          const a = (i / 8) * Math.PI * 2;
-          return (
-            <mesh key={i} position={[Math.cos(a) * 0.255, 4.55 + Math.sin(a) * 0.255, 1.07]} rotation={[Math.PI / 2, 0, 0]} material={steel}>
-              <cylinderGeometry args={[0.013, 0.013, 0.012, 8]} />
-            </mesh>
-          );
-        })}
         {/* Cockpit window band near the top */}
         <group position={[0, 5.1, 0.93]} rotation={[0.2, 0, 0]}>
           <mesh geometry={geo.windowFrame} position={[0, 0, -0.02]} material={graphite} />
