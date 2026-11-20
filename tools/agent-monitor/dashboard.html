@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Monitor</title>
+<style>
+  :root {
+    --bg: #0a0e17;
+    --panel: #111827;
+    --border: #1f2937;
+    --text: #e5e7eb;
+    --dim: #6b7280;
+    --accent: #3b82f6;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --cyan: #06b6d4;
+    --purple: #a855f7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    flex-shrink: 0;
+  }
+  .header h1 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--cyan);
+  }
+  .header h1 span { color: var(--dim); font-weight: 400; }
+  .stats { display: flex; gap: 12px; margin-left: auto; }
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+  }
+  .stat .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .stat .dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .stat .dot.yellow { background: var(--yellow); }
+  .stat .dot.red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .stat .dot.gray { background: var(--dim); }
+  .stat .num { font-weight: 600; color: #fff; }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--dim);
+  }
+  .filter-group select {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-family: inherit;
+    font-size: 11px;
+  }
+
+  .pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse-anim 2s infinite;
+  }
+  @keyframes pulse-anim {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .pulse.disconnected { background: var(--red); animation: none; }
+
+  /* Main layout */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Agent table */
+  .agent-panel {
+    flex: 6;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .table-header {
+    display: grid;
+    grid-template-columns: 32px 1fr 80px 1.5fr 90px 90px 1.5fr 80px 100px;
+    gap: 8px;
+    padding: 8px 16px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    flex-shrink: 0;
+  }
+  .table-body {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .agent-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 80px 1.5fr 90px 90px 1.5fr 80px 100px;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .agent-row:hover { background: rgba(255,255,255,0.04); }
+  .agent-row.selected { background: rgba(59,130,246,0.1); border-left: 2px solid var(--accent); }
+  .agent-row .cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+  }
+
+  .state-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .state-badge.running_tool { background: rgba(34,197,94,0.15); color: var(--green); }
+  .state-badge.idle { background: rgba(59,130,246,0.15); color: var(--accent); }
+  .state-badge.error { background: rgba(239,68,68,0.15); color: var(--red); }
+  .state-badge.completed { background: rgba(107,114,128,0.15); color: var(--dim); }
+  .state-badge.stalled { background: rgba(234,179,8,0.15); color: var(--yellow); }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .status-dot.running_tool { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .status-dot.idle { background: var(--accent); }
+  .status-dot.error { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .status-dot.completed { background: var(--dim); }
+  .status-dot.stalled { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+
+  /* Agent Detail */
+  .detail-panel {
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 12px 20px;
+    flex-shrink: 0;
+    display: none;
+  }
+  .detail-panel.open { display: block; }
+  .detail-panel h3 {
+    font-size: 12px;
+    color: var(--cyan);
+    margin-bottom: 8px;
+  }
+  .detail-events {
+    font-size: 11px;
+  }
+  .detail-event {
+    display: flex;
+    gap: 12px;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .detail-event .de-time { color: var(--dim); width: 80px; flex-shrink: 0; }
+  .detail-event .de-type { width: 120px; flex-shrink: 0; font-weight: 500; }
+  .detail-event .de-type.PreToolUse { color: var(--cyan); }
+  .detail-event .de-type.PostToolUse { color: var(--green); }
+  .detail-event .de-type.PostToolUseFailure { color: var(--red); }
+  .detail-event .de-type.SessionStart { color: var(--purple); }
+  .detail-event .de-type.SessionEnd { color: var(--dim); }
+  .detail-event .de-type.SubagentStart { color: var(--yellow); }
+  .detail-event .de-type.SubagentStop { color: var(--yellow); }
+  .detail-event .de-summary { color: var(--text); flex: 1; }
+
+  /* Event stream */
+  .event-panel {
+    flex: 4;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .event-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    flex-shrink: 0;
+  }
+  .event-header button {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--dim);
+    font-family: inherit;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .event-header button:hover { color: var(--text); background: rgba(255,255,255,0.1); }
+  .event-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+  .event-item {
+    display: flex;
+    gap: 8px;
+    padding: 5px 16px;
+    font-size: 11px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .event-item .ev-time { color: var(--dim); width: 65px; flex-shrink: 0; }
+  .event-item .ev-agent { color: var(--cyan); width: 100px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .event-item .ev-type { width: 110px; flex-shrink: 0; font-weight: 500; }
+  .event-item .ev-summary { color: var(--dim); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .ev-type.PreToolUse { color: var(--cyan); }
+  .ev-type.PostToolUse { color: var(--green); }
+  .ev-type.PostToolUseFailure { color: var(--red); }
+  .ev-type.SessionStart { color: var(--purple); }
+  .ev-type.SessionEnd { color: var(--dim); }
+  .ev-type.SubagentStart { color: var(--yellow); }
+  .ev-type.SubagentStop { color: var(--yellow); }
+
+  /* Empty state */
+  .empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--dim);
+    font-size: 13px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .empty .hint { font-size: 11px; opacity: 0.6; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="pulse" id="connDot"></div>
+  <h1>AGENT MONITOR <span>v1</span></h1>
+  <div class="filter-group">
+    <label>Project:</label>
+    <select id="projectFilter"><option value="">All</option></select>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="dot green"></div> Active <span class="num" id="statActive">0</span></div>
+    <div class="stat"><div class="dot yellow"></div> Idle <span class="num" id="statIdle">0</span></div>
+    <div class="stat"><div class="dot red"></div> Errors <span class="num" id="statErrors">0</span></div>
+    <div class="stat"><div class="dot gray"></div> Total <span class="num" id="statTotal">0</span></div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="agent-panel">
+    <div class="table-header">
+      <div></div>
+      <div>Agent</div>
+      <div>Type</div>
+      <div>Project</div>
+      <div>State</div>
+      <div>Tool</div>
+      <div>Task</div>
+      <div>Runtime</div>
+      <div>Last Seen</div>
+    </div>
+    <div class="table-body" id="agentTable">
+      <div class="empty">
+        <div>No agents detected</div>
+        <div class="hint">Start a Claude Code session to see activity</div>
+      </div>
+    </div>
+    <div class="detail-panel" id="detailPanel">
+      <h3 id="detailTitle">Agent Events</h3>
+      <div class="detail-events" id="detailEvents"></div>
+    </div>
+  </div>
+
+  <div class="event-panel">
+    <div class="event-header">
+      <span>Event Stream</span>
+      <button id="pauseBtn" onclick="togglePause()">Pause</button>
+    </div>
+    <div class="event-list" id="eventList">
+      <div class="empty">
+        <div>Waiting for events...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STALE_THRESHOLD = 60 * 1000;
+const DEAD_THRESHOLD = 300 * 1000;
+
+let ws = null;
+let paused = false;
+let selectedAgent = null;
+let allEvents = [];
+let currentFilter = '';
+
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}`);
+
+  ws.onopen = () => {
+    document.getElementById('connDot').classList.remove('disconnected');
+  };
+
+  ws.onclose = () => {
+    document.getElementById('connDot').classList.add('disconnected');
+    setTimeout(connect, 2000);
+  };
+
+  ws.onmessage = (msg) => {
+    if (paused) return;
+    try {
+      const data = JSON.parse(msg.data);
+      updateDashboard(data);
+    } catch {}
+  };
+}
+
+function updateDashboard(data) {
+  const { agents, recentEvents, stats } = data;
+
+  // Stats
+  const running = agents.filter(a => getEffectiveState(a) === 'running_tool').length;
+  const idle = agents.filter(a => getEffectiveState(a) === 'idle').length;
+  document.getElementById('statActive').textContent = running;
+  document.getElementById('statIdle').textContent = idle;
+  document.getElementById('statErrors').textContent = stats.errors;
+  document.getElementById('statTotal').textContent = stats.total;
+
+  // Project filter
+  updateProjectFilter(agents);
+
+  // Agent table
+  const filtered = currentFilter ? agents.filter(a => a.project === currentFilter) : agents;
+  renderAgentTable(filtered);
+
+  // Event stream
+  if (recentEvents && recentEvents.length > 0) {
+    allEvents = recentEvents.concat(allEvents).slice(0, 500);
+    renderEventStream();
+  }
+
+  // Detail panel
+  if (selectedAgent) {
+    fetchAgentDetail(selectedAgent);
+  }
+}
+
+function getEffectiveState(agent) {
+  if (agent.state === 'completed') return 'completed';
+  const lastSeen = new Date(agent.last_seen).getTime();
+  const elapsed = Date.now() - lastSeen;
+  if (elapsed > DEAD_THRESHOLD) return 'stalled';
+  if (elapsed > STALE_THRESHOLD && agent.state !== 'running_tool') return 'stalled';
+  return agent.state;
+}
+
+function formatRuntime(startedAt) {
+  const ms = Date.now() - new Date(startedAt).getTime();
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ${s % 60}s`;
+  const h = Math.floor(m / 60);
+  return `${h}h ${m % 60}m`;
+}
+
+function formatTime(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function timeAgo(ts) {
+  if (!ts) return '—';
+  const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+  if (s < 5) return 'just now';
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  return `${Math.floor(m / 60)}h ago`;
+}
+
+function agentDisplayName(agent) {
+  if (agent.agent_id) return agent.agent_type || agent.agent_id.slice(0, 12);
+  return `Session ${(agent.session_id || '').slice(0, 8)}`;
+}
+
+function shortProject(project) {
+  if (!project) return '—';
+  const parts = project.replace(/\\/g, '/').split('/');
+  return parts[parts.length - 1] || parts[parts.length - 2] || project;
+}
+
+function updateProjectFilter(agents) {
+  const select = document.getElementById('projectFilter');
+  const projects = [...new Set(agents.map(a => a.project).filter(Boolean))];
+  const current = select.value;
+
+  // Only rebuild if projects changed
+  const existing = Array.from(select.options).map(o => o.value).filter(Boolean);
+  if (JSON.stringify(existing.sort()) === JSON.stringify(projects.sort())) return;
+
+  select.innerHTML = '<option value="">All</option>';
+  projects.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p;
+    opt.textContent = shortProject(p);
+    select.appendChild(opt);
+  });
+  select.value = current;
+}
+
+function renderAgentTable(agents) {
+  const container = document.getElementById('agentTable');
+
+  if (agents.length === 0) {
+    container.innerHTML = '<div class="empty"><div>No agents detected</div><div class="hint">Start a Claude Code session to see activity</div></div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  agents.forEach(agent => {
+    const state = getEffectiveState(agent);
+    const row = document.createElement('div');
+    row.className = `agent-row${agent.agent_key === selectedAgent ? ' selected' : ''}`;
+    row.onclick = () => selectAgent(agent.agent_key);
+    row.innerHTML = `
+      <div class="cell"><div class="status-dot ${state}"></div></div>
+      <div class="cell">${esc(agentDisplayName(agent))}</div>
+      <div class="cell" style="color:var(--dim)">${esc(agent.agent_type || '—')}</div>
+      <div class="cell" title="${esc(agent.project || '')}">${esc(shortProject(agent.project))}</div>
+      <div class="cell"><span class="state-badge ${state}">${state}</span></div>
+      <div class="cell" style="color:var(--cyan)">${esc(agent.current_tool || '—')}</div>
+      <div class="cell" title="${esc(agent.last_summary || '')}">${esc(agent.last_summary || '—')}</div>
+      <div class="cell">${formatRuntime(agent.started_at)}</div>
+      <div class="cell" style="color:var(--dim)">${timeAgo(agent.last_seen)}</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function renderEventStream() {
+  const container = document.getElementById('eventList');
+  container.innerHTML = '';
+  allEvents.forEach(evt => {
+    const item = document.createElement('div');
+    item.className = 'event-item';
+    const agentName = evt.agent_id
+      ? (evt.agent_type || evt.agent_id.slice(0, 12))
+      : `Session ${(evt.session_id || '').slice(0, 8)}`;
+    item.innerHTML = `
+      <div class="ev-time">${formatTime(evt._ts)}</div>
+      <div class="ev-agent" title="${esc(evt.session_id || '')}">${esc(agentName)}</div>
+      <div class="ev-type ${evt.event_type || ''}">${esc(evt.event_type || '?')}</div>
+      <div class="ev-summary">${esc(evt.summary || evt.tool_name || '')}</div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+async function selectAgent(agentKey) {
+  if (selectedAgent === agentKey) {
+    selectedAgent = null;
+    document.getElementById('detailPanel').classList.remove('open');
+    renderAgentTable(getCurrentAgents());
+    return;
+  }
+  selectedAgent = agentKey;
+  renderAgentTable(getCurrentAgents());
+  await fetchAgentDetail(agentKey);
+}
+
+function getCurrentAgents() {
+  // Re-read from last known state
+  try {
+    return JSON.parse(document.getElementById('agentTable').dataset.agents || '[]');
+  } catch { return []; }
+}
+
+async function fetchAgentDetail(agentKey) {
+  try {
+    const res = await fetch(`/api/events?agent_key=${encodeURIComponent(agentKey)}&limit=50`);
+    const events = await res.json();
+    const panel = document.getElementById('detailPanel');
+    panel.classList.add('open');
+    document.getElementById('detailTitle').textContent = `Events for ${agentKey}`;
+
+    const container = document.getElementById('detailEvents');
+    container.innerHTML = '';
+    events.forEach(evt => {
+      const row = document.createElement('div');
+      row.className = 'detail-event';
+      row.innerHTML = `
+        <div class="de-time">${formatTime(evt._ts)}</div>
+        <div class="de-type ${evt.event_type || ''}">${esc(evt.event_type || '?')}</div>
+        <div class="de-summary">${esc(evt.summary || evt.tool_name || '—')}</div>
+      `;
+      container.appendChild(row);
+    });
+  } catch {}
+}
+
+function togglePause() {
+  paused = !paused;
+  document.getElementById('pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+}
+
+function esc(str) {
+  if (!str) return '';
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// Wire up filter
+document.getElementById('projectFilter').addEventListener('change', (e) => {
+  currentFilter = e.target.value;
+});
+
+// Start
+connect();
+</script>
+</body>
+</html>

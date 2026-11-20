@@ -1,0 +1,144 @@
+{
+  "owner": {
+    "name": "Abdulrahman Bahjat",
+    "initials": "AB",
+    "title": "Mechanical Engineer & Aerospace Systems Developer",
+    "tagline": "Building bridges between physical systems and intelligent software.",
+    "about": "I am a Mechanical Engineering graduate with a passion for Aerospace systems, Robotics, and Software Architecture. I design and build systems that operate at the intersection of precision hardware and intelligent code — from autonomous robotics platforms to aerospace simulation environments.",
+    "email": "abdulrahman@bahjat.dev",
+    "github": "https://github.com/abdulrahmanbahjat",
+    "linkedin": "https://linkedin.com/in/abdulrahmanbahjat",
+    "location": "Dubai, UAE",
+    "interests": ["Aerospace Systems", "Autonomous Robotics", "Flight Dynamics", "Software Architecture", "3D Visualization", "Space Exploration"],
+    "goals": ["Contribute to next-generation autonomous flight systems", "Bridge the gap between mechanical engineering and intelligent software", "Build open-source tools for the robotics community"],
+    "resume": {
+      "downloadUrl": "/resume.pdf",
+      "education": [
+        {
+          "institution": "American University of Sharjah",
+          "degree": "B.Sc. Mechanical Engineering",
+          "year": "2019 – 2024",
+          "gpa": "3.7 / 4.0"
+        }
+      ],
+      "experience": [
+        {
+          "company": "Emirates Aviation University",
+          "role": "Research Assistant – Aerospace Systems",
+          "period": "2023 – 2024",
+          "description": "Developed simulation frameworks for unmanned aerial vehicle (UAV) flight dynamics. Integrated sensor fusion algorithms with ROS-based autopilot systems."
+        },
+        {
+          "company": "Freelance",
+          "role": "Robotics & Software Engineer",
+          "period": "2021 – Present",
+          "description": "Delivered custom robotics platforms, automation systems, and full-stack engineering dashboards for clients across the GCC region."
+        }
+      ]
+    }
+  },
+  "skills": [
+    { "category": "Aerospace", "items": ["Flight Dynamics", "UAV Systems", "CFD (ANSYS)", "MATLAB/Simulink", "Orbital Mechanics"] },
+    { "category": "Robotics", "items": ["ROS / ROS2", "SLAM", "Sensor Fusion", "Actuator Control", "Arduino / Raspberry Pi"] },
+    { "category": "Mechanical", "items": ["SolidWorks", "CATIA", "FEA", "Thermodynamics", "Manufacturing Processes"] },
+    { "category": "Software", "items": ["Python", "C++", "JavaScript", "React", "Three.js", "Node.js"] },
+    { "category": "Tools", "items": ["Git", "Docker", "Linux", "LaTeX", "Fusion 360"] }
+  ],
+  "projects": [
+    {
+      "id": "smart-greenhouse",
+      "title": "Smart Greenhouse",
+      "shortDesc": "IoT-driven greenhouse with sensor-based climate control and remote monitoring.",
+      "fullDesc": "An automated greenhouse control system built around a Raspberry Pi controller. A sensor array tracks soil moisture, temperature, humidity, and light; irrigation and ventilation actuators respond automatically, and live telemetry streams to a web dashboard for remote monitoring and manual override.",
+      "domain": "robotics",
+      "color": "#66BB6A",
+      "texture": "icy",
+      "size": 1.8,
+      "featured": true,
+      "orbitRadius": 14,
+      "orbitSpeed": 0.18,
+      "orbitOffset": 0.0,
+      "technologies": ["Raspberry Pi", "Python", "IoT Sensors", "Node.js", "React", "Automation"],
+      "moons": ["RPi", "Python", "IoT"],
+      "links": { "repo": "https://github.com/abdulrahmanbahjat/smart-greenhouse", "demo": "" },
+      "diagrams": [],
+      "images": []
+    },
+    {
+      "id": "cfd-wing-analysis",
+      "title": "CFD Wing Analysis",
+      "shortDesc": "High-fidelity CFD analysis of swept wings in transonic flow regimes.",
+      "fullDesc": "A comprehensive computational fluid dynamics study of NACA swept wing geometries under transonic conditions (Mach 0.8–1.2). Uses ANSYS Fluent with custom Python post-processing pipelines to extract aerodynamic coefficients, pressure distributions, and drag polars.",
+      "domain": "aerospace",
+      "color": "#81D4FA",
+      "texture": "gaseous",
+      "size": 1.4,
+      "featured": false,
+      "orbitRadius": 20,
+      "orbitSpeed": 0.12,
+      "orbitOffset": 1.2,
+      "technologies": ["ANSYS Fluent", "Python", "MATLAB", "CFD", "Aerodynamics"],
+      "moons": ["ANSYS", "Python", "MATLAB"],
+      "links": { "repo": "", "demo": "" },
+      "diagrams": [],
+      "images": []
+    },
+    {
+      "id": "auto-turret",
+      "title": "Auto Turret Sentry",
+      "shortDesc": "Differential drive UGV with computer vision and real-time path planning.",
+      "fullDesc": "A custom differential-drive unmanned ground vehicle (UGV) equipped with a stereo camera system and a Jetson Nano compute module. Implements A* path planning, YOLOv8 object detection, and real-time telemetry streaming to a React-based control dashboard.",
+      "domain": "robotics",
+      "color": "#B0BEC5",
+      "texture": "metallic",
+      "size": 1.6,
+      "featured": true,
+      "orbitRadius": 10,
+      "orbitSpeed": 0.25,
+      "orbitOffset": 0.8,
+      "technologies": ["Jetson Nano", "YOLOv8", "ROS2", "C++", "React", "OpenCV"],
+      "moons": ["YOLOv8", "ROS2", "Jetson"],
+      "links": { "repo": "https://github.com/abdulrahmanbahjat/ground-robot", "demo": "" },
+      "diagrams": [],
+      "images": []
+    },
+    {
+      "id": "portfolio-universe",
+      "title": "Portfolio V1",
+      "shortDesc": "This very site — a Three.js spatial portfolio with cinematic navigation.",
+      "fullDesc": "A fully interactive 3D portfolio experience built with React Three Fiber, GSAP, and Zustand. Features a cinematic lift-off sequence, procedurally placed solar system, planet-based project navigation, and a hidden admin panel for static-file updates.",
+      "domain": "software",
+      "color": "#CE93D8",
+      "texture": "geometric",
+      "size": 1.2,
+      "featured": false,
+      "orbitRadius": 26,
+      "orbitSpeed": 0.08,
+      "orbitOffset": 2.5,
+      "technologies": ["React", "Three.js", "React Three Fiber", "GSAP", "Zustand"],
+      "moons": ["React", "Three.js", "GSAP"],
+      "links": { "repo": "https://github.com/abdulrahmanbahjat/portfolio-universe", "demo": "" },
+      "diagrams": [],
+      "images": []
+    },
+    {
+      "id": "thermal-analysis",
+      "title": "Spacecraft Thermal Control",
+      "shortDesc": "FEA-based thermal analysis and passive cooling design for a CubeSat.",
+      "fullDesc": "End-to-end thermal analysis of a 3U CubeSat structure in Low Earth Orbit. Uses SolidWorks Simulation for FEA and a custom MATLAB thermal model to verify passive radiator sizing. Designed to keep onboard electronics within operational limits across orbital day/night cycles.",
+      "domain": "aerospace",
+      "color": "#FFAB40",
+      "texture": "rocky",
+      "size": 1.0,
+      "featured": false,
+      "orbitRadius": 17,
+      "orbitSpeed": 0.14,
+      "orbitOffset": 3.8,
+      "technologies": ["SolidWorks", "MATLAB", "FEA", "Thermal Analysis"],
+      "moons": ["SolidWorks", "MATLAB"],
+      "links": { "repo": "", "demo": "" },
+      "diagrams": [],
+      "images": []
+    }
+  ]
+}

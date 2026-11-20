@@ -1,62 +1,65 @@
+/* Design tokens shared by the experience and the /admin studio. */
+@import '@fontsource/michroma/400.css';
+@import '@fontsource-variable/manrope/index.css';
+
 :root {
-  color-scheme: dark;
+  --bg: #05060a;
+  --ink: #ece7dc;
+  --ink-dim: rgba(236, 231, 220, 0.66);
+  --ink-faint: rgba(236, 231, 220, 0.38);
+  --line: rgba(236, 231, 220, 0.14);
+  --line-strong: rgba(236, 231, 220, 0.28);
+  --amber: #f2b45a;
+  --amber-deep: #c98a3a;
+  --amber-glow: rgba(242, 180, 90, 0.22);
+  --panel: #0b0d10;
+  --panel-2: #12151a;
+  --panel-3: #191d23;
+  --danger: #e2765a;
+  --ok: #8fc7a0;
 
-  --space-900: #05070d;
-  --space-700: #0b1020;
-  --ink-100: #eef2f8;
-  --ink-300: #a9b4c7;
-  /*
-   * Lifted from #67718a, which measured 4.13:1 against the page ground — under the 4.5 AA
-   * floor for normal text. It is the muted tone, so it carries exactly the copy nobody
-   * checks: helper text in the studio, the simplified-version link, HUD captions. One token
-   * accounted for 28 of the 32 findings in `npm run ui:audit`. This value measures 4.85:1
-   * and keeps the same hue and role.
-   */
-  --ink-500: #737d94;
-  --star-core: #fff6dc;
-  --star-glow: #ffb454;
-  --star-edge: #ff7a2a;
-  --rim-cool: #6fa3ff;
-  --cockpit-graphite: #14171d;
-  --cockpit-panel: #1e232b;
-  --screen-glow: #cfe8ff;
+  --font-display: 'Michroma', 'Manrope Variable', system-ui, sans-serif;
+  --font-ui: 'Manrope Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  --font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
-  --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
-
-  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
 
-  /*
-   * Corner radius, as two steps and two shapes.
-   *
-   * The stylesheets had accumulated 3px, 4px, 6px, 8px and 10px across surfaces that sit
-   * next to each other, which is the kind of thing that reads as "assembled" rather than
-   * "designed" without anyone being able to say why. Small is for chips, tags and screen
-   * frames; medium for cards and media. Pills and dots keep their own shapes.
-   */
-  /*
-   * The inset every piece of persistent chrome sits at.
-   *
-   * The solar system had "PROJECT INDEX" at left 32 / bottom 26, "SOUND OFF" at right 28 /
-   * bottom 24 and "HOME PLANET" at right 32 — three different insets on one screen, with two
-   * pills in the same row 2px out of vertical alignment. Nothing chose those numbers; they
-   * were written three times in three files.
-   */
-  --hud-inset: 30px;
-  --hud-inset-bottom: 26px;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-pill: 999px;
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
 
-  --hair: 1px solid rgba(169, 180, 199, 0.18);
-  --panel-bg: rgba(11, 16, 32, 0.72);
-  --panel-blur: 14px;
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
 
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--amber);
+  color: #14100a;
 }

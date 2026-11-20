@@ -1,12 +1,6 @@
-// First: `?lowpoly` patches three's material classes before anything creates one.
-import './lib/lowPoly';
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { App } from './app/App';
-import './styles/app.css';
+import { createRoot } from 'react-dom/client'
+import './styles/tokens.css'
+import './ui/ui.css'
+import { App } from './App'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+createRoot(document.getElementById('root')!).render(<App />)
