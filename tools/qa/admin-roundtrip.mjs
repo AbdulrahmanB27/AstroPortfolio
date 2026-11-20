@@ -59,6 +59,7 @@ record('admin_shows_published_state', (await page.textContent('.source-bar')).in
 await page.screenshot({ path: join(out, '01_admin_loaded.png') })
 
 // 2. edit: grid on, tagline, one extra project
+const baseCount = JSON.parse(readFileSync(join(dist, 'data', 'portfolio.json'), 'utf8')).projects.length
 await page.check(field('site.settings.grid.enabled'))
 await nav('Profile')
 await page.fill(field('profile.tagline'), 'Round-trip check: edited in the studio.')
@@ -90,28 +91,28 @@ const [download] = await Promise.all([page.waitForEvent('download'), page.click(
 const exportedPath = join(out, 'exported-portfolio.json')
 await download.saveAs(exportedPath)
 const exported = JSON.parse(readFileSync(exportedPath, 'utf8'))
-record('export_filename_and_schema', download.suggestedFilename() === 'portfolio.json' && exported.schemaVersion === 1 && exported.projects.length === 7 && exported.site.settings.grid.enabled === true, {
+record('export_filename_and_schema', download.suggestedFilename() === 'portfolio.json' && exported.schemaVersion === 1 && exported.projects.length === baseCount + 1 && exported.site.settings.grid.enabled === true, {
   filename: download.suggestedFilename(),
   projects: exported.projects.length,
-  newId: exported.projects[6].id,
+  newId: exported.projects[baseCount].id,
 })
 
 // 5. draft preview in the site (still not deployed)
 const viaDraft = await siteState('?draft=1&view=orbit')
-record('site_previews_local_draft', viaDraft.draft && viaDraft.projects === 7 && viaDraft.gridOn, viaDraft)
+record('site_previews_local_draft', viaDraft.draft && viaDraft.projects === baseCount + 1 && viaDraft.gridOn, viaDraft)
 const published = await siteState('?view=orbit')
-record('deployed_site_unchanged_before_redeploy', !published.draft && published.projects === 6 && !published.gridOn, published)
+record('deployed_site_unchanged_before_redeploy', !published.draft && published.projects === baseCount && !published.gridOn, published)
 
 // 6. "redeploy": replace the data asset, nothing else
 writeFileSync(join(site, 'data', 'portfolio.json'), readFileSync(exportedPath))
 const after = await siteState('?view=orbit')
-record('redeployed_site_shows_changes', after.projects === 7 && after.gridOn && after.tagline.startsWith('Round-trip') && after.labels === 8, after)
+record('redeployed_site_shows_changes', after.projects === baseCount + 1 && after.gridOn && after.tagline.startsWith('Round-trip') && after.labels === baseCount + 2, after)
 await page.screenshot({ path: join(out, '03_site_after_redeploy_grid_on.png') })
 // the new planet is interactive without any scene code change
 await page.click('.plabel:has-text("Round Trip Planet")')
 await page.waitForFunction(() => window.__portfolio.app.getState().mode === 'project' && !window.__portfolio.app.getState().busy, null, { timeout: 15000 })
 const opened = await page.evaluate(() => window.__portfolio.app.getState().projectId)
-record('new_json_project_is_an_interactive_planet', opened === exported.projects[6].id, { opened })
+record('new_json_project_is_an_interactive_planet', opened === exported.projects[baseCount].id, { opened })
 await page.waitForTimeout(600)
 await page.screenshot({ path: join(out, '04_new_planet_project.png') })
 

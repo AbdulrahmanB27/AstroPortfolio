@@ -116,9 +116,10 @@ npm run qa:admin       # studio round trip on a production build served like Git
 npm run qa:perf        # frame-rate measurement (run on mains power, with nothing else using the GPU)
 node tools/qa/frametrace.mjs "view=home"    # per-second frame pacing and canvas size for one view
 node tools/qa/shader-links.mjs [--desktop]  # which shaders link slowly on a first visit, and when
+node tools/qa/panels.mjs [idFilter]         # every project display: content reachable from the top, images load
 ```
 
-The dev server must be running for capture / journey / secrets / perf. `qa:admin` builds its own copy.
+The dev server must be running for capture / journey / secrets / perf / panels. `qa:admin` builds its own copy.
 
 Read-only test states (no privileges, they only pick a scene): `?view=home`, `?view=cockpit&tab=resume`,
 `?view=orbit`, `?view=project&project=<id>`, `?view=intro&t=3`, `?view=launch&t=2.5`, plus `&n=12` to stress

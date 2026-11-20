@@ -145,3 +145,25 @@ Gate for each visual phase: rubric average ≥ 4.3, nothing below 4, judged from
   3. A stray stencil ("THR") floats beside the throttle on the cockpit deck; fixing it needs a rebake.
   4. Owner content: real projects, education and experience details, resume PDF.
 
+
+## 10. Content port from the live site (2026-11-19)
+
+- [x] Ported the owner's real content from `main` of github.com/AbdulrahmanB27/AstroPortfolio (the live site at
+  abdulrahmanbahjat.com) into `public/data/portfolio.json`: profile, education, experience and activities,
+  skills, contact links, and seven projects (Sweet Moment Chocolates, MyRoom, MyKitchen, PrayerLock,
+  AstroPortfolio, VEX Robotics, Minecraft Adhan Clock).
+- [x] Copied `public/resume/Abdulrahman-Bahjat-Resume.pdf`, `public/CNAME` and the project images
+  (`public/media/projects/`) byte for byte from `main`.
+- [x] Mapping: old `tagline` -> `summary`; old `summary` + `description` + `process` -> `description`;
+  `technologies` -> `tags`; activities folded into `experience`. The six art-passed planet slots (lane, phase,
+  type) were kept and re-assigned by fit; AstroPortfolio is a new `moon` body sharing lane 6.
+- [x] PrayerLock was `placeholder: true` on `main` (no screenshots or links yet). Set to false here because the
+  rebuild prints "Placeholder" on its orbit label and hides it from the resume; the text is the owner's own.
+- [x] AstroPortfolio screenshots on `main` showed the previous site; replaced with fresh captures of this build.
+- [x] `tools/qa/shots.json`: `project_sparse` now opens PrayerLock (the old placeholder entry is gone).
+- [x] Real entries are long enough to overflow the probe display, which exposed a clipping bug: fixed in
+  `src/ui/ui.css` (`align-content: safe center`; image column anchored to the top). New check
+  `tools/qa/panels.mjs`: 7 projects x 3 sizes, all reachable.
+- [x] `journey.mjs` and `admin-roundtrip.mjs` no longer hardcode six projects or an exact URL string.
+- [x] Verified: qa:schema 0 errors / 0 warnings; build; qa:journey 20/20; qa:admin 15/15; captures `port`,
+  `port2`, `port3` with 0 console errors.

@@ -1390,12 +1390,12 @@
 }
 .project.has-media .project__inner {
   grid-template-areas: 'media text' 'chips text';
-  grid-template-rows: auto auto;
-  align-content: center;
+  grid-template-rows: auto 1fr;
   row-gap: 1.1em;
 }
-.project.has-media .project__media {
-  align-self: end;
+.project.has-media .project__media,
+.project.has-media .project__text {
+  align-self: start;
 }
 .project.has-media .project__chips {
   align-self: start;
@@ -1404,6 +1404,7 @@
   grid-template-areas: 'text facts' 'chips facts';
   grid-template-rows: auto auto;
   align-content: center;
+  align-content: safe center;
   row-gap: 1.2em;
 }
 .project.no-media .project__text {

@@ -402,3 +402,14 @@ an emissive tint, or relocation — verify silhouettes with a screenshot.
 **Problem:** The scaler treated low but even frame times as a battery-saver cap and did nothing; home was actually locked at half the refresh rate (even 33 ms frames) by GPU load.
 **Correct pattern:** Take the device's pace from the fastest interval it has shown: 16.7 ms seen anywhere means 60 Hz is available and 33 ms is a miss; a paced browser never shows the short interval.
 
+
+## Lesson: centred content in a scroll box loses its top when it overflows
+**Problem:** With the real project text, the probe display opened mid-paragraph on desktop and laptop: the title and first lines sat above the scroll origin and could not be scrolled to.
+**Root cause:** `.project__inner` scrolls and centred its grid tracks (`align-content: center`). Overflow then spills equally above and below, and a scroll container cannot reach the part above. The placeholder entries were short enough never to overflow, so every earlier capture looked fine.
+**Correct pattern:** `align-content: safe center` (with plain `center` declared first as the fallback), and for long entries anchor the image column to the top beside the title instead of centring it against the text.
+**Rule:** Test every content screen with the longest real entry, not the sample one: run `node tools/qa/panels.mjs` after any content or panel CSS change.
+
+## Lesson: QA checks should read their expectations from the content they test
+**Problem:** After the real content landed, the journey and admin checks failed although the site behaved correctly: they expected exactly six projects and one exact URL string.
+**Correct pattern:** Derive counts from the published `portfolio.json`; compare URLs without a trailing slash.
+**Rule:** A test that breaks when the owner edits content is testing the content, not the code.

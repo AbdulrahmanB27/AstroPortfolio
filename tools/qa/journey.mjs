@@ -147,7 +147,7 @@ await settle()
 await page.waitForTimeout(500)
 await check('project_open', { mode: 'project', busy: false, project: 'sweet-moment-chocolate' })
 const link = await page.getAttribute('.project__links a', 'href')
-record('project_link', link === 'https://sweetmomentchocolate.com', { href: link })
+record('project_link', link?.replace(/\/$/, '') === 'https://sweetmomentchocolate.com', { href: link })
 const img = await page.evaluate(() => {
   const i = document.querySelector('.project__media img')
   return i ? { complete: i.complete, w: i.naturalWidth } : null
