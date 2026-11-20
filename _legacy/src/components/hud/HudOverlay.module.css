@@ -1,0 +1,151 @@
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: rgba(144, 202, 249, 0.8);
+  text-transform: uppercase;
+}
+
+.hud.schematic {
+  color: rgba(0, 191, 255, 0.85);
+}
+
+/* ── Positioned areas ────────────────────────────────────────────────────── */
+.topLeft {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.topRight {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  pointer-events: all;
+}
+
+.bottomLeft {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+}
+
+.bottomRight {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+}
+
+/* ── Label / Value ───────────────────────────────────────────────────────── */
+.label {
+  font-size: 0.5rem;
+  opacity: 0.5;
+}
+
+.value {
+  font-size: 0.65rem;
+}
+
+/* ── Prompt ──────────────────────────────────────────────────────────────── */
+.prompt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(224, 224, 224, 0.75);
+  min-height: 1.2em;
+}
+
+.cursor {
+  color: rgba(79, 195, 247, 0.9);
+  animation: blink 1s step-end infinite;
+  flex-shrink: 0;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ── Mode toggle button ──────────────────────────────────────────────────── */
+.modeToggle {
+  background: none;
+  border: 1px solid rgba(144, 202, 249, 0.35);
+  color: rgba(144, 202, 249, 0.7);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  pointer-events: all;
+}
+
+.modeToggle:hover {
+  border-color: rgba(144, 202, 249, 0.8);
+  color: rgba(144, 202, 249, 1);
+  background: rgba(144, 202, 249, 0.05);
+}
+
+/* ── Decorative corner brackets ──────────────────────────────────────────── */
+.corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  opacity: 0.35;
+}
+
+.cornerTL {
+  top: 12px;
+  left: 12px;
+  border-top: 1px solid currentColor;
+  border-left: 1px solid currentColor;
+}
+
+.cornerTR {
+  top: 12px;
+  right: 12px;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+}
+
+.cornerBL {
+  bottom: 12px;
+  left: 12px;
+  border-bottom: 1px solid currentColor;
+  border-left: 1px solid currentColor;
+}
+
+.cornerBR {
+  bottom: 12px;
+  right: 12px;
+  border-bottom: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+}
+
+/* ── Atmosphere Flash ────────────────────────────────────────────────────── */
+.atmosphereFlash {
+  position: absolute;
+  inset: 0;
+  background-color: #E0F7FA;
+  opacity: 0;
+  transition: opacity 1.5s cubic-bezier(0.25, 1, 0.5, 1);
+  pointer-events: none;
+  z-index: 5;
+  /* Behind text, above everything else */
+  mix-blend-mode: screen;
+}
+
+.atmosphereFlash.active {
+  opacity: 1;
+  transition: opacity 0.5s ease-in;
+  /* Quick fade in, slow fade out */
+}

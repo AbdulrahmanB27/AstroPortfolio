@@ -1,0 +1,576 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SimplifiedView — Premium Glassmorphic Portfolio Overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Overlay & Container ──────────────────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(4, 6, 14, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  overflow-y: auto;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+  font-family: 'Inter', 'Space Grotesk', sans-serif;
+  color: #E0E0E0;
+}
+
+/* ── Back Button ──────────────────────────────────────────────────────────── */
+.backBtn {
+  background: none;
+  border: 1px solid rgba(79, 195, 247, 0.25);
+  color: rgba(144, 202, 249, 0.8);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.25s;
+  margin-bottom: 32px;
+}
+
+.backBtn:hover {
+  color: #4FC3F7;
+  border-color: rgba(79, 195, 247, 0.6);
+  background: rgba(79, 195, 247, 0.06);
+  box-shadow: 0 0 12px rgba(79, 195, 247, 0.15);
+}
+
+/* ── Hero Profile Card ────────────────────────────────────────────────────── */
+.heroCard {
+  background: rgba(10, 16, 28, 0.6);
+  border: 1px solid rgba(0, 200, 180, 0.15);
+  border-radius: 16px;
+  padding: 48px 32px 36px;
+  text-align: center;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.heroCard::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(0, 200, 180, 0.25), transparent 40%, transparent 60%, rgba(79, 195, 247, 0.15));
+  z-index: -1;
+  pointer-events: none;
+}
+
+.avatarRing {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: conic-gradient(from 180deg,
+      rgba(79, 195, 247, 0.4),
+      rgba(0, 200, 180, 0.4),
+      rgba(206, 147, 216, 0.4),
+      rgba(79, 195, 247, 0.4));
+  padding: 3px;
+  animation: ringRotate 8s linear infinite;
+}
+
+@keyframes ringRotate {
+  from {
+    filter: hue-rotate(0deg);
+  }
+
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+.avatarInner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(15, 20, 35, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroName {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+
+.heroSubtitle {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.55rem;
+  color: rgba(255, 213, 79, 0.75);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.heroBio {
+  font-size: 0.92rem;
+  line-height: 1.8;
+  color: #BDBDBD;
+  max-width: 600px;
+  margin: 0 auto 24px;
+}
+
+.iconRow {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.iconBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: rgba(224, 224, 224, 0.7);
+  text-decoration: none;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.iconBtn:hover {
+  background: rgba(79, 195, 247, 0.1);
+  border-color: rgba(79, 195, 247, 0.4);
+  color: #4FC3F7;
+  box-shadow: 0 0 16px rgba(79, 195, 247, 0.15);
+  transform: translateY(-2px);
+}
+
+/* ── Two-Column Layout ────────────────────────────────────────────────────── */
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 768px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Glass Panels ─────────────────────────────────────────────────────────── */
+.panel {
+  background: rgba(10, 16, 28, 0.5);
+  border: 1px solid rgba(144, 202, 249, 0.08);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+/* ── Section Titles ───────────────────────────────────────────────────────── */
+.sectionTitle {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  color: #FFD54F;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sectionTitle::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, rgba(255, 213, 79, 0.25), transparent);
+}
+
+/* ── Skills Grid ──────────────────────────────────────────────────────────── */
+.skillsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skillCategory {
+  margin-bottom: 4px;
+}
+
+.skillCatLabel {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.5rem;
+  color: rgba(144, 202, 249, 0.6);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.skillTag {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.55rem;
+  color: #E0E0E0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.skillTag:hover {
+  background: rgba(79, 195, 247, 0.08);
+  border-color: rgba(79, 195, 247, 0.3);
+}
+
+.tagIcon {
+  color: rgba(79, 195, 247, 0.5);
+  font-size: 0.5rem;
+}
+
+/* ── Download Button ──────────────────────────────────────────────────────── */
+.downloadBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(255, 213, 79, 0.1);
+  border: 1px solid rgba(255, 213, 79, 0.35);
+  border-radius: 8px;
+  color: #FFD54F;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.downloadBtn:hover {
+  background: rgba(255, 213, 79, 0.18);
+  box-shadow: 0 0 16px rgba(255, 213, 79, 0.15);
+  transform: translateY(-1px);
+}
+
+/* ── Timeline ─────────────────────────────────────────────────────────────── */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timelineItem {
+  display: flex;
+  gap: 16px;
+  min-height: 80px;
+}
+
+.timelineNodeWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.timelineNode {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 213, 79, 0.5);
+  background: rgba(10, 16, 28, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: #FFD54F;
+  flex-shrink: 0;
+}
+
+.timelineLine {
+  width: 2px;
+  flex: 1;
+  background: rgba(255, 213, 79, 0.15);
+  margin: 4px 0;
+}
+
+.timelineItem:last-child .timelineLine {
+  display: none;
+}
+
+.timelineContent {
+  flex: 1;
+  padding-bottom: 24px;
+}
+
+.timelineHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.timelineTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.dateBadge {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.5rem;
+  background: rgba(255, 213, 79, 0.12);
+  color: #FFD54F;
+  border: 1px solid rgba(255, 213, 79, 0.3);
+  border-radius: 4px;
+  padding: 3px 8px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.timelineSubtitle {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  color: rgba(79, 195, 247, 0.7);
+  margin-bottom: 6px;
+}
+
+.timelineDesc {
+  font-size: 0.85rem;
+  color: rgba(189, 189, 189, 0.8);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Interests ────────────────────────────────────────────────────────────── */
+.interestList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.interestTag {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.55rem;
+  color: #FFD54F;
+  background: rgba(255, 213, 79, 0.06);
+  border: 1px solid rgba(255, 213, 79, 0.2);
+  border-radius: 20px;
+  padding: 6px 14px;
+  letter-spacing: 0.06em;
+  transition: all 0.2s;
+}
+
+.interestTag:hover {
+  background: rgba(255, 213, 79, 0.12);
+  border-color: rgba(255, 213, 79, 0.4);
+}
+
+/* ── Project Cards ────────────────────────────────────────────────────────── */
+.projectsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.projectCard {
+  background: rgba(10, 15, 25, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 3px solid var(--project-color, #90CAF9);
+  border-radius: 10px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.projectCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+  background: rgba(15, 22, 35, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.projectCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 100% 0%, var(--project-color-alpha), transparent 40%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.projectCard:hover::before {
+  opacity: 1;
+}
+
+.projectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.projectDomain {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.48rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--project-color);
+  margin-bottom: 6px;
+  opacity: 0.8;
+}
+
+.projectTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+
+.projectShortDesc {
+  font-size: 0.8rem;
+  color: #9E9E9E;
+}
+
+.projectBody {
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: #BDBDBD;
+  margin: 0 0 16px;
+}
+
+.featuredBadge {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.48rem;
+  color: #FFD54F;
+  border: 1px solid rgba(255, 213, 79, 0.4);
+  background: rgba(255, 213, 79, 0.05);
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.techTag {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.5rem;
+  color: var(--tag-color, #4FC3F7);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+  transition: all 0.2s;
+}
+
+.techTag:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--tag-color, #4FC3F7);
+}
+
+/* ── Links ────────────────────────────────────────────────────────────────── */
+.linkGroup {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.flatLink {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.55rem;
+  color: #90CAF9;
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 0;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.flatLink:hover {
+  color: #4FC3F7;
+}
+
+.flatLink::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: #90CAF9;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
+}
+
+.flatLink:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────────── */
+.footer {
+  margin-top: 48px;
+  text-align: center;
+}
+
+.footerLine {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(144, 202, 249, 0.15), transparent);
+  margin-bottom: 16px;
+}
+
+.footerText {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.5rem;
+  color: rgba(144, 202, 249, 0.3);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}

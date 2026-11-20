@@ -1,0 +1,275 @@
+{
+  "schemaVersion": 1,
+  "site": {
+    "title": "Abdulrahman Bahjat — Engineering Portfolio",
+    "description": "Interactive portfolio of Abdulrahman Bahjat, Mechanical Engineering student at Penn State.",
+    "settings": {
+      "grid": {
+        "enabled": false,
+        "opacity": 0.16,
+        "density": 10
+      },
+      "orbitSpeed": 1
+    }
+  },
+  "profile": {
+    "name": "Abdulrahman Bahjat",
+    "initials": "AB",
+    "role": "Mechanical Engineering · Penn State",
+    "tagline": "Engineering student exploring robotics, 3D printing, AI, programming and space.",
+    "location": "",
+    "about": [
+      "I'm Abdulrahman Bahjat, a Mechanical Engineering student at Penn State. I'm interested in engineering, robotics, 3D printing, AI, programming and space exploration.",
+      "This portfolio is a small star system. Each planet in orbit is one project: launch from the home planet to explore them."
+    ],
+    "goals": [
+      "Placeholder — goals to be added."
+    ],
+    "interests": [
+      "Robotics",
+      "3D printing",
+      "Artificial intelligence",
+      "Programming",
+      "Space exploration",
+      "Mechanical design"
+    ],
+    "placeholder": true
+  },
+  "education": [
+    {
+      "id": "penn-state",
+      "school": "The Pennsylvania State University",
+      "degree": "Mechanical Engineering (undergraduate)",
+      "start": "",
+      "end": "",
+      "details": [
+        "Placeholder — dates and coursework to be added."
+      ],
+      "placeholder": true
+    }
+  ],
+  "experience": [],
+  "skills": [
+    {
+      "id": "engineering",
+      "group": "Engineering",
+      "items": [
+        "Mechanical engineering",
+        "Robotics",
+        "3D printing"
+      ],
+      "placeholder": true
+    },
+    {
+      "id": "software",
+      "group": "Software",
+      "items": [
+        "Programming",
+        "Web development",
+        "Artificial intelligence"
+      ],
+      "placeholder": true
+    },
+    {
+      "id": "interests",
+      "group": "Exploring",
+      "items": [
+        "Space systems",
+        "Computer science"
+      ],
+      "placeholder": true
+    }
+  ],
+  "resume": {
+    "pdf": "",
+    "updated": "",
+    "summary": "Mechanical Engineering student at Penn State with interests in robotics, 3D printing, AI, programming and space exploration."
+  },
+  "contact": {
+    "email": "abodybahjat@gmail.com",
+    "note": "The quickest way to reach me is email.",
+    "links": []
+  },
+  "projects": [
+    {
+      "id": "sweet-moment-chocolate",
+      "title": "Sweet Moment Chocolate",
+      "category": "Web development",
+      "year": "",
+      "role": "Solo developer",
+      "summary": "Website for a local chocolate business, designed and built solo.",
+      "description": [
+        "A live website for Sweet Moment Chocolate, a local business. I developed the site on my own, from layout to launch."
+      ],
+      "tags": [
+        "Web",
+        "Client work",
+        "Solo build"
+      ],
+      "media": [
+        {
+          "src": "media/sweet-moment-chocolate.webp",
+          "alt": "Home page of the Sweet Moment Chocolate website",
+          "caption": "The live site"
+        }
+      ],
+      "links": [
+        {
+          "label": "Visit the site",
+          "url": "https://sweetmomentchocolate.com",
+          "kind": "live"
+        }
+      ],
+      "featured": true,
+      "placeholder": false,
+      "planet": {
+        "type": "gas",
+        "palette": [
+          "#8a5a3c",
+          "#d9b48a",
+          "#4a2c1c"
+        ],
+        "size": 1.35,
+        "orbit": 3,
+        "phase": 0.85,
+        "ring": true,
+        "moons": 0,
+        "seed": 14
+      }
+    },
+    {
+      "id": "space-portfolio",
+      "title": "Space Portfolio",
+      "category": "Interactive 3D",
+      "year": "2026",
+      "role": "",
+      "summary": "This site: a small 3D star system where every planet is a project.",
+      "description": [
+        "An interactive portfolio built as a miniature star system. It runs as a fully static site, with all content stored in one JSON file that can be edited in a built-in studio at /admin."
+      ],
+      "tags": [
+        "Three.js",
+        "React",
+        "Blender"
+      ],
+      "media": [],
+      "links": [],
+      "featured": false,
+      "placeholder": false,
+      "planet": {
+        "type": "ocean",
+        "palette": [],
+        "size": 1.1,
+        "orbit": 2,
+        "phase": 0.62,
+        "ring": false,
+        "moons": 1,
+        "seed": 5
+      }
+    },
+    {
+      "id": "robotics-project",
+      "title": "Robotics Project",
+      "category": "Robotics",
+      "year": "",
+      "role": "",
+      "summary": "Placeholder — details for this project are coming soon.",
+      "description": [],
+      "tags": [
+        "Coming soon"
+      ],
+      "media": [],
+      "links": [],
+      "featured": false,
+      "placeholder": true,
+      "planet": {
+        "type": "rock",
+        "palette": [],
+        "size": 0.9,
+        "orbit": 1,
+        "phase": 0.43,
+        "ring": false,
+        "moons": 0,
+        "seed": 21
+      }
+    },
+    {
+      "id": "3d-printing-project",
+      "title": "3D Printing Project",
+      "category": "3D printing",
+      "year": "",
+      "role": "",
+      "summary": "Placeholder — details for this project are coming soon.",
+      "description": [],
+      "tags": [
+        "Coming soon"
+      ],
+      "media": [],
+      "links": [],
+      "featured": false,
+      "placeholder": true,
+      "planet": {
+        "type": "ember",
+        "palette": [],
+        "size": 1.0,
+        "orbit": 4,
+        "phase": 0.03,
+        "ring": false,
+        "moons": 0,
+        "seed": 33
+      }
+    },
+    {
+      "id": "ai-project",
+      "title": "AI Project",
+      "category": "Artificial intelligence",
+      "year": "",
+      "role": "",
+      "summary": "Placeholder — details for this project are coming soon.",
+      "description": [],
+      "tags": [
+        "Coming soon"
+      ],
+      "media": [],
+      "links": [],
+      "featured": false,
+      "placeholder": true,
+      "planet": {
+        "type": "ice",
+        "palette": [],
+        "size": 1.05,
+        "orbit": 5,
+        "phase": 0.2,
+        "ring": false,
+        "moons": 2,
+        "seed": 47
+      }
+    },
+    {
+      "id": "engineering-design-project",
+      "title": "Engineering Design Project",
+      "category": "Mechanical design",
+      "year": "",
+      "role": "",
+      "summary": "Placeholder — details for this project are coming soon.",
+      "description": [],
+      "tags": [
+        "Coming soon"
+      ],
+      "media": [],
+      "links": [],
+      "featured": false,
+      "placeholder": true,
+      "planet": {
+        "type": "desert",
+        "palette": [],
+        "size": 1.15,
+        "orbit": 6,
+        "phase": 0.36,
+        "ring": false,
+        "moons": 1,
+        "seed": 58
+      }
+    }
+  ]
+}

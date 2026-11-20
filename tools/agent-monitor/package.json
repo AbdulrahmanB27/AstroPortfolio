@@ -1,0 +1,14 @@
+{
+  "name": "agent-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Claude Code agent monitoring dashboard",
+  "scripts": {
+    "start": "node server.js",
+    "setup": "node setup.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "ws": "^8.18.0"
+  }
+}

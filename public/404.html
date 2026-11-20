@@ -1,54 +1,30 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
-    <title>Redirecting — Abdulrahman Bahjat</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Off course — Abdulrahman Bahjat</title>
     <style>
-      html { background: #05070d; color: #a9b4c7; font: 15px/1.55 Inter, system-ui, sans-serif; }
-      body { margin: 0; min-height: 100vh; display: grid; place-items: center; text-align: center; }
-      p { margin: 0; padding: 24px; }
-      a { color: #ffb454; }
+      html, body { height: 100%; margin: 0; background: #05060a; color: #ece7dc; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      main { min-height: 100%; display: grid; place-content: center; justify-items: center; gap: 18px; padding: 24px; text-align: center; }
+      .star { width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 40% 38%, #fff1cf, #f2b45a 62%, #a25a1c); box-shadow: 0 0 26px 4px rgba(242, 180, 90, 0.22); }
+      h1 { margin: 0; font-size: 13px; font-weight: 400; letter-spacing: 0.34em; text-transform: uppercase; }
+      p { margin: 0; color: rgba(236, 231, 220, 0.66); max-width: 34ch; line-height: 1.5; }
+      a { color: #17110a; background: #f2b45a; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 700; }
     </style>
-    <script>
-      // GitHub Pages serves this file for any path that has no matching file.
-      // The portfolio is a single page that routes with the URL hash (#/about, #/projects/<id>),
-      // so the right answer is almost always "go back to the app root and keep the hash".
-      //
-      // Base path rule (mirrors .github/workflows/deploy.yml and vite.config.ts):
-      //   <user>.github.io/<repo>/…   → project site, base = "/<repo>/" (first path segment)
-      //   custom domain (public/CNAME) → base = "/"
-      // "/admin" and "/lite" (the separate admin/ and lite/ entries) are real directories that
-      // may be requested without their trailing slash; everything else lands on the app root.
-      // Pages itself already 301s those two — this is the fallback for a host that does not.
-      (function () {
-        var loc = window.location;
-        var path = loc.pathname;
-        var segments = path.split('/').filter(Boolean);
-        var isGithubIo = /\.github\.io$/i.test(loc.hostname);
-        var base = isGithubIo && segments.length > 0 ? '/' + segments[0] + '/' : '/';
-        var rest = path.slice(base.length).replace(/\/+$/, '');
-        var target = rest === 'admin' || rest === 'lite' ? base + rest + '/' : base;
-
-        // A user site (<user>.github.io with base "/") reaches this file for "/typo/", where
-        // the first segment is not a repo name. If the computed target is the very path that
-        // just 404ed, fall back to the domain root instead of redirecting in a loop.
-        if (target === path) target = '/';
-
-        var next = target + loc.search + loc.hash;
-        if (next !== path + loc.search + loc.hash) loc.replace(next);
-      })();
-    </script>
   </head>
   <body>
-    <!--
-      "/" is right on a custom domain and on Cloudflare, and wrong on a GitHub project site,
-      where the root is "/<repo>/". This link is only ever seen with JavaScript off — the
-      script above redirects before the body paints — and with JavaScript off nothing here can
-      learn the repo name, because Vite copies this file verbatim and never rewrites it. So it
-      stays "/", which is correct everywhere except the one case that cannot be fixed.
-    -->
-    <p>That page does not exist. <a href="/">Back to the portfolio</a>.</p>
+    <main>
+      <span class="star" aria-hidden="true"></span>
+      <h1>Abdulrahman Bahjat</h1>
+      <p>This page drifted off course. The portfolio is back at the home planet.</p>
+      <a id="home" href="/">Return to the portfolio</a>
+    </main>
+    <script>
+      // GitHub Pages serves this file for any unknown path. Project sites live under /<repository>/.
+      var seg = location.pathname.split('/')[1]
+      var base = /\.github\.io$/.test(location.hostname) && seg ? '/' + seg + '/' : '/'
+      document.getElementById('home').setAttribute('href', base)
+    </script>
   </body>
 </html>

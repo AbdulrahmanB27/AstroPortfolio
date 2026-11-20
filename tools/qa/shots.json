@@ -1,0 +1,200 @@
+[
+  {
+    "name": "home",
+    "query": "view=home&t=6",
+    "sizes": [
+      "desktop",
+      "laptop",
+      "phone"
+    ],
+    "wait": 3500
+  },
+  {
+    "name": "home_bare",
+    "query": "view=home&t=6&bare=1",
+    "sizes": [
+      "desktop"
+    ],
+    "wait": 3500
+  },
+  {
+    "name": "intro_first",
+    "query": "view=intro&t=0.9",
+    "sizes": [
+      "desktop"
+    ],
+    "wait": 3000
+  },
+  {
+    "name": "intro_mid",
+    "query": "view=intro&t=3.4",
+    "sizes": [
+      "desktop"
+    ],
+    "wait": 3000
+  },
+  {
+    "name": "cockpit_about",
+    "query": "view=cockpit&tab=about&t=6",
+    "sizes": [
+      "desktop",
+      "laptop",
+      "phone"
+    ],
+    "wait": 3500
+  },
+  {
+    "name": "cockpit_skills",
+    "query": "view=cockpit&tab=skills&t=6",
+    "sizes": [
+      "desktop",
+      "phone"
+    ],
+    "wait": 3500
+  },
+  {
+    "name": "cockpit_resume",
+    "query": "view=cockpit&tab=resume&t=6",
+    "sizes": [
+      "desktop",
+      "phone"
+    ],
+    "wait": 3500
+  },
+  {
+    "name": "cockpit_contact",
+    "query": "view=cockpit&tab=contact&t=6",
+    "sizes": [
+      "desktop"
+    ],
+    "wait": 3500
+  },
+  {
+    "name": "launch_ignite",
+    "query": "view=launch&t=1.6",
+    "sizes": [
+      "desktop"
+    ],
+    "wait": 3000
+  },
+  {
+    "name": "launch_rise",
+    "query": "view=launch&t=2.5",
+    "sizes": [
+      "desktop"
+    ],
+    "wait": 3000
+  },
+  {
+    "name": "launch_apex",
+    "query": "view=launch&t=4.2",
+    "sizes": [
+      "desktop"
+    ],
+    "wait": 3000
+  },
+  {
+    "name": "launch_pull",
+    "query": "view=launch&t=5.4",
+    "sizes": [
+      "desktop"
+    ],
+    "wait": 3000
+  },
+  {
+    "name": "orbit",
+    "query": "view=orbit&t=6",
+    "sizes": [
+      "desktop",
+      "laptop",
+      "phone"
+    ],
+    "wait": 3500
+  },
+  {
+    "name": "orbit_n4",
+    "query": "view=orbit&t=6&n=4",
+    "sizes": [
+      "desktop"
+    ],
+    "wait": 3500
+  },
+  {
+    "name": "orbit_n8",
+    "query": "view=orbit&t=6&n=8",
+    "sizes": [
+      "desktop",
+      "phone"
+    ],
+    "wait": 3500
+  },
+  {
+    "name": "orbit_n12",
+    "query": "view=orbit&t=6&n=12",
+    "sizes": [
+      "desktop",
+      "phone"
+    ],
+    "wait": 3500
+  },
+  {
+    "name": "project_real",
+    "query": "view=project&project=sweet-moment-chocolate&t=6",
+    "sizes": [
+      "desktop",
+      "laptop",
+      "phone"
+    ],
+    "wait": 4000
+  },
+  {
+    "name": "project_sparse",
+    "query": "view=project&project=robotics-project&t=6",
+    "sizes": [
+      "desktop",
+      "phone"
+    ],
+    "wait": 4000
+  },
+  {
+    "name": "flight",
+    "query": "view=flight&t=6",
+    "sizes": [
+      "desktop",
+      "phone"
+    ],
+    "wait": 4000
+  },
+  {
+    "name": "deathstar",
+    "query": "view=deathstar&t=6",
+    "sizes": [
+      "desktop"
+    ],
+    "wait": 4000
+  },
+  {
+    "name": "altlaunch_a",
+    "query": "view=altlaunch&t=2.2",
+    "sizes": [
+      "laptop"
+    ],
+    "wait": 3000
+  },
+  {
+    "name": "altlaunch_b",
+    "query": "view=altlaunch&t=3.7",
+    "sizes": [
+      "laptop"
+    ],
+    "wait": 3000
+  },
+  {
+    "name": "altlaunch_c",
+    "query": "view=altlaunch&t=4.6",
+    "sizes": [
+      "laptop"
+    ],
+    "wait": 3000
+  }
+]
