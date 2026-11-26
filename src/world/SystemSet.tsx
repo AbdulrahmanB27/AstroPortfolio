@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 import { HOME_CENTER, HOME_GLOBE_ORBIT_SCALE, HOME_R, PLANET_HOME_SCALE, STAR_DIST, STAR_R, STAR_SYSTEM_SCALE, SYS_MATRIX } from './constants'
-import { bodyPosition, layoutSystem, systemRefs, type Body } from './orbits'
+import { bodyPosition, layoutSystem, moonOffset, moonSize, systemRefs, type Body } from './orbits'
 import { makePlanetMaterial, makeRingMaterial } from './planetMaterial'
 import { fx, rig, setPose } from './rig'
 import { app, useApp } from '../state/store'
@@ -142,12 +142,10 @@ function RadialGrid({ outer, density, opacity }: { outer: number; density: numbe
 function Moon({ spec, index, radius }: { spec: PlanetSpec; index: number; radius: number }) {
   const ref = useRef<THREE.Mesh>(null)
   const mat = useMemo(() => makePlanetMaterial({ ...spec, type: 'moon', palette: [], seed: spec.seed + 17 * (index + 1) }), [spec, index])
-  const dist = 1.75 + index * 0.55
-  const size = 0.16 - index * 0.03
+  const size = moonSize(index)
   useFrame(() => {
-    const a = fx.time * (0.16 - index * 0.035) + index * 2.1 + spec.seed
     if (ref.current) {
-      ref.current.position.set(Math.cos(a) * dist, Math.sin(a * 0.7 + index) * 0.22, Math.sin(a) * dist)
+      moonOffset(spec.seed, index, fx.time, ref.current.position)
       mat.uniforms.uTime.value = fx.time
       mat.uniforms.uBump.value = radius * size
     }

@@ -402,3 +402,77 @@ an emissive tint, or relocation — verify silhouettes with a screenshot.
 **Problem:** The scaler treated low but even frame times as a battery-saver cap and did nothing; home was actually locked at half the refresh rate (even 33 ms frames) by GPU load.
 **Correct pattern:** Take the device's pace from the fastest interval it has shown: 16.7 ms seen anywhere means 60 Hz is available and 33 ms is a miss; a paced browser never shows the short interval.
 
+
+## Lesson: centred content in a scroll box loses its top when it overflows
+**Problem:** With the real project text, the probe display opened mid-paragraph on desktop and laptop: the title and first lines sat above the scroll origin and could not be scrolled to.
+**Root cause:** `.project__inner` scrolls and centred its grid tracks (`align-content: center`). Overflow then spills equally above and below, and a scroll container cannot reach the part above. The placeholder entries were short enough never to overflow, so every earlier capture looked fine.
+**Correct pattern:** `align-content: safe center` (with plain `center` declared first as the fallback), and for long entries anchor the image column to the top beside the title instead of centring it against the text.
+**Rule:** Test every content screen with the longest real entry, not the sample one: run `node tools/qa/panels.mjs` after any content or panel CSS change.
+
+## Lesson: QA checks should read their expectations from the content they test
+**Problem:** After the real content landed, the journey and admin checks failed although the site behaved correctly: they expected exactly six projects and one exact URL string.
+**Correct pattern:** Derive counts from the published `portfolio.json`; compare URLs without a trailing slash.
+**Rule:** A test that breaks when the owner edits content is testing the content, not the code.
+
+## Lesson: a light inside a group that hides recompiles every shader in the scene
+**Problem:** Transitions froze: about 0.6 s in Chrome and 1 to 1.7 s in Firefox in the middle of the launch, when entering the cockpit, when opening the first project and on the way back to the home planet.
+**Root cause:** The engine's point light was a child of the lander, and the lander (and the whole surface set) is hidden in several states. three.js includes the number of lights in every material's program key, so each time that light came or went, every material in the scene, lit or not, was given a new program and compiled again. A second point light with intensity 0 sat inside the probe group and did the same on project focus.
+**Correct pattern:** Lights live at the top level and are never hidden; switch them with intensity. Position a "local" light from the frame loop instead of parenting it.
+**Rule:** After adding or moving any light, run `node tools/qa/pace.mjs "view=home" launch` and the other transitions: the output must say "no shader program linked during the transition".
+
+## Lesson: a camera move between two orbiting views must travel in the orbit's own coordinates
+**Problem:** "Home planet" swung the camera under and around the planet, and through the star's glow, whenever the system view had been turned first.
+**Root cause:** The path was a spline in world space from wherever the camera was to a fixed point behind the landing site. From the default view that is a short, clean line. From a turned view the start can be below the home planet's horizon or on the far side of the star, and the same spline cuts under the planet or over the star and ends in a 180 degree whip. Every test started from the default view.
+**Correct pattern:** Interpolate the view's own parameters (azimuth, tilt, zoom) back to the composed overview while blending towards the destination, so the camera stays on its orbit until it is on the right side.
+**Rule:** Test every transition that starts from a user-controlled camera from several user-chosen states (`tools/qa/return-trace.mjs --az --el --zoom`, `tools/qa/strip.mjs --drag`), not only the default.
+
+## Lesson: measure a transition's pacing, not just its end state
+**Problem:** The journeys passed 20/20 while the launch ran at 30 fps with 100 ms frames and a 0.6 s freeze.
+**Root cause:** The journey checks the state after each step. Nothing looked at frames during a cinematic. The soft shadow map (4096 squared, 12-tap blur) was being re-rendered every frame while the lander climbed.
+**Correct pattern:** `tools/qa/pace.mjs` reports frames per half second, the longest frames and any shader link during a transition; `tools/qa/strip.mjs --scrub` renders exact frames of it. Shadow map is now 4096 x 1024 (the frustum is 4:1), 8 taps, and refreshed only while its change is in view.
+**Rule:** Every cinematic gets a pace run in Chrome and Firefox before it is called done.
+
+## Lesson: test in the second browser with a tool, not by assumption
+**Problem:** "Visuals are glitched on Firefox" arrived from the owner; verification.md had listed Firefox as untested.
+**Correct pattern:** playwright-core can drive the installed Firefox over WebDriver BiDi (`firefox.launch({ channel: 'moz-firefox' })`); the QA scripts take `--firefox`. Differences that matter: Firefox has no parallel shader compile, rejects pointer moves outside the window and non-integer wheel deltas, and has no touch emulation.
+**Rule:** Run `journey.mjs --firefox`, `reading.mjs --firefox` and the pace runs with `--firefox` before a release.
+
+## Lesson: a display that zooms must ignore the scroll events its own resize causes
+**Problem:** On phones, pressing Escape to zoom out of a display sometimes zoomed straight back in.
+**Root cause:** "Any scroll zooms in." While the panel shrank, the browser re-clamped its scroll position and fired scroll events, which counted as the visitor scrolling.
+**Rule:** Gestures inferred from scroll events need a quiet period after any programmatic layout change of the scroller.
+
+## Lesson: bake noise into a texture when a shader covers the screen
+**Problem:** The star was the most expensive thing on the home view and one of the slowest shaders to compile, and its look came from stacking analytic noise.
+**Correct pattern:** One 512 squared tiling texture generated on the CPU at start-up (cells, soft noise, coarse cells in three channels), sampled three-planar on the sphere. Lookups compile instantly, cost little per pixel, and cellular patterns that are impractical per pixel become free. Home went from needing a reduced canvas to holding 60 fps at full 1080p.
+
+
+## Lesson: one button per destination
+**Problem:** The owner disliked the home menu: four of its five buttons (About, Skills, Resume, Contact) all went to the same cockpit.
+**Root cause:** The menu mirrored the content sections instead of the places a visitor can go. Sections inside one place are that place's own navigation (the computer's tabs).
+**Rule:** A top-level menu lists destinations, never sections of the same destination. If two buttons end in the same view, merge them and say what is inside in the hint line.
+
+## Lesson: a scroll that triggers something must not also scroll
+**Problem:** Scrolling a display zoomed the camera in and moved the page at the same time, so the visitor arrived part-way down the text.
+**Correct pattern:** The preview state does not scroll at all (`overflow: hidden`, `touch-action: none`). The wheel listener is non-passive and swallows events until the camera has arrived and that same gesture has ended (a gap in the wheel stream, or a short time limit so a hand that never pauses is not locked out). Touch moves are cancelled until arrival.
+**Rule:** When one gesture has two meanings, give the first meaning the whole gesture.
+
+## Lesson: scrollIntoView also scrolls layers that never scroll by hand
+**Problem:** In the simple view, a section link shifted the whole fixed interface up: the sticky bar was cut off and the 3D canvas showed in a strip at the bottom.
+**Root cause:** `scrollIntoView` scrolls every scrollable ancestor, and an `overflow: hidden` box is still scrollable by script.
+**Rule:** Inside a fixed overlay, scroll the overlay itself (`el.scrollTo`) to a computed offset; never call `scrollIntoView` there.
+
+## Lesson: a synthetic touch gesture is not a touch
+**Problem:** The first phone run reported that swipes scrolled nothing, anywhere.
+**Root cause:** Under mobile emulation Chrome's `Input.synthesizeScrollGesture` sent pointer moves but no `touchmove`, so nothing scrolled. The site was fine.
+**Correct pattern:** Drive swipes with `Input.dispatchTouchEvent` (touchStart, a touchMove per frame, touchEnd): those produce real touch scrolling, `pointercancel` and scroll events. `tools/qa/phone.mjs` does this.
+**Rule:** When every instance of one kind of input fails at once, test the input tool against a plain scrolling page before touching the product.
+
+## Lesson: collisions for a ship that is steered, not simulated
+**Correct pattern:** The ship keeps its simple model (a speed along the nose) plus a knock vector that dies away. On contact the position is put back on the surface and the part of the velocity pointing into the body is reflected with most of it lost, then split again into "along the nose" and "knock". A glancing touch slides past, a head-on one stops the ship and pushes it back, and the nose never snaps round. Bodies off the plane (the home planet, the station, moons) are tested as the circle where their sphere cuts the plane.
+**Rule:** Add physics as a correction on top of the existing control model; do not replace the model to get one effect.
+
+## Lesson: a ribbon that widens along its length shows its triangles
+**Problem:** The freighter's wide boost trail had regular stripes across it.
+**Root cause:** Each segment was a trapezoid (the trail fanned out in proportion to the nozzle width), and a value interpolated across the two triangles of a trapezoid kinks along the diagonal.
+**Rule:** Spread a ribbon by a fixed amount, not by a multiple of its width, so wide ribbons stay close to rectangles.

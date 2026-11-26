@@ -88,7 +88,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: clamp(2px, 0.9vh, 12px);
+  gap: clamp(8px, 1.9vh, 22px);
 }
 .menu li {
   opacity: 0;
@@ -134,19 +134,22 @@
   line-height: 1.12;
   transition: transform 0.22s var(--ease-out);
 }
+/* three destinations: each one says where it goes, all the time */
 .menu__hint {
   grid-column: 2;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  color: var(--ink-faint);
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: max-height 0.22s var(--ease-out), opacity 0.2s ease, margin 0.22s var(--ease-out);
+  margin-top: 4px;
+  font-size: 12.5px;
+  letter-spacing: 0.07em;
+  color: rgba(236, 231, 220, 0.6);
+  transition: color 0.2s ease;
 }
 .menu__item:hover,
 .menu__item:focus-visible {
   color: var(--ink);
+}
+.menu__item:hover .menu__hint,
+.menu__item:focus-visible .menu__hint {
+  color: rgba(236, 231, 220, 0.86);
 }
 .menu__item:hover .menu__tick,
 .menu__item:focus-visible .menu__tick {
@@ -158,17 +161,12 @@
 .menu__item:focus-visible .menu__label {
   transform: translateX(3px);
 }
-.menu__item:hover .menu__hint,
-.menu__item:focus-visible .menu__hint,
-.menu__item--primary .menu__hint {
-  max-height: 1.6em;
-  opacity: 1;
-  margin-top: 3px;
-}
 .menu__item--primary {
   color: var(--ink);
 }
-.menu__item--primary .menu__hint {
+.menu__item--primary .menu__hint,
+.menu__item--primary:hover .menu__hint,
+.menu__item--primary:focus-visible .menu__hint {
   color: var(--amber);
 }
 .menu__item--primary .menu__tick {
@@ -1390,12 +1388,12 @@
 }
 .project.has-media .project__inner {
   grid-template-areas: 'media text' 'chips text';
-  grid-template-rows: auto auto;
-  align-content: center;
+  grid-template-rows: auto 1fr;
   row-gap: 1.1em;
 }
-.project.has-media .project__media {
-  align-self: end;
+.project.has-media .project__media,
+.project.has-media .project__text {
+  align-self: start;
 }
 .project.has-media .project__chips {
   align-self: start;
@@ -1404,6 +1402,7 @@
   grid-template-areas: 'text facts' 'chips facts';
   grid-template-rows: auto auto;
   align-content: center;
+  align-content: safe center;
   row-gap: 1.2em;
 }
 .project.no-media .project__text {
@@ -1558,5 +1557,463 @@
 @container screen (max-width: 560px) {
   .project.has-media .project__inner {
     grid-template-areas: 'media' 'text' 'chips';
+  }
+}
+
+/* ───────────────────────── reading: the camera pushed in on a display ── */
+/* Seen from the establishing shot a display is a preview: it does not scroll. The first scroll, tap or click
+   brings it up close, and only then does the page move. The cue under it always says what scrolling will do. */
+.screen:not(.is-reading) .scrollcue {
+  overflow: hidden;
+  touch-action: none;
+}
+/* The cue's box is always there (see ScreenCue): only its wording changes, so it cannot resize the page. */
+.console > .screen__more,
+.project__foot .screen__more {
+  display: flex;
+}
+.cue,
+.cue b {
+  display: none;
+}
+.cue i,
+.cue b {
+  font-style: normal;
+  font-weight: inherit;
+}
+.screen:not(.is-reading) .cue--zoom,
+.screen.is-reading:has(.scrollcue[data-more='down']) .cue--more,
+.screen.is-reading:not(:has(.scrollcue[data-more='down'])) .cue--out {
+  display: inline;
+}
+.cue--out {
+  color: rgba(236, 231, 220, 0.5);
+}
+@media (hover: none) and (pointer: coarse) {
+  .cue i {
+    display: none;
+  }
+  .cue b {
+    display: inline;
+  }
+}
+.screen.project:not(.is-reading) .project__foot:not(:has(.project__links)) {
+  display: flex;
+}
+.screen:not(.is-reading) {
+  cursor: zoom-in;
+}
+.screen:not(.is-reading) :is(a, button) {
+  cursor: pointer;
+}
+/* pushed in: the back pill gets a solid backing because it now sits over the display's frame */
+body:has(.screen.is-reading) .backbtn {
+  background: rgba(6, 7, 10, 0.9);
+}
+/* phones: the reading panel grows past the hardware, so it carries its own edge */
+@media (max-aspect-ratio: 4/5) {
+  .screen.is-reading {
+    background: rgba(7, 8, 12, 0.97);
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px var(--line-strong), 0 18px 60px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Establishing shot of a display: it is a preview, so text may run on under a soft fade into the cue
+   (hiding whole blocks there leaves holes). Pushed in to read, the clean "whole blocks only" rule applies. */
+.screen:not(.is-reading) .scrollcue [data-cut] {
+  opacity: 1 !important;
+}
+.screen:not(.is-reading) .scrollcue[data-more='down'] {
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 3.4em), transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 3.4em), transparent 100%);
+}
+
+/* the display's single column may never grow past the display (a long footer used to widen it and push
+   the title out of view on the narrow upright display) */
+.project {
+  grid-template-columns: minmax(0, 1fr);
+}
+.project__foot {
+  flex-wrap: wrap;
+  row-gap: 0.5em;
+}
+
+/* the page never rubber-bands or pull-refreshes under a finger: every drag belongs to the scene or a display */
+html,
+body {
+  overscroll-behavior: none;
+}
+
+/* system view hint: two short instructions on one line */
+.hint i {
+  margin: 0 0.7em;
+  font-style: normal;
+  color: var(--amber);
+}
+.pindex__head {
+  display: flex;
+  align-items: baseline;
+}
+.pindex__head em {
+  margin-left: auto;
+  font-family: var(--font-ui);
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: rgba(236, 231, 220, 0.7);
+}
+
+/* ───────────────────────────────────────── simple view: the site as one plain page ── */
+.simple {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  pointer-events: auto;
+  background: radial-gradient(120% 60% at 50% -18%, rgba(242, 180, 90, 0.13), rgba(242, 180, 90, 0) 62%), var(--bg);
+  animation: simple-in 0.45s var(--ease-out);
+}
+.simple:focus {
+  outline: none;
+}
+@keyframes simple-in {
+  from {
+    opacity: 0;
+  }
+}
+.simple__bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2vw, 28px);
+  padding: 12px var(--pad);
+  background: rgba(5, 6, 10, 0.9);
+  border-bottom: 1px solid var(--line);
+}
+.simple__mark {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: var(--amber);
+}
+.simple__bar nav {
+  display: flex;
+  gap: clamp(2px, 1vw, 14px);
+  margin-right: auto;
+}
+.simple__bar nav button {
+  padding: 8px 8px;
+  background: none;
+  border: 0;
+  font-size: 13.5px;
+  letter-spacing: 0.03em;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.simple__bar nav button:hover {
+  color: var(--ink);
+}
+.simple__close {
+  flex: none;
+  padding: 9px 16px;
+  font-size: 11.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: rgba(236, 231, 220, 0.05);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.simple__close:hover {
+  border-color: var(--amber);
+  background: rgba(242, 180, 90, 0.1);
+}
+.simple__close span {
+  margin-right: 0.4em;
+  letter-spacing: 0;
+}
+.simple__page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: clamp(36px, 7vh, 84px) var(--pad) clamp(56px, 10vh, 120px);
+  font-size: clamp(15.5px, 0.25vw + 14px, 17.5px);
+  line-height: 1.65;
+}
+.simple__hero {
+  padding-bottom: clamp(30px, 6vh, 60px);
+}
+.simple__hero h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(20px, 2.1vw + 11px, 40px);
+  letter-spacing: 0.2em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+.simple__role,
+.simple__page p.simple__role {
+  margin: 1em 0 0;
+  color: var(--amber);
+  letter-spacing: 0.04em;
+}
+.simple__tagline,
+.simple__page p.simple__tagline {
+  margin: 0.7em 0 0;
+  max-width: 44ch;
+  font-size: 1.3em;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.simple__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 1.8em;
+}
+.simple__page > section {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  column-gap: clamp(20px, 4vw, 56px);
+  padding: clamp(26px, 4.6vh, 46px) 0;
+  border-top: 1px solid var(--line);
+}
+.simple__page h2 {
+  margin: 0.35em 0 1.2em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.simple__page h3 {
+  margin: 0;
+  font-size: 1.22em;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.25;
+}
+.simple__page h4 {
+  margin: 2em 0 0.8em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(236, 231, 220, 0.62);
+}
+.simple__page p {
+  margin: 0 0 1em;
+  max-width: 68ch;
+  color: rgba(236, 231, 220, 0.8);
+}
+.simple__page a:not(.btn) {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--amber-deep);
+  text-underline-offset: 0.22em;
+}
+.simple__page a:not(.btn):hover {
+  color: var(--amber);
+}
+.slist {
+  margin: 0 0 1em;
+  padding: 0;
+  list-style: none;
+  max-width: 68ch;
+}
+.slist li {
+  position: relative;
+  padding: 0.22em 0 0.22em 1.3em;
+  color: rgba(236, 231, 220, 0.8);
+}
+.slist li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.95em;
+  width: 0.7em;
+  height: 1px;
+  background: var(--amber-deep);
+}
+.sproject {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(14px, 2.4vw, 28px);
+  padding: 1.7em 0;
+  border-top: 1px solid var(--line);
+}
+.sproject:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.sproject:last-child {
+  padding-bottom: 0;
+}
+.sproject.has-image {
+  grid-template-columns: minmax(150px, 230px) minmax(0, 1fr);
+  align-items: start;
+}
+.sproject__image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--panel-2);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.sproject__meta,
+.simple__page p.sproject__meta {
+  margin: 0.35em 0 0.7em;
+  font-size: 0.8em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(236, 231, 220, 0.6);
+}
+.simple__page p.sproject__summary {
+  margin-bottom: 0.7em;
+  color: var(--ink);
+}
+.sproject details {
+  margin: 0 0 1em;
+}
+.sproject summary {
+  display: inline-block;
+  padding: 0.2em 0;
+  font-size: 0.86em;
+  letter-spacing: 0.05em;
+  color: var(--amber);
+  cursor: pointer;
+  list-style: none;
+}
+.sproject summary::-webkit-details-marker {
+  display: none;
+}
+.sproject summary::after {
+  content: ' +';
+}
+.sproject details[open] summary::after {
+  content: ' −';
+}
+.sproject details p {
+  margin-top: 0.7em;
+}
+.sproject .chips {
+  margin-bottom: 0.9em;
+}
+.simple__page .chips li {
+  font-size: 0.8em;
+}
+.sproject__links,
+.simple__page p.sproject__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1.4em;
+  margin: 0;
+}
+.sentry {
+  padding: 0 0 1.5em;
+}
+.sentry__where,
+.simple__page p.sentry__where {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 1.4em;
+  margin: 0.2em 0 0.6em;
+  max-width: 68ch;
+  color: rgba(236, 231, 220, 0.66);
+}
+.sentry__where em {
+  font-style: normal;
+  white-space: nowrap;
+}
+.sskills {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.6em clamp(20px, 4vw, 56px);
+}
+.sskills h4 {
+  margin-top: 0.35em;
+}
+.simple__email,
+.simple__page p.simple__email {
+  font-size: 1.25em;
+}
+@media (max-width: 760px) {
+  .simple__bar {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+  .simple__mark {
+    display: none;
+  }
+  .simple__bar nav {
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 0;
+    margin-left: -8px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent);
+  }
+  .simple__bar nav::-webkit-scrollbar {
+    display: none;
+  }
+  .simple__bar nav button {
+    white-space: nowrap;
+    padding: 9px 9px;
+    font-size: 13px;
+  }
+  .simple__close {
+    padding: 9px 12px;
+    letter-spacing: 0.1em;
+  }
+  .simple__page {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .simple__page > section {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .simple__page h2 {
+    margin: 0 0 1.4em;
+  }
+  .sproject.has-image {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .simple {
+    animation: none;
+  }
+}
+@media print {
+  .simple {
+    display: none;
+  }
+}
+
+/* Windows narrower than about 3:2 (tablets, split screens): the lander stands where the menu would be, so the
+   menu drops onto the open ground at the lower right. Phones (portrait) have their own layout above. */
+@media (min-aspect-ratio: 4/5) and (max-aspect-ratio: 3/2) {
+  .menu {
+    top: auto;
+    bottom: clamp(24px, 6vh, 64px);
+    transform: none;
+  }
+  .menu::before {
+    inset: -56px -130px -70px -100px;
+    background: radial-gradient(closest-side, rgba(3, 4, 7, 0.8), rgba(3, 4, 7, 0.55) 55%, rgba(3, 4, 7, 0) 100%);
   }
 }

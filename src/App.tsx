@@ -3,16 +3,17 @@ import { World } from './world/World'
 import { Chrome } from './ui/Chrome'
 import { useApp, app } from './state/store'
 import { loadPortfolio } from './content/load'
-import { director } from './state/director'
+import { activeTimeline, director } from './state/director'
 import { useKeys } from './state/useKeys'
 import { qa } from './qa/params'
 import { fx, rig } from './world/rig'
 import { systemRefs } from './world/orbits'
 import { screenDiscs } from './ui/labels'
+import { flightState } from './world/FlightSet'
 
 // Test handle for automated QA (dev server and ?view= test states only; never a privileged API).
 if (import.meta.env.DEV || import.meta.env.VITE_QA === '1' || qa.view !== null) {
-  ;(window as unknown as Record<string, unknown>).__portfolio = { app: useApp, director, fx, rig, systemRefs, screenDiscs }
+  ;(window as unknown as Record<string, unknown>).__portfolio = { app: useApp, director, fx, rig, systemRefs, screenDiscs, timeline: activeTimeline, flight: flightState }
 }
 
 export function App() {
@@ -33,9 +34,15 @@ export function App() {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
     const onMq = () => app().set({ reducedMotion: mq.matches })
     mq.addEventListener('change', onMq)
+    // the plain page follows the address bar, so Back closes it and Forward reopens it
+    const onAddress = () => director.setSimple(window.location.hash === '#simple')
+    window.addEventListener('popstate', onAddress)
+    window.addEventListener('hashchange', onAddress)
     return () => {
       alive = false
       mq.removeEventListener('change', onMq)
+      window.removeEventListener('popstate', onAddress)
+      window.removeEventListener('hashchange', onAddress)
     }
   }, [])
 

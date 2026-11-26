@@ -53,19 +53,26 @@ Schema, defaults and validation: [`src/content/schema.ts`](src/content/schema.ts
 
 ## How to experience it
 
-- **First minute:** a short approach to the home planet (any key or *Skip* ends it), then the menu.
-- **About / Skills / Resume / Contact:** walk up to the lander, the hatch opens, the mission computer wakes.
-  *Exit cockpit* or `Esc` returns to the surface.
-- **Projects:** launch into the system. Drag to turn it, wheel or pinch to zoom, pick a planet or its label
-  (phones also get a project index). A survey probe brings up the project display. `Esc` steps back.
-- **Home:** the *Home planet* button, the home planet itself, or the star.
+- **First minute:** a short approach to the home planet (any key or *Skip* ends it), then a menu of three
+  destinations.
+- **Launch into orbit:** the projects. Drag to turn the system, wheel or pinch to zoom, pick a planet or its
+  label (phones also get a project index). A survey probe brings up the project display. `Esc`, the *Back*
+  pill or a click on empty space steps back.
+- **Enter the cockpit:** walk up to the lander, the hatch opens, the mission computer wakes with About,
+  Skills, Resume and Contact. *Exit cockpit* or `Esc` returns to the surface.
+- **Simple view:** the whole portfolio as one plain, scrolling page with no 3D. It has its own address
+  (`/#simple`), so it can be linked to directly; `Esc`, its *Back* button or the browser's Back closes it.
+- **Reading a display:** from a distance a display is a preview. The first scroll (or a tap or click on it)
+  only zooms in; after that the page scrolls. `Esc`, scrolling up at the top (pulling down, on a phone) or a
+  click outside pulls back.
+- **Back to the surface:** pick the home planet (or the star) in the system view.
 
 ### Hidden extras (not linked from the UI)
 
 | Trigger | What happens |
 |---|---|
-| `Alt`- or `Shift`-click **Projects** | Alternate launch: the astronaut is tied to a landing leg |
-| `↑ ↑ ↓ ↓ ← →` in the system view | Flight mode: hold the mouse / touch or use WASD, `Shift` boosts, `Esc` leaves |
+| `Alt`- or `Shift`-click **Launch into orbit** | Alternate launch: the astronaut is tied to a landing leg |
+| `↑ ↑ ↓ ↓ ← →` in the system view | Flight mode: hold the mouse / touch or use WASD, `Shift` boosts (and leaves a trail), `Esc` leaves. The star, planets, moons and the station are solid |
 | Fly far beyond the outer orbit | A station appears; reaching it unlocks a second ship |
 | `Shift` + `G` | Schematic radial grid on / off (default is set in the studio) |
 | Type `admin` | Opens the content studio |
@@ -80,7 +87,7 @@ public/models, textures, draco   Blender-built GLBs (Draco), baked cockpit light
 src/content/                     schema, validation, loader
 src/state/                       store, director (every transition), keyboard shortcuts
 src/world/                       scene sets, shots (authored cameras), shaders
-src/ui/                          DOM: menu, mission computer, project display, labels
+src/ui/                          DOM: menu, mission computer, project display, labels, simple view
 src/admin/                       content studio
 tools/blender/                   one build script per asset (headless Blender 5.x)
 tools/assets/compress.mjs        Draco compression of public/models
@@ -114,11 +121,18 @@ npm run qa:journey     # full click-through with real input (add -- --size phone
 npm run qa:secrets     # hidden features work and stay out of the normal flow
 npm run qa:admin       # studio round trip on a production build served like GitHub Pages
 npm run qa:perf        # frame-rate measurement (run on mains power, with nothing else using the GPU)
+npm run qa:reading     # zoom ("reading") behaviour of the in-world displays (add -- --size phone | --firefox)
+npm run qa:phone       # every state on a phone with real touch input (add -- --size 360x640 | 844x390 ...)
+npm run qa:firefox     # stills and console errors from the installed Firefox
+npm run qa:pace -- "view=home" launch     # frame pacing and shader links through one transition (--firefox)
+node tools/qa/return-trace.mjs ret --az 150 --el -16 --zoom 0.5 --real   # camera path of the return home
+node tools/qa/strip.mjs strips "view=orbit" returnHome --scrub --drag 880,-160   # exact frames of a transition
 node tools/qa/frametrace.mjs "view=home"    # per-second frame pacing and canvas size for one view
 node tools/qa/shader-links.mjs [--desktop]  # which shaders link slowly on a first visit, and when
+node tools/qa/panels.mjs [idFilter]         # every project display: content reachable from the top, images load
 ```
 
-The dev server must be running for capture / journey / secrets / perf. `qa:admin` builds its own copy.
+The dev server must be running for capture / journey / secrets / perf / panels. `qa:admin` builds its own copy.
 
 Read-only test states (no privileges, they only pick a scene): `?view=home`, `?view=cockpit&tab=resume`,
 `?view=orbit`, `?view=project&project=<id>`, `?view=intro&t=3`, `?view=launch&t=2.5`, plus `&n=12` to stress

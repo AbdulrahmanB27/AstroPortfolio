@@ -67,7 +67,6 @@ void main(){
 
 function Exhaust() {
   const mesh = useRef<THREE.Mesh>(null)
-  const light = useRef<THREE.PointLight>(null)
   const mat = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -95,13 +94,9 @@ function Exhaust() {
       mesh.current.visible = p > 0.002
       mesh.current.scale.set(0.85 + 0.2 * p, 0.3 + 0.9 * p + Math.sin(fx.time * 31) * 0.03, 0.85 + 0.2 * p)
     }
-    if (light.current) light.current.intensity = p * 900
   })
   return (
-    <>
-      <mesh ref={mesh} geometry={geo} material={mat} visible={false} />
-      <pointLight ref={light} position={[0, 0.3, 0]} color="#ffb060" intensity={0} distance={70} decay={2} />
-    </>
+<mesh ref={mesh} geometry={geo} material={mat} visible={false} />
   )
 }
 
@@ -174,6 +169,7 @@ export function HomeSet() {
 
   const near = useRef<THREE.Group>(null)
   const globeRef = useRef<THREE.Group>(null)
+  const engineLight = useRef<THREE.PointLight>(null)
   const rocketRef = useRef<THREE.Group>(null)
   const astroRef = useRef<THREE.Group>(null)
   const rimRef = useRef<THREE.Mesh>(null)
@@ -306,6 +302,11 @@ void main(){
       r.quaternion.copy(rocketQuat)
       if (fx.pitch) r.rotateOnWorldAxis(PITCH_AXIS, -fx.pitch)
       r.visible = fx.rocketVisible > 0.5
+      const lamp = engineLight.current
+      if (lamp) {
+        lamp.position.copy(r.position).addScaledVector(ROCKET_UP, 0.3)
+        lamp.intensity = r.visible && dist < 9000 ? fx.engine * 900 : 0
+      }
     }
     if (r) {
       spark.position.copy(r.position)
@@ -428,6 +429,9 @@ void main(){
       <mesh ref={rimRef} position={HOME_CENTER} material={rimMat} visible={false}>
         <sphereGeometry args={[HOME_R * 1.03, 48, 32]} />
       </mesh>
+      {/* Engine glow. It lives outside the groups that hide: a light that comes and goes changes the light
+          count, and three.js rebuilds every shader in the scene when that happens (a visible freeze). */}
+      <pointLight ref={engineLight} color="#ffb060" intensity={0} distance={70} decay={2} />
       <group ref={near}>
         <primitive object={terrain.scene} />
         <group ref={astroRef} position={ASTRO_POS} quaternion={astroQuat}>

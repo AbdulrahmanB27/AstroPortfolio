@@ -193,9 +193,105 @@ The gate (4.3, nothing below 4) is still not met. Across rounds 4-7 the scores m
 own spread, and round 6 asked for the opposite of round 5 on the star texture. Reports: `tasks/judge-r6.md`,
 `tasks/judge-r7.md`.
 
+## Owner feedback round (2026-11-25, captures `c1`, `c2`, `s4`, `read1`, `strips`, `ret`)
+
+The owner reported: the sun looks bad; visuals glitch in Firefox; the screens are too small and scrolling
+should zoom; the return to the home planet puts the camera under the planet.
+
+How each was reproduced:
+- **Return path.** `tools/qa/return-trace.mjs` (new) drags the system view with real mouse input, calls the
+  return and logs the camera every frame. From the default view the path was clean. From turned views the
+  camera started up to 7.5 km below the home planet's horizon (az -90, tilt -16) and, at az 180, passed 1.2 km
+  from the enlarged globe before whipping round. Frame sheets: `tasks/captures/ret/`.
+- **Firefox.** playwright-core drives the installed Firefox 160/161 (`channel: 'moz-firefox'`). Still frames
+  matched Chrome. `tools/qa/pace.mjs` (new) showed the problem in motion: the launch at 13-15 frames per half
+  second with freezes of 1.6 s, 1.0 s and 0.7 s; a 0.94 s freeze in the middle of the return. Chrome had the
+  same faults at smaller size (launch 16-18 frames per half second, one 0.62 s freeze).
+- **Cause of the freezes** (found by diffing the source of shader programs linked mid-transition): the number
+  of point lights changed from 2 to 1 whenever the lander was hidden, which makes three.js recompile every
+  material. Plus: the 4096 x 4096 soft shadow map was re-rendered every frame of the lift-off.
+
+After the fixes, on the final code:
+| Check | Chrome | Firefox |
+|---|---|---|
+| `pace.mjs` launch | 30 frames every half second, no frame over 60 ms, no shader linked | same |
+| `pace.mjs` cockpit in / out, project open / close | 30 per half second, no frame over 60 ms, no shader linked | 30 per half second; one 73 ms frame on project open; no shader linked |
+| `return-trace.mjs --real`, default view | longest frame 19 ms | not run for the default view |
+| `return-trace.mjs --real --az 150 --el -16 --zoom 0.5` | longest frame 19 ms | longest frame 40 ms |
+| `return-trace.mjs --real --az -130 --el 24 --zoom 1.35` | longest frame 19 ms | not run |
+| `journey.mjs` laptop | 20/20 | 20/20 |
+| `journey.mjs` phone, reduced motion | 20/20, 20/20 | not available (no touch emulation); reduced not run |
+| `reading.mjs` (new) laptop | 20/20 | 20/20 |
+| `reading.mjs` phone | 17/17 | not available |
+| `secrets.mjs`, `qa:admin`, `panels.mjs`, `qa:schema` | 17/17, 15/15, 7 projects x 3 sizes, 0 errors | not run |
+| `capture.mjs` | 37 captures, 0 console errors | 4 stills, 0 errors |
+| `npx tsc --noEmit`, `npm run build` | clean; `dist/` 7.7 MB (content images and resume PDF now included) | |
+
+Reading mode numbers (laptop, 1366 x 768): cockpit display 563 x 352 px -> 1036 x 647 px (3.4x the area), text
+13.5 -> 19.7 px; project display 566 x 354 -> 972 x 608 (2.95x). Phone: cockpit panel 311 x 347 -> 355 x 768,
+project panel 271 x 433 -> 339 x 768.
+
+Frame rate (mains power, preview pane closed, no other process above 2% GPU, 1920 x 1080, two runs):
+Chrome 59.6-60 fps in all six views, now at the full 1920 x 1080 canvas in every view including home (the new
+star is cheaper than the old one). Firefox, headless, test views: system view 60 fps at full size; home 43 fps
+at full size, so the scaler takes it to 1536 x 864 within about three seconds and it then holds 57-60 fps.
+
+Shader link times in Chrome during loading: moon/rock planet shader 1953 -> 849 ms (one extra height sample
+instead of two). Firefox reaches "ready" in 8.5-12.4 s on the test views (was 13.8-24.4 s).
+
+Not verified in this round:
+- The owner's own Firefox window was not seen: the request for screen access was not answered. Whether
+  "glitched" meant the freezes found here or something else is not confirmed.
+- Firefox at a high display scale: the pixel-scale preference did not take effect through the test driver, so
+  Firefox was only run at scale 1.
+- The sun was judged by me from captures only; no independent review round was run on it.
+- No real phone, no Safari.
+
+## Owner feedback round 2 (2026-11-26, captures `ph1`..`ph3`, `j3`, `j3ff`, `read3`, `r3`, `fl1`, `secrets`)
+
+Machine state for every number below: mains power (`BatteryStatus` 2); the app's preview pane parked on a
+static page during the pacing runs.
+
+| Check | Result |
+|---|---|
+| `tsc --noEmit`, `npm run build` | clean; dist 7.7 MB |
+| `qa:schema` | 7 projects, 0 errors, 0 warnings |
+| `capture.mjs r3` (all locked shots) | 37 captures, 0 console errors |
+| `journey.mjs` laptop / phone / reduced motion | 32/32 each |
+| `journey.mjs --firefox` | 32/32 |
+| `reading.mjs` laptop / phone / Firefox | 28/28, 24/24, 28/28 |
+| `phone.mjs` 390x844, 360x640, 412x915, 768x1024, 844x390, 1024x768 | 56/56, 56/56, 57/57, 57/57, 56/56, 56/56 |
+| `secrets.mjs` | 22/22 |
+| `qa:admin` | 15/15 |
+| `panels.mjs` | all 7 project displays reachable at every size |
+
+What the new checks cover:
+- **Menu:** exactly three items; the cockpit reopens on the last page read; Alt-click on Launch still plays the
+  alternate launch.
+- **Simple view:** opens from the menu and from a cold load of `/#simple`; lists every project; no sideways
+  scroll and nothing past the right edge on any phone size; Esc, its Back button and the browser's Back close
+  it; the address is clean again afterwards.
+- **Zoom before scroll:** the wheel spin (or swipe) that zooms leaves `scrollTop` at 0; the next one scrolls.
+  One unbroken 30-notch spin moved the page 0 px before the camera arrived and scrolled after. On touch, a
+  pull down at the top zooms out and stays out. The cue's wording is checked against the real overflow.
+- **Click off the planet:** a click on the planet keeps the project; a click on empty space returns to the
+  system view (laptop, phone, Firefox). The Back pill still works.
+- **System view:** no Home pill; a tip naming the home planet is on screen; clicking the Home label lands.
+- **Flight:** flown at full boost straight at a planet, the star, the home planet and the smallest moon, the
+  ship never got inside (deepest 0 m) and a touch was registered each time; boost reached 6753 m/s against
+  about 3400 unboosted, and fell back when Shift was released. Flight view holds 60 fps at 1920x1080.
+- **Pacing (unchanged code paths, re-measured):** launch, cockpit, project focus and return at 30 frames per
+  half second in Chrome and Firefox, no frame over 60 ms, no shader program linked mid-transition.
+
+Looked at by eye (not only asserted): home, simple view, cockpit, system view, project and flight at 390x844;
+home, system view, cockpit and project at 844x390; project at 768x1024; home at 1024x768, 1180x820 and
+1440x900; boost trail (scout straight and turning, freighter); a glancing and a head-on touch on a planet.
+
 ## Not verified / not done
-- No real device was used: phone results are 390x844 emulation with touch in desktop Chrome.
-- Only Chrome (system install, headless, ANGLE D3D11) was run. Firefox, Safari and WebKit were not.
+- No real device was used: phone and tablet results are emulation in desktop Chrome (six sizes, real touch
+  events through the DevTools protocol).
+- Chrome (system install, headless, ANGLE D3D11) and the installed Firefox (headless) were run. Safari and
+  WebKit were not. The owner's own Firefox window has not been observed.
 - The site has not been deployed; GitHub Pages behaviour was simulated with a sub-path static server.
 - No screen-reader pass. Keyboard access was exercised only through the journeys (Tab/Enter/Escape paths).
 - Motion smoothness was judged from stills and frame-time numbers, not from recorded video.

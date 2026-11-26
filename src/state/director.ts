@@ -3,6 +3,7 @@ import { CatmullRomCurve3, Quaternion, Vector3 } from 'three'
 import { app, type Tab } from './store'
 import { fx, rig, setPose, currentPose, type Pose, type ShotFn } from '../world/rig'
 import {
+  blendPose,
   cockpitEntryShot,
   cockpitShot,
   hatchInsideShot,
@@ -11,6 +12,7 @@ import {
   introStartShot,
   launchApexShot,
   orbitShot,
+  projectReadPose,
   projectShot,
 } from '../world/shots'
 import { ASTRO_POS, ROCKET_POS, ROCKET_UP } from '../world/constants'
@@ -55,6 +57,7 @@ function resetFx() {
   fx.probe = 0
   fx.dust = 0
   fx.gag = -1
+  fx.read = 0
   rig.roll = 0
 }
 
@@ -128,15 +131,19 @@ function setProject(id: string) {
     if (!b) return orbitResting(a)
     const fr = projectShot(a, b.pos, b.radius, isCompact(id))
     placeProbe(fr)
-    return fr.pose
+    return fx.read > 0 ? blendPose(fr.pose, projectReadPose(a, fr), fx.read) : fr.pose
   }
   setPose(f.pose)
   app().set({ mode: 'project', busy: false, skippable: false, projectId: id, hoverId: null })
 }
 
 // ───────────────────────────────────────────────────────── tween helpers ──
+let readTween: gsap.core.Tween | null = null
+
 function begin(skippable: boolean) {
   active?.kill()
+  readTween?.kill()
+  if (app().reading) app().set({ reading: false })
   rig.resting = null
   app().set({ busy: true, skippable, hoverId: null })
   document.body.style.cursor = ''
@@ -343,6 +350,9 @@ function buildLaunch(alt: boolean) {
   return tl
 }
 
+/** The transition that is playing, if any (QA scripts scrub it frame by frame). */
+export const activeTimeline = () => active
+
 export const director = {
   /** Called once the scene has mounted. */
   boot() {
@@ -353,6 +363,12 @@ export const director = {
     }
     if (v === 'cockpit') return setCockpit(qa.tab ?? 'about')
     if (v === 'orbit') return setOrbit()
+    if (v === 'return') {
+      // system view, then the trip back to the surface on its own (for watching that transition in any browser)
+      setOrbit()
+      window.setTimeout(() => director.returnHome(), 3500)
+      return
+    }
     if (v === 'project') {
       setOrbit()
       const id = qa.project && systemRefs.world.has(qa.project) ? qa.project : app().content?.projects[0]?.id
@@ -396,6 +412,8 @@ export const director = {
       gsap.to(fx, { blackout: 0, duration: 0.6 })
       return
     }
+    // arriving straight on the plain page: no opening shot plays behind it
+    if (app().simple) return setHome()
     buildIntro(visited)
   },
 
@@ -497,16 +515,56 @@ export const director = {
     const a = aspect()
     const end = homeShot(a)
     const apex = launchApexShot(a)
+    const overview = orbitShot(a, outer(), ORBIT_AZ, 0, 1)
+    const fromFlight = st.mode === 'flight'
+    // where the visitor left the system view (they may have turned, tilted and zoomed it)
+    const az0 = rig.orbitAz
+    const el0 = rig.orbitEl
+    const zoom0 = rig.orbitZoom
+    const dAz = ((((ORBIT_AZ - az0 + 180) % 360) + 360) % 360) - 180
     const tl = begin(true)
     st.set({ mode: 'launch', altShipActive: st.altShipActive })
-    const from = currentPose()
-    flyCurve(tl, [from.pos, from.pos.clone().lerp(apex.pos, 0.6).add(V(0, 1500, 0)), apex.pos], [from.target, from.target.clone().lerp(apex.target, 0.5), apex.target], apex.fov, 1.35, 'power2.inOut', 0)
-    tl.to(fx, { system: 0, duration: 1.2, ease: 'power2.inOut' }, 0.15)
+    let t0 = 0
+    if (fromFlight) {
+      poseTo(tl, overview, 1.0, 'power3.inOut', 0)
+      t0 = 1.0
+    }
+    // 1. One continuous move: the view turns back to the composed overview along its own orbit (so it can
+    //    never cut through the star or pass beneath the home planet) while it closes in on the point above
+    //    and behind the landing site. A view that was turned further gets a little more time.
+    const turn = fromFlight ? 0 : Math.min(0.9, Math.abs(dAz) / 200 + Math.abs(el0) / 80 + Math.abs(zoom0 - 1) * 0.5)
+    const T1 = 1.35 + turn
+    const smooth = (x: number) => {
+      const u = Math.min(1, Math.max(0, x))
+      return u * u * (3 - 2 * u)
+    }
+    const leg = { k: 0 }
+    tl.to(
+      leg,
+      {
+        k: 1,
+        duration: T1,
+        ease: 'power2.inOut',
+        onUpdate: () => {
+          const u = fromFlight ? 1 : smooth(leg.k / 0.65)
+          const o = orbitShot(a, outer(), az0 + dAz * u, el0 * (1 - u), zoom0 + (1 - zoom0) * u)
+          const w = smooth((leg.k - 0.22) / 0.78)
+          rig.pos.copy(o.pos).lerp(apex.pos, w)
+          rig.pos.y += 900 * Math.sin(Math.PI * w)
+          rig.target.copy(o.target).lerp(apex.target, w)
+          rig.fov = o.fov + (apex.fov - o.fov) * w
+          rig.sway = 0
+        },
+      },
+      t0,
+    )
+    tl.to(fx, { system: 0, duration: 1.2, ease: 'power2.inOut' }, t0 + T1 - 1.2)
     tl.add(() => {
       fx.rocketVisible = 1
       fx.lift = 0
-    }, 1.0)
-    flyCurve(tl, [apex.pos, V(-150, 210, 640), V(-34, 44, 150), V(-5, 7.5, 34), end.pos], [apex.target, V(0, -30, -420), V(2, 6, -160), V(2, 3.2, -70), end.target], end.fov, 1.5, 'power2.out', 1.3)
+    }, t0 + T1 - 0.35)
+    // 2. down to the surface, the star ahead the whole way
+    flyCurve(tl, [apex.pos, V(-150, 210, 640), V(-34, 44, 150), V(-5, 7.5, 34), end.pos], [apex.target, V(0, -30, -420), V(2, 6, -160), V(2, 3.2, -70), end.target], end.fov, 1.5, 'power2.out', t0 + T1 - 0.05)
     tl.add(() => setHome())
   },
 
@@ -531,10 +589,43 @@ export const director = {
     app().set({ gridOn: !app().gridOn })
   },
 
+  /**
+   * Push the camera in on the display being read (cockpit computer or project display), or pull back out.
+   * Not a cinematic: input stays live and the display follows the camera every frame.
+   */
+  setReading(on: boolean) {
+    const st = app()
+    if (st.busy || (st.mode !== 'cockpit' && st.mode !== 'project') || st.reading === on) return
+    st.set({ reading: on })
+    readTween?.kill()
+    const apply = () => {
+      if (rig.resting) setPose(rig.resting(aspect()))
+    }
+    if (reduced()) {
+      fx.read = on ? 1 : 0
+      return apply()
+    }
+    readTween = gsap.to(fx, { read: on ? 1 : 0, duration: 0.7, ease: 'power3.inOut', onUpdate: apply })
+  },
+
+  /**
+   * The plain one-page version of the site, laid over the scene. It has its own address (#simple), so it can be
+   * linked to directly and the browser's Back button closes it.
+   */
+  setSimple(on: boolean) {
+    const st = app()
+    if (st.simple !== on) st.set({ simple: on })
+    const inUrl = window.location.hash === '#simple'
+    if (on && !inUrl) window.history.pushState(null, '', '#simple')
+    else if (!on && inUrl) window.history.replaceState(null, '', window.location.pathname + window.location.search)
+  },
+
   /** Step back one level (Escape / back buttons). */
   back() {
     const st = app()
+    if (st.simple) return director.setSimple(false)
     if (st.busy) return director.skip()
+    if (st.reading) return director.setReading(false)
     if (st.mode === 'project') director.closeProject()
     else if (st.mode === 'cockpit') director.exitCockpit()
     else if (st.mode === 'flight') director.exitFlight()

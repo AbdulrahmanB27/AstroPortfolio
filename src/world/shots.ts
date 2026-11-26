@@ -1,6 +1,6 @@
 import { Matrix4, Vector3 } from 'three'
 import { ASTRO_POS, ROCKET_POS, ROCKET_UP, STAR_POS, SYS_MATRIX, layout } from './constants'
-import type { Pose } from './rig'
+import { fx, type Pose } from './rig'
 import cockpitLayout from '../../public/models/cockpit_layout.json'
 
 /**
@@ -70,6 +70,9 @@ const roomDir = (v: number[]) => V(v[0], v[1], v[2]).transformDirection(COCKPIT_
 export const COCKPIT_SCREEN = cockpitLayout.screen as { center: number[]; normal: number[]; up: number[]; width: number; height: number }
 
 /** Camera looks exactly along the screen normal, so the display projects as a true rectangle for the DOM layer. */
+/** On phones the main display is a narrower unit: both bezels fit the screen at reading size. */
+export const PORTRAIT_MONITOR = 0.56
+
 export function cockpitShot(aspect: number): Pose {
   const c = room(COCKPIT_SCREEN.center)
   const n = roomDir(COCKPIT_SCREEN.normal)
@@ -77,10 +80,20 @@ export function cockpitShot(aspect: number): Pose {
   const portrait = aspect < 0.8
   // phones stand taller and closer: the display fills the lower half, the star's dome clears its top edge
   // (the phone monitor is a narrower unit, see CockpitSet: at this distance both of its bezels are in frame)
-  const d = portrait ? 1.56 : lerp(2.62, 2.39, (aspect - 1.3) / (1.78 - 1.3))
-  const lift = portrait ? 0.27 : 0.19
+  const fov = portrait ? 66 : 46
+  let d = portrait ? 1.56 : lerp(2.36, 2.14, (aspect - 1.3) / (1.78 - 1.3))
+  let lift = portrait ? 0.27 : 0.165
+  if (fx.read > 0) {
+    // reading: square on to the display and close enough for it to fill the view (height-limited on wide
+    // screens, width-limited on phones); the dark bezel stays in frame so it still reads as hardware
+    const half = Math.tan(rad(fov / 2))
+    const w = COCKPIT_SCREEN.width * (portrait ? PORTRAIT_MONITOR : 1)
+    const dRead = Math.max(COCKPIT_SCREEN.height / 2 / (0.86 * half), w / 2 / (0.93 * half * aspect))
+    d += (dRead - d) * fx.read
+    lift *= 1 - fx.read
+  }
   const pos = c.clone().addScaledVector(n, d).addScaledVector(u, lift)
-  return { pos, target: pos.clone().addScaledVector(n, -3), fov: portrait ? 66 : 46, sway: 0 }
+  return { pos, target: pos.clone().addScaledVector(n, -3), fov, sway: 0 }
 }
 
 export function cockpitEntryShot(_aspect: number): Pose {
@@ -162,3 +175,23 @@ export function projectShot(aspect: number, planet: Vector3, radius: number, com
 }
 
 export { ASTRO_POS }
+
+/**
+ * The same project framing with the camera pushed in on the probe's display (reading). It keeps the
+ * establishing shot's direction, so the display stays square to the camera all the way in.
+ */
+export function projectReadPose(aspect: number, f: ReturnType<typeof projectShot>): Pose {
+  const upright = f.roll !== 0
+  const half = Math.tan(rad(f.pose.fov / 2))
+  const w = (upright ? 2.0 : 3.2) * f.probeScale
+  const h = (upright ? 3.2 : 2.0) * f.probeScale
+  const d = Math.max(h / 2 / (0.82 * half), w / 2 / (0.9 * half * aspect))
+  const pos = f.probePos.clone().addScaledVector(f.fwd, -d)
+  const reach = f.pose.target.distanceTo(f.pose.pos)
+  return { pos, target: pos.clone().addScaledVector(f.fwd, reach), fov: f.pose.fov, sway: 0 }
+}
+
+export function blendPose(a: Pose, b: Pose, k: number): Pose {
+  return { pos: a.pos.clone().lerp(b.pos, k), target: a.target.clone().lerp(b.target, k), fov: a.fov + (b.fov - a.fov) * k, sway: (a.sway ?? 0) * (1 - k) + (b.sway ?? 0) * k }
+}
+

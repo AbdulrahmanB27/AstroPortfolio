@@ -15,7 +15,11 @@
     "qa:journey": "node tools/qa/journey.mjs journey",
     "qa:secrets": "node tools/qa/secrets.mjs",
     "qa:admin": "npm run build:qa && node tools/qa/admin-roundtrip.mjs dist-qa",
-    "qa:perf": "node tools/qa/perf.mjs --vsync"
+    "qa:perf": "node tools/qa/perf.mjs --vsync",
+    "qa:reading": "node tools/qa/reading.mjs",
+    "qa:phone": "node tools/qa/phone.mjs",
+    "qa:firefox": "node tools/qa/firefox.mjs",
+    "qa:pace": "node tools/qa/pace.mjs"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.5",

@@ -5,8 +5,8 @@ import { director } from '../state/director'
 import { Console } from './Console'
 import { ProjectPanel } from './ProjectPanel'
 import { OrbitHud } from './OrbitHud'
+import { SimpleView } from './SimpleView'
 import { qa } from '../qa/params'
-import type { Tab } from '../state/store'
 
 /** Designed load state: never a half-built scene. */
 function Loader() {
@@ -57,28 +57,29 @@ function Identity() {
   )
 }
 
-const MENU: { key: 'about' | 'projects' | 'skills' | 'resume' | 'contact'; label: string; hint: string }[] = [
-  { key: 'about', label: 'About', hint: 'Who I am' },
-  { key: 'projects', label: 'Projects', hint: 'Launch into the system' },
-  { key: 'skills', label: 'Skills', hint: 'What I work with' },
-  { key: 'resume', label: 'Resume', hint: 'Education and PDF' },
-  { key: 'contact', label: 'Contact', hint: 'Get in touch' },
+/** One button per place: the system of project planets, the cockpit's computer, and the plain page. */
+const MENU: { key: 'launch' | 'cockpit' | 'simple'; label: string; hint: string }[] = [
+  { key: 'launch', label: 'Launch into orbit', hint: 'Explore the projects' },
+  { key: 'cockpit', label: 'Enter the cockpit', hint: 'About · Skills · Resume · Contact' },
+  { key: 'simple', label: 'Simple view', hint: 'Everything on one page' },
 ]
 
 function HomeMenu() {
   const mode = useApp((s) => s.mode)
   const busy = useApp((s) => s.busy)
-  const show = mode === 'home' && !busy
+  const simple = useApp((s) => s.simple)
+  const show = mode === 'home' && !busy && !simple
   const go = (key: (typeof MENU)[number]['key']) => (e: MouseEvent) => {
-    if (key === 'projects') director.launch(e.altKey || e.shiftKey)
-    else director.openCockpit(key as Tab)
+    if (key === 'launch') director.launch(e.altKey || e.shiftKey)
+    else if (key === 'cockpit') director.openCockpit(useApp.getState().tab)
+    else director.setSimple(true)
   }
   return (
     <nav className={`menu${show ? ' is-on' : ''}`} aria-label="Destinations" aria-hidden={!show}>
       <ul>
         {MENU.map((m, i) => (
           <li key={m.key} style={{ ['--i' as string]: i }}>
-            <button type="button" className={`menu__item${m.key === 'projects' ? ' menu__item--primary' : ''}`} onClick={go(m.key)} tabIndex={show ? 0 : -1}>
+            <button type="button" className={`menu__item${m.key === 'launch' ? ' menu__item--primary' : ''}`} data-key={m.key} onClick={go(m.key)} tabIndex={show ? 0 : -1}>
               <span className="menu__tick" aria-hidden="true" />
               <span className="menu__label">{m.label}</span>
               <span className="menu__hint">{m.hint}</span>
@@ -94,7 +95,8 @@ function Skip() {
   const skippable = useApp((s) => s.skippable)
   const busy = useApp((s) => s.busy)
   const mode = useApp((s) => s.mode)
-  const show = busy && skippable && (mode === 'intro' || mode === 'launch')
+  const simple = useApp((s) => s.simple)
+  const show = busy && skippable && !simple && (mode === 'intro' || mode === 'launch')
   useEffect(() => {
     if (!show) return
     const onKey = (e: KeyboardEvent) => {
@@ -205,6 +207,7 @@ export function Chrome() {
       <DraftBadge />
       <PrintResume />
       <Loader />
+      <SimpleView />
     </div>
   )
 }

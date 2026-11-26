@@ -149,7 +149,7 @@
   },
   {
     "name": "project_sparse",
-    "query": "view=project&project=robotics-project&t=6",
+    "query": "view=project&project=prayerlock&t=6",
     "sizes": [
       "desktop",
       "phone"

@@ -25,6 +25,7 @@ const entries = new Map<string, Entry>()
 /** Last projected planet discs (screen px), also used by the QA scripts to aim real pointer input. */
 export const screenDiscs = new Map<string, { x: number; y: number; r: number }>()
 const v = new Vector3()
+const HOME_ID = '__home'
 
 export function registerLabel(id: string, el: HTMLElement, line: HTMLElement, featured: boolean) {
   entries.set(id, { el, line, w: el.offsetWidth || 120, h: el.offsetHeight || 34, slot: -1, featured })
@@ -100,8 +101,9 @@ export function updateLabels(cam: PerspectiveCamera, w: number, h: number, opts:
   const order = discs
     .filter((d) => entries.has(d.id))
     .sort((a, b) => {
-      const pa = (a.id === opts.hoverId ? 1000 : 0) + (entries.get(a.id)!.featured ? 100 : 0) + a.r
-      const pb = (b.id === opts.hoverId ? 1000 : 0) + (entries.get(b.id)!.featured ? 100 : 0) + b.r
+      // the home planet's callout is the way back to the surface: it is placed before the others
+      const pa = (a.id === opts.hoverId ? 1000 : 0) + (a.id === HOME_ID ? 500 : 0) + (entries.get(a.id)!.featured ? 100 : 0) + a.r
+      const pb = (b.id === opts.hoverId ? 1000 : 0) + (b.id === HOME_ID ? 500 : 0) + (entries.get(b.id)!.featured ? 100 : 0) + b.r
       return pb - pa
     })
   const discRects = discs.map((d) => ({ id: d.id, rect: { x0: d.x - d.r, y0: d.y - d.r, x1: d.x + d.r, y1: d.y + d.r } }))
@@ -129,7 +131,8 @@ export function updateLabels(cam: PerspectiveCamera, w: number, h: number, opts:
         taken.push(rect)
         break
       }
-      if (!placed && hovered) {
+      // ...and is shown even when no free slot is left
+      if (!placed && (hovered || d.id === HOME_ID)) {
         const x = Math.min(w - e.w - 10, Math.max(10, d.x + d.r + 14))
         const y = Math.min(h - e.h - 56, Math.max(64, d.y - d.r - e.h))
         placed = { x, y, slot: 0 }

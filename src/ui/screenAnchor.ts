@@ -18,8 +18,9 @@ export function bindScreen(name: string, el: HTMLElement | null) {
 /**
  * @param halfW / halfH half extents of the screen in the object's local XY plane (local +Z faces the viewer)
  * @param inset     fraction of the screen kept as margin inside the bezel
+ * @param grow      0..1 how far the panel has grown to the full viewport height (phones, reading)
  */
-export function updateScreen(name: string, obj: Object3D, cam: PerspectiveCamera, vw: number, vh: number, halfW: number, halfH: number, inset = 0, clampPad = -1) {
+export function updateScreen(name: string, obj: Object3D, cam: PerspectiveCamera, vw: number, vh: number, halfW: number, halfH: number, inset = 0, clampPad = -1, grow = 0) {
   const el = els.get(name)
   if (!el) return
   obj.updateWorldMatrix(true, false)
@@ -35,6 +36,11 @@ export function updateScreen(name: string, obj: Object3D, cam: PerspectiveCamera
   let x1 = (Math.max(a.x, b.x) * 0.5 + 0.5) * vw
   let y0 = (-Math.max(a.y, b.y, c.y) * 0.5 + 0.5) * vh
   let y1 = (-Math.min(a.y, b.y) * 0.5 + 0.5) * vh
+  if (grow > 0) {
+    // narrow screens, reading: the panel extends beyond the physical display to use the full height
+    y0 += (Math.min(y0, 66) - y0) * grow
+    y1 += (Math.max(y1, vh - 10) - y1) * grow
+  }
   if (clampPad >= 0) {
     x0 = Math.max(x0, clampPad)
     x1 = Math.min(x1, vw - clampPad)

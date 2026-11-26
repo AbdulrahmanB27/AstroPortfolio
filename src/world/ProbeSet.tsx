@@ -71,14 +71,12 @@ export function ProbeSet() {
       }
     }
     const st = app()
-    if (st.mode === 'project' && !st.busy) updateScreen('probe', anchor, camera as THREE.PerspectiveCamera, size.width, size.height, 1.6, 1.0, 0.035, portrait ? 8 : -1)
+    if (st.mode === 'project' && !st.busy) updateScreen('probe', anchor, camera as THREE.PerspectiveCamera, size.width, size.height, 1.6, 1.0, 0.035, portrait ? 8 : -1, portrait ? fx.read : 0)
   })
 
   return (
     <group ref={root} visible={false}>
       <primitive object={gltf.scene} />
-      {/* key + fill so the hardware reads against space */}
-      <pointLight position={[-3, 2.5, 5]} intensity={0} />
     </group>
   )
 }
