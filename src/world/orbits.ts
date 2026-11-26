@@ -83,6 +83,16 @@ export function bodyPosition(b: Body, t: number, out = new Vector3()): Vector3 {
   return out.set(Math.cos(a) * b.orbitRadius, 0, Math.sin(a) * b.orbitRadius)
 }
 
+/** A moon's radius, in radii of its planet. */
+export const moonSize = (index: number) => 0.16 - index * 0.03
+
+/** A moon's offset from the centre of its planet at scene time t, in radii of the planet. */
+export function moonOffset(seed: number, index: number, t: number, out = new Vector3()): Vector3 {
+  const a = t * (0.16 - index * 0.035) + index * 2.1 + seed
+  const dist = 1.75 + index * 0.55
+  return out.set(Math.cos(a) * dist, Math.sin(a * 0.7 + index) * 0.22, Math.sin(a) * dist)
+}
+
 /** Live registry written every frame by the system set and read by labels, the director and flight mode. */
 export const systemRefs = {
   layout: null as SystemLayout | null,

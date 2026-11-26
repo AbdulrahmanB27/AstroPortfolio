@@ -4,7 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useGLTF, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { fx } from './rig'
-import { COCKPIT_MATRIX, COCKPIT_SCREEN } from './shots'
+import { COCKPIT_MATRIX, COCKPIT_SCREEN, PORTRAIT_MONITOR } from './shots'
 import { updateScreen } from '../ui/screenAnchor'
 import { app, useApp } from '../state/store'
 
@@ -37,9 +37,6 @@ const LIGHT_COLORS: Record<string, [number, number, number, number]> = {
   AmberLight: [1.0, 0.56, 0.14, 1.6],
   WhiteLight: [0.8, 0.9, 1.0, 0.5],
 }
-
-/** On phones the main display is a narrower unit: both bezels fit the screen at reading size. */
-const PORTRAIT_MONITOR = 0.56
 
 /** Baked rocket cockpit. It sits inside the lander's capsule and replaces the exterior while the visitor is inside. */
 export function CockpitSet() {
@@ -122,7 +119,7 @@ export function CockpitSet() {
     if (parts.monitor) parts.monitor.scale.x = narrow
     if (parts.screen) parts.screen.scale.x = narrow
     if (parts.screen && !st.busy) {
-      updateScreen('console', parts.screen, camera as THREE.PerspectiveCamera, size.width, size.height, COCKPIT_SCREEN.width / 2, COCKPIT_SCREEN.height / 2, 0.02, portrait ? 8 : 0)
+      updateScreen('console', parts.screen, camera as THREE.PerspectiveCamera, size.width, size.height, COCKPIT_SCREEN.width / 2, COCKPIT_SCREEN.height / 2, 0.02, portrait ? 8 : 0, portrait ? fx.read : 0)
     }
   })
 

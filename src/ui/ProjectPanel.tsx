@@ -3,6 +3,8 @@ import { useApp } from '../state/store'
 import { director } from '../state/director'
 import { bindScreen } from './screenAnchor'
 import { useScrollCue } from './useScrollCue'
+import { useReading } from './useReading'
+import { ScreenCue } from './ScreenCue'
 import { assetUrl } from '../content/load'
 import { isSafeAsset, isSafeLink } from '../content/schema'
 
@@ -12,6 +14,7 @@ export function ProjectPanel() {
   const busy = useApp((s) => s.busy)
   const id = useApp((s) => s.projectId)
   const content = useApp((s) => s.content)
+  const reading = useApp((s) => s.reading)
   const ref = useRef<HTMLDivElement>(null)
   const inner = useRef<HTMLElement>(null)
   const [shot, setShot] = useState(0)
@@ -24,6 +27,8 @@ export function ProjectPanel() {
   }, [])
   useEffect(() => setShot(0), [id])
   useScrollCue(inner, [id, on])
+  // a click on empty space steps back to the system view; the planet being looked at is not empty space
+  useReading(ref, inner, on, [id], { go: () => director.closeProject(), keep: id })
 
   const media = project?.media.filter((m) => isSafeAsset(m.src)) ?? []
   const links = project?.links.filter((l) => isSafeLink(l.url)) ?? []
@@ -43,7 +48,7 @@ export function ProjectPanel() {
       <button type="button" className={`backbtn${on ? ' is-on' : ''}`} onClick={() => director.closeProject()} tabIndex={on ? 0 : -1} aria-hidden={!on}>
         <span aria-hidden="true">←</span> Back to orbit
       </button>
-      <div ref={ref} className={`screen project${on ? ' is-on' : ''}${media.length ? ' has-media' : ' no-media'}`} aria-hidden={!on}>
+      <div ref={ref} className={`screen project${on ? ' is-on' : ''}${media.length ? ' has-media' : ' no-media'}${reading ? ' is-reading' : ''}`} aria-hidden={!on}>
         {project && (
           <article ref={inner} className="project__inner scrollcue" aria-label={project.title} tabIndex={on ? 0 : -1}>
             {current && (
@@ -101,7 +106,7 @@ export function ProjectPanel() {
                 </div>
             )}
             <span className="screen__more" aria-hidden="true">
-              Scroll for more ↓
+              <ScreenCue />
             </span>
           </footer>
         )}

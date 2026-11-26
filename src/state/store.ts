@@ -14,6 +14,10 @@ interface AppState {
   tab: Tab
   projectId: string | null
   hoverId: string | null
+  /** The camera has pushed in on the display the visitor is reading (cockpit computer or project display). */
+  reading: boolean
+  /** The plain one-page version of the site is laid over the scene. */
+  simple: boolean
   content: Portfolio | null
   contentError: string | null
   draftPreview: boolean
@@ -38,6 +42,8 @@ export const useApp = create<AppState>((set) => ({
   tab: 'about',
   projectId: null,
   hoverId: null,
+  reading: false,
+  simple: typeof window !== 'undefined' && window.location.hash === '#simple',
   content: null,
   contentError: null,
   draftPreview: false,

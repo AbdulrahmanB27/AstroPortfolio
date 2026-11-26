@@ -5,11 +5,11 @@ import type { Tab } from '../state/store'
  * e.g. ?view=cockpit&tab=resume or ?view=project&project=<id>&t=4.
  * Views that would reveal the hidden features are limited to dev and QA builds.
  */
-export type QaView = 'home' | 'cockpit' | 'orbit' | 'project' | 'flight' | 'deathstar' | 'intro' | 'launch' | 'altlaunch'
+export type QaView = 'home' | 'cockpit' | 'orbit' | 'project' | 'flight' | 'deathstar' | 'intro' | 'launch' | 'altlaunch' | 'return'
 
 const q = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
 const SECRET_OK = import.meta.env.DEV || import.meta.env.VITE_QA === '1'
-const PUBLIC_VIEWS: QaView[] = ['home', 'cockpit', 'orbit', 'project', 'intro', 'launch']
+const PUBLIC_VIEWS: QaView[] = ['home', 'cockpit', 'orbit', 'project', 'intro', 'launch', 'return']
 const SECRET_VIEWS: QaView[] = ['flight', 'deathstar', 'altlaunch']
 
 function parseView(): QaView | null {

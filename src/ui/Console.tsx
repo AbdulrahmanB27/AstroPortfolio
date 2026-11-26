@@ -3,6 +3,8 @@ import { TABS, useApp, type Tab } from '../state/store'
 import { director } from '../state/director'
 import { bindScreen } from './screenAnchor'
 import { useScrollCue } from './useScrollCue'
+import { useReading } from './useReading'
+import { ScreenCue } from './ScreenCue'
 import { assetUrl } from '../content/load'
 import { isEmail, isSafeAsset, isSafeLink, type Portfolio } from '../content/schema'
 
@@ -214,6 +216,7 @@ export function Console() {
   const busy = useApp((s) => s.busy)
   const tab = useApp((s) => s.tab)
   const content = useApp((s) => s.content)
+  const reading = useApp((s) => s.reading)
   const ref = useRef<HTMLDivElement | null>(null)
   const body = useRef<HTMLDivElement>(null)
   const on = mode === 'cockpit' && !busy
@@ -227,6 +230,7 @@ export function Console() {
     body.current?.scrollTo({ top: 0 })
   }, [tab])
   useScrollCue(body, [tab, on, content])
+  useReading(ref, body, on, [content])
 
   if (!content) return null
   const onKey = (e: React.KeyboardEvent) => {
@@ -239,7 +243,7 @@ export function Console() {
       <button type="button" className={`backbtn${on ? ' is-on' : ''}`} onClick={() => director.exitCockpit()} tabIndex={on ? 0 : -1} aria-hidden={!on}>
         <span aria-hidden="true">←</span> Exit cockpit
       </button>
-      <div ref={bind} className={`screen console${on ? ' is-on' : ''}`} aria-hidden={!on}>
+      <div ref={bind} className={`screen console${on ? ' is-on' : ''}${reading ? ' is-reading' : ''}`} aria-hidden={!on}>
         <div className="console__head">
           <span className="console__title">Mission computer</span>
           <div className="console__tabs" role="tablist" aria-label="Personal information" onKeyDown={onKey}>
@@ -267,7 +271,7 @@ export function Console() {
           {tab === 'contact' && <Contact c={content} />}
         </div>
         <div className="screen__more" aria-hidden="true">
-          Scroll for more ↓
+          <ScreenCue />
         </div>
       </div>
     </>

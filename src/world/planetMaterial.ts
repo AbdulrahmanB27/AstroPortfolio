@@ -29,17 +29,15 @@ export function resolvePalette(spec: PlanetSpec): [THREE.Color, THREE.Color, THR
 }
 
 const VERT = /* glsl */ `
-varying vec3 vObj; varying vec3 vWorld; varying vec3 vN; varying vec3 vT1; varying vec3 vT2;
+uniform vec3 uStar;
+varying vec3 vObj; varying vec3 vWorld; varying vec3 vN; varying vec3 vLo;
 void main(){
   vObj = position;
   vec4 w = modelMatrix * vec4(position, 1.0);
   vWorld = w.xyz;
   vN = normalize(mat3(modelMatrix) * normal);
-  // surface tangents in world space, for the close-up relief normal
-  vec3 d0 = normalize(position);
-  vec3 t1 = normalize(cross(d0, vec3(0.0, 1.0, 0.0) + 0.001));
-  vT1 = normalize(mat3(modelMatrix) * t1);
-  vT2 = normalize(mat3(modelMatrix) * cross(d0, t1));
+  // direction to the star in the planet's own frame, for the close-up relief shading
+  vLo = normalize((uStar - w.xyz) * mat3(modelMatrix));
   gl_Position = projectionMatrix * viewMatrix * w;
 }`
 
@@ -48,7 +46,7 @@ ${SNOISE}
 const int uType = PTYPE;   // compile-time: dead branches are dropped, each type compiles to a small program
 uniform vec3 uA; uniform vec3 uB; uniform vec3 uC; uniform vec3 uRim;
 uniform float uSeed; uniform float uTime; uniform vec3 uStar; uniform float uDim; uniform float uBump;
-varying vec3 vObj; varying vec3 vWorld; varying vec3 vN; varying vec3 vT1; varying vec3 vT2;
+varying vec3 vObj; varying vec3 vWorld; varying vec3 vN; varying vec3 vLo;
 
 vec3 spin(vec3 p, float a){ float c = cos(a), s = sin(a); return vec3(c*p.x + s*p.z, p.y, -s*p.x + c*p.z); }
 vec3 hash33(vec3 p){ p = fract(p * vec3(0.1031, 0.1030, 0.0973)); p += dot(p, p.yxz + 33.33); return fract((p.xxy + p.yxx) * p.zyx); }
@@ -236,35 +234,37 @@ void main(){
   }
 
   vec3 G = normalize(vN);
-  vec3 N = G;
-  {
-    vec3 sx = dFdx(vWorld); vec3 sy = dFdy(vWorld);
-    float foot = max(length(sx), length(sy)) / max(uBump, 1.0);
-    float k = smoothstep(0.02, 0.0035, foot);
-    if (k > 0.001 && uType != 1) {
-      // two extra height samples along the surface tangents
-      vec3 d0 = normalize(vObj);
-      vec3 t1 = normalize(cross(d0, vec3(0.0, 1.0, 0.0) + 0.001));
-      vec3 t2 = cross(d0, t1);
-      float e = 0.006;
-      float h1 = reliefH(spin(normalize(d0 + t1 * e), uTime * 0.012 + uSeed) + uSeed * 0.37);
-      float h2 = reliefH(spin(normalize(d0 + t2 * e), uTime * 0.012 + uSeed) + uSeed * 0.37);
-      vec3 gradW = ((h1 - h) * normalize(vT1) + (h2 - h) * normalize(vT2)) / e;
-      N = normalize(G - gradW * 0.6 * k);
-    }
-  }
   vec3 L = normalize(uStar - vWorld);
   vec3 V = normalize(cameraPosition - vWorld);
   float geo = dot(G, L);
   float mu = max(dot(G, V), 0.0);
   bool gas = uType == 1;
+  float ndl = geo;
+#if PTYPE != 1
+  {
+    // Close-up relief. Diffuse shading only needs the slope along the light, so one extra height sample
+    // (a step towards the star along the surface) replaces a full normal from two.
+    vec3 sx = dFdx(vWorld); vec3 sy = dFdy(vWorld);
+    float foot = max(length(sx), length(sy)) / max(uBump, 1.0);
+    float k = smoothstep(0.02, 0.0035, foot);
+    vec3 d0 = normalize(vObj);
+    vec3 lt = vLo - d0 * dot(vLo, d0);
+    float st = length(lt);
+    if (k > 0.001 && st > 0.02) {
+      float e = 0.006;
+      float h1 = reliefH(spin(normalize(d0 + (lt / st) * e), uTime * 0.012 + uSeed) + uSeed * 0.37);
+      float slope = 0.6 * k * (h1 - h) / e;
+      ndl = (geo - slope * st) / sqrt(1.0 + slope * slope);
+    }
+  }
+#endif
   // gas giants scatter light round the terminator; solid bodies keep a crisper edge
-  float day = smoothstep(gas ? -0.18 : -0.06, gas ? 0.5 : 0.34, dot(N, L)) * smoothstep(-0.14, 0.1, geo);
+  float day = smoothstep(gas ? -0.18 : -0.06, gas ? 0.5 : 0.34, ndl) * smoothstep(-0.14, 0.1, geo);
   vec3 sun = vec3(1.95, 1.66, 1.34);
   vec3 col = alb * day * sun;
   if (gas) col *= mix(0.5, 1.0, pow(mu, 0.45));           // limb darkening: reads as depth of atmosphere
   if (cloud > 0.0) col = mix(col, vec3(1.0, 0.97, 0.93) * smoothstep(-0.1, 0.3, geo) * sun * 0.85, cloud * 0.8);
-  col += vec3(1.0, 0.9, 0.75) * pow(max(dot(N, normalize(L + V)), 0.0), 64.0) * gloss * day * 1.3;
+  col += vec3(1.0, 0.9, 0.75) * pow(max(dot(G, normalize(L + V)), 0.0), 64.0) * gloss * day * 1.3;
   // night side: a cool fill so no body ever vanishes into the sky
   col += alb * vec3(0.05, 0.058, 0.072) * (1.0 + 1.6 * pow(1.0 - mu, 2.0));
   col += emi;

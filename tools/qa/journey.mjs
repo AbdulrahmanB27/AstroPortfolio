@@ -1,6 +1,6 @@
 // End-to-end journey with real input. Records state, console errors and frames at each beat.
-//   node tools/qa/journey.mjs <label> [--base http://localhost:5180/] [--size desktop|laptop|phone] [--reduced]
-import { chromium } from 'playwright-core'
+//   node tools/qa/journey.mjs <label> [--base http://localhost:5180/] [--size desktop|laptop|phone] [--reduced] [--firefox]
+import { chromium, firefox } from 'playwright-core'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -17,16 +17,18 @@ const [width, height] = SIZES[sizeName]
 const out = join(root, 'tasks', 'captures', label)
 mkdirSync(out, { recursive: true })
 
-const browser = await chromium.launch({
-  channel: 'chrome',
-  headless: true,
-  args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist', '--hide-scrollbars'],
-})
+// --firefox drives the installed Firefox over WebDriver BiDi (no touch emulation there: laptop/desktop only)
+const useFirefox = args.includes('--firefox')
+const browser = useFirefox
+  ? await firefox.launch({ channel: 'moz-firefox', headless: true, timeout: 120000 })
+  : await chromium.launch({
+      channel: 'chrome',
+      headless: true,
+      args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist', '--hide-scrollbars'],
+    })
 const ctx = await browser.newContext({
   viewport: { width, height },
-  deviceScaleFactor: 1,
-  isMobile: sizeName === 'phone',
-  hasTouch: sizeName === 'phone',
+  ...(useFirefox ? {} : { deviceScaleFactor: 1, isMobile: sizeName === 'phone', hasTouch: sizeName === 'phone' }),
   reducedMotion: reduced ? 'reduce' : 'no-preference',
 })
 const page = await ctx.newPage()
@@ -38,7 +40,7 @@ let n = 0
 const state = () =>
   page.evaluate(() => {
     const s = window.__portfolio?.app.getState()
-    return s ? { mode: s.mode, busy: s.busy, tab: s.tab, project: s.projectId } : null
+    return s ? { mode: s.mode, busy: s.busy, tab: s.tab, project: s.projectId, simple: s.simple } : null
   })
 const snap = async (name) => {
   const file = `${String(++n).padStart(2, '0')}_${name}_${sizeName}.png`
@@ -65,8 +67,8 @@ const settle = async (ms = 14000) => {
   }
   return false
 }
-const tap = (sel) => (sizeName === 'phone' ? page.tap(sel) : page.click(sel))
-const menu = (label) => `.menu__item:has-text("${label}")`
+const tap = (sel, o) => (sizeName === 'phone' ? page.tap(sel, o) : page.click(sel, o))
+const menu = (key) => `.menu__item[data-key="${key}"]`
 
 // The dev server exposes the test handle without any ?view parameter, so this is the real first-run flow.
 await page.goto(base, { waitUntil: 'load' })
@@ -86,11 +88,25 @@ if (reduced) {
 await settle()
 await check('home_ready', { mode: 'home', busy: false })
 
-// About -> cockpit
-await tap(menu('About'))
+// three destinations, each to its own place
+const labels = await page.evaluate(() => [...document.querySelectorAll('.menu__item .menu__label')].map((e) => e.textContent))
+record('menu_has_three_destinations', labels.length === 3, { labels })
+
+// Simple view: a plain page over the scene, with its own address; Escape closes it
+await tap(menu('simple'))
+await page.waitForTimeout(700)
+await check('simple_view_open', { mode: 'home', simple: true })
+const simple = await page.evaluate(() => ({ projects: document.querySelectorAll('.simple .sproject').length, want: window.__portfolio.app.getState().content.projects.length, hash: location.hash }))
+record('simple_view_lists_every_project', simple.projects === simple.want && simple.hash === '#simple', simple)
+await page.keyboard.press('Escape')
+await page.waitForTimeout(500)
+await check('simple_view_closed', { mode: 'home', simple: false, busy: false })
+
+// Cockpit
+await tap(menu('cockpit'))
 await page.waitForTimeout(900)
 await snap('to_cockpit_mid')
-await tap(menu('Projects')).catch(() => {}) // must be ignored while busy
+await tap(menu('launch'), { timeout: 1500 }).catch(() => {}) // must be ignored while busy
 await settle()
 await page.waitForTimeout(700)
 await check('cockpit_about', { mode: 'cockpit', busy: false, tab: 'about' })
@@ -107,16 +123,16 @@ await snap('exit_cockpit_mid')
 await settle()
 await check('home_after_cockpit', { mode: 'home', busy: false })
 
-// Resume goes straight to the resume tab; Escape steps back
-await tap(menu('Resume'))
+// the computer comes back on the page that was last open; Escape steps back
+await tap(menu('cockpit'))
 await settle()
-await check('cockpit_resume_direct', { mode: 'cockpit', tab: 'resume' })
+await check('cockpit_reopens_on_last_tab', { mode: 'cockpit', tab: 'contact' })
 await page.keyboard.press('Escape')
 await settle()
 await check('home_via_escape', { mode: 'home', busy: false })
 
-// Projects -> launch -> orbit
-await tap(menu('Projects'))
+// Launch -> orbit
+await tap(menu('launch'))
 if (!reduced) {
   await page.waitForTimeout(1500)
   await snap('launch_1500')
@@ -167,12 +183,43 @@ else await page.mouse.click(target.x, target.y)
 await settle()
 await page.waitForTimeout(400)
 await check('project_by_planet_click', { mode: 'project', project: 'space-portfolio' })
-await page.keyboard.press('Escape')
+// a click on the planet itself keeps the project open; a click on empty space steps back to the system
+const spot = await page.evaluate(() => {
+  const disc = window.__portfolio.screenDiscs.get(window.__portfolio.app.getState().projectId)
+  const panel = document.querySelector('.project').getBoundingClientRect()
+  const back = document.querySelector('.backbtn.is-on').getBoundingClientRect()
+  const free = (x, y) => !(x >= panel.left - 6 && x <= panel.right + 6 && y >= panel.top - 6 && y <= panel.bottom + 6) && !(x <= back.right + 8 && y <= back.bottom + 8) && Math.hypot(x - disc.x, y - disc.y) > disc.r + 12
+  const inPanel = (x, y) => x >= panel.left && x <= panel.right && y >= panel.top && y <= panel.bottom
+  const pts = [[0.95, 0.06], [0.5, 0.04], [0.06, 0.3], [0.94, 0.3], [0.5, 0.97], [0.05, 0.6], [0.95, 0.6], [0.06, 0.94]].map(([fx, fy]) => [Math.round(innerWidth * fx), Math.round(innerHeight * fy)])
+  return { empty: pts.find(([x, y]) => free(x, y)) ?? null, planet: inPanel(disc.x, disc.y) || disc.x < 0 || disc.x > innerWidth || disc.y < 0 || disc.y > innerHeight ? null : [disc.x, disc.y] }
+})
+const poke = ([x, y]) => (sizeName === 'phone' ? page.touchscreen.tap(x, y) : page.mouse.click(x, y))
+if (spot.planet) {
+  await poke(spot.planet)
+  await page.waitForTimeout(700)
+  await check('click_on_the_planet_keeps_the_project', { mode: 'project', project: 'space-portfolio' })
+}
+record('empty_space_beside_the_project', !!spot.empty, spot)
+if (spot.empty) await poke(spot.empty)
+else await page.keyboard.press('Escape')
+await page.waitForTimeout(300)
 await settle()
-await check('orbit_via_escape', { mode: 'orbit', busy: false })
+await check('orbit_by_clicking_empty_space', { mode: 'orbit', busy: false })
 
-// the way home
-await tap('.backbtn.is-on')
+// the way home: the old pill is gone, a tip names the way, and the home planet takes you back
+record('no_home_pill_in_orbit', (await page.locator('.backbtn.is-on').count()) === 0)
+const tips = await page.evaluate(() => [...document.querySelectorAll('.hint.is-on, .pindex.is-on .pindex__head em')].filter((e) => e.getBoundingClientRect().width > 0 && getComputedStyle(e).display !== 'none').map((e) => e.textContent.trim().replace(/\s+/g, ' ')))
+record('orbit_tip_says_how_to_get_back', tips.some((t) => /home/i.test(t)), { tips })
+await page.waitForTimeout(700)
+const homeLabel = await page.evaluate(() => {
+  const el = document.querySelector('.plabel[data-id="__home"]')
+  return !!el && parseFloat(el.style.opacity || '0') > 0.3
+})
+if (homeLabel) await tap('.plabel[data-id="__home"]')
+else {
+  const d = await page.evaluate(() => window.__portfolio.screenDiscs.get('__home'))
+  await poke([d.x, d.y])
+}
 if (!reduced) {
   await page.waitForTimeout(1200)
   await snap('return_mid')
@@ -181,11 +228,27 @@ await settle(16000)
 await check('home_after_return', { mode: 'home', busy: false })
 
 // a second launch works and can be skipped
-await tap(menu('Projects'))
+await tap(menu('launch'))
 await page.waitForTimeout(600)
 await page.keyboard.press('Enter')
 await settle()
 await check('orbit_after_skip', { mode: 'orbit', busy: false })
+
+// the simple view has its own address: it opens straight from a link, and the browser's Back button closes it
+await page.goto('about:blank') // a change of #fragment alone would not reload the page
+await page.goto(base + '#simple', { waitUntil: 'load' })
+await page.waitForSelector('.simple .sproject', { timeout: 30000 })
+record('simple_view_opens_from_its_link', (await state()).simple === true, { url: page.url() })
+await page.click('.simple__close')
+await page.waitForFunction(() => { const s = window.__portfolio.app.getState(); return s.mode === 'home' && !s.busy && s.sceneReady }, null, { timeout: 150000 })
+await page.waitForTimeout(600)
+await check('closing_it_lands_on_the_home_planet', { mode: 'home', busy: false, simple: false })
+record('address_is_clean_again', !page.url().includes('#'), { url: page.url() })
+await tap(menu('simple'))
+await page.waitForTimeout(500)
+await page.evaluate(() => history.back()) // the browser's Back button (same page, so no load event to wait for)
+await page.waitForTimeout(500)
+await check('browser_back_closes_the_simple_view', { mode: 'home', simple: false })
 
 record('console_errors', errors.length === 0, { errors: errors.slice(0, 5) })
 writeFileSync(join(out, `journey_${sizeName}${reduced ? '_reduced' : ''}.json`), JSON.stringify(results, null, 2))

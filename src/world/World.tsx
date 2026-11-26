@@ -54,7 +54,8 @@ function CameraRig() {
     if (rig.roll) cam.rotateZ(rig.roll)
 
     const alt = cam.position.length()
-    const near = st.mode === 'cockpit' ? 0.03 : THREE.MathUtils.clamp(alt * 0.004, 0.08, 260)
+    // (pushed in on a project display the camera is within a display's width of it)
+    const near = st.mode === 'cockpit' ? 0.03 : THREE.MathUtils.clamp(alt * 0.004, 0.08, fx.read > 0 ? 12 : 260)
     if (cam.fov !== rig.fov || cam.near !== near) {
       cam.fov = rig.fov
       cam.near = near
@@ -121,6 +122,7 @@ function Lights() {
   const gl = useThree((s) => s.gl)
   const frames = useRef(0)
   const lastLift = useRef(-1)
+  const lastRocket = useRef(-1)
   useEffect(() => {
     const l = sun.current
     if (!l) return
@@ -133,7 +135,13 @@ function Lights() {
   useFrame(() => {
     // static world: refresh the shadow map only while something that casts is moving
     frames.current++
-    const moving = Math.abs(fx.lift - lastLift.current) > 0.001 || fx.gag >= 0 || fx.hatch > 0.001
+    // Re-rendering the 4K soft shadow map costs about a frame, so it is done only while its change can be
+    // seen: the lander's first metres of climb (its shadow then leaves the view), the tether gag at half
+    // rate, and once whenever the lander appears or disappears. The sliding hatch does not move a shadow.
+    const lifting = Math.abs(fx.lift - lastLift.current) > 0.001 && (fx.lift < 16 || lastLift.current < 16) && frames.current % 2 === 0
+    const gag = fx.gag >= 0 && frames.current % 2 === 0
+    const moving = lifting || gag || fx.rocketVisible !== lastRocket.current
+    lastRocket.current = fx.rocketVisible
     if (frames.current < 40 || moving) gl.shadowMap.needsUpdate = true
     lastLift.current = fx.lift
     const k = 1 - fx.system
@@ -151,7 +159,8 @@ function Lights() {
           color="#ffc78c"
           intensity={SURFACE_LIGHTS[0]}
           castShadow={!qa.debug.has('noshadow')}
-          shadow-mapSize={[4096, 4096]}
+          // the shadow frustum is 92 m wide and 21 m tall: a 4:1 map keeps the same texel size for a quarter of the work
+          shadow-mapSize={[4096, 1024]}
           shadow-camera-left={-46}
           shadow-camera-right={46}
           shadow-camera-top={9}
@@ -161,7 +170,7 @@ function Lights() {
           shadow-bias={-0.00012}
           shadow-normalBias={0.02}
           shadow-radius={2.4}
-          shadow-blurSamples={12}
+          shadow-blurSamples={8}
         />
         {/* soft wrap from the huge stellar disc */}
         <directionalLight color="#ffb877" intensity={SURFACE_LIGHTS[1]} position={[STAR_DIR.x * 100 + 20, 46, STAR_DIR.z * 100]} />
@@ -247,8 +256,6 @@ function Ready() {
 }
 
 function Scene() {
-  const mode = useApp((s) => s.mode)
-  const inSystem = mode === 'orbit' || mode === 'project' || mode === 'flight' || mode === 'launch'
   return (
     <>
       <CameraRig />
@@ -259,7 +266,8 @@ function Scene() {
       <HomeSet />
       <SystemSet />
       <CockpitSet />
-      {inSystem && <ProbeSet />}
+      {/* always mounted (hidden until a project is focused) so its shaders are compiled behind the loader */}
+      <ProbeSet />
       <FlightSet />
       <PostFX />
       <Ready />
@@ -309,10 +317,14 @@ function AdaptiveDpr({ range, dpr, setDpr }: { range: { min: number; max: number
     if (fps < target * 0.92) {
       // missed refreshes are visible stutter: better one notch softer
       s.high = 0
-      if (++s.low >= 2 && dpr > range.min + 1e-3) {
+      // well short of the target: go straight to the size the shortfall calls for (frame time follows the
+      // pixel count), instead of creeping there one small, visible step at a time
+      const ratio = fps / target
+      if (++s.low >= (ratio < 0.8 ? 1 : 2) && dpr > range.min + 1e-3) {
         s.low = 0
-        s.ceiling = Math.min(s.ceiling, dpr - 0.1)
-        setDpr(Math.max(range.min, Math.round((dpr - 0.1) * 20) / 20))
+        const next = Math.max(range.min, Math.round(Math.min(dpr - 0.1, dpr * Math.sqrt(ratio) * 0.98) * 20) / 20)
+        s.ceiling = Math.min(s.ceiling, next)
+        setDpr(next)
       }
     } else if (fps > target * 0.975) {
       s.low = 0
@@ -331,10 +343,13 @@ function AdaptiveDpr({ range, dpr, setDpr }: { range: { min: number; max: number
 export function World() {
   const range = useMemo(dprRange, [])
   const [dpr, setDpr] = useState(range.max)
+  // behind the plain page nothing is seen, so nothing is drawn (once the scene has finished loading)
+  const covered = useApp((s) => s.simple && s.sceneReady && !s.busy)
   return (
     <Canvas
       className="world"
       flat
+      frameloop={covered ? 'never' : 'always'}
       shadows={{ type: qa.debug.has('pcf') ? THREE.PCFSoftShadowMap : THREE.VSMShadowMap }}
       dpr={dpr}
       gl={{ antialias: false, powerPreference: 'high-performance', stencil: false, preserveDrawingBuffer: qa.view !== null }}

@@ -52,6 +52,8 @@ export const fx = {
   focusDim: 0,
   /** 0..1 probe deployment. */
   probe: 0,
+  /** 0 = establishing shot of a display, 1 = pushed in to read it. */
+  read: 0,
   dust: 0,
   /** Tether gag progress 0..1, <0 when inactive. */
   gag: -1,

@@ -19,6 +19,8 @@ export function useKeys() {
         director.back()
         return
       }
+      // the plain page is a document: no shortcuts act on the scene hidden behind it
+      if (st.simple) return
       // Shift+G: schematic grid
       if (e.shiftKey && e.key.toLowerCase() === 'g' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         director.toggleGrid()

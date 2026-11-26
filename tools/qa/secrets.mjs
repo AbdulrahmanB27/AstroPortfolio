@@ -52,7 +52,7 @@ await press(['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'Arrow
 record('flight_code_ignored_on_surface', (await st()).mode === 'home')
 
 // ── secret launch: Alt + Projects ──
-await page.click('.menu__item:has-text("Projects")', { modifiers: ['Alt'] })
+await page.click('.menu__item[data-key="launch"]', { modifiers: ['Alt'] })
 await page.waitForTimeout(2600)
 s = await st()
 record('alt_launch_runs_tether_gag', s.mode === 'launch' && s.gag >= 0, { gag: s.gag })
@@ -96,6 +96,73 @@ await page.waitForTimeout(1800)
 await page.mouse.up()
 const after = (await st()).cam
 record('pointer_flies_the_ship', Math.hypot(after[0] - before[0], after[2] - before[2]) > 800)
+// boost: faster, and it leaves a trail
+await page.evaluate(() => {
+  // open space between the outer orbits, heading along the orbit
+  const f = window.__portfolio.flight
+  Object.assign(f.ship, { x: 0, z: 24000, heading: Math.PI / 2, speed: 0, kx: 0, kz: 0 })
+})
+await page.keyboard.down('Shift')
+await page.keyboard.down('w')
+await page.waitForTimeout(2200)
+const boosted = await page.evaluate(() => ({ speed: Math.round(window.__portfolio.flight.ship.speed), boost: +window.__portfolio.flight.ship.boost.toFixed(2) }))
+await page.screenshot({ path: join(out, '04b_boost_trail.png') })
+await page.keyboard.up('Shift')
+await page.waitForTimeout(900)
+const cruising = await page.evaluate(() => ({ speed: Math.round(window.__portfolio.flight.ship.speed), boost: +window.__portfolio.flight.ship.boost.toFixed(2) }))
+await page.keyboard.up('w')
+record('shift_boosts', boosted.boost > 0.9 && boosted.speed > 5000 && cruising.boost < 0.1 && cruising.speed < boosted.speed, { boosted, cruising })
+
+// bodies are solid: fly straight at each kind at full boost and never get inside
+const gapTo = () =>
+  page.evaluate(() => {
+    const f = window.__portfolio.flight
+    let worst = Infinity
+    for (const s of f.solids()) {
+      const reach = s.r + f.shipRadius
+      if (Math.abs(s.y) >= reach) continue
+      worst = Math.min(worst, Math.hypot(f.ship.x - s.x, f.ship.z - s.z) - Math.sqrt(reach * reach - s.y * s.y))
+    }
+    return worst
+  })
+const ram = async (name, pick, shotName) => {
+  const hitBefore = await page.evaluate(() => window.__portfolio.flight.impact.at)
+  await page.evaluate((code) => {
+    const f = window.__portfolio.flight
+    const s = new Function('solids', `return ${code}`)(f.solids())
+    // start 4000 m short of its surface, on the side away from the star, nose at its centre
+    const out = Math.hypot(s.x, s.z) || 1
+    const ux = out > 1 ? s.x / out : 0
+    const uz = out > 1 ? s.z / out : 1
+    const x = s.x + ux * (s.r + 4000)
+    const z = s.z + uz * (s.r + 4000)
+    Object.assign(f.ship, { x, z, heading: Math.atan2(s.x - x, -(s.z - z)), speed: 0, turn: 0, kx: 0, kz: 0 })
+  }, pick)
+  await page.keyboard.down('Shift')
+  await page.keyboard.down('w')
+  let worst = Infinity
+  let hit = false
+  for (let i = 0; i < 70; i++) {
+    await page.waitForTimeout(50)
+    worst = Math.min(worst, await gapTo())
+    const at = await page.evaluate(() => window.__portfolio.flight.impact.at)
+    if (!hit && at !== hitBefore) {
+      hit = true
+      await page.waitForTimeout(120)
+      if (shotName) await page.screenshot({ path: join(out, shotName) })
+    }
+  }
+  await page.keyboard.up('w')
+  await page.keyboard.up('Shift')
+  record(`${name}_is_solid`, hit && worst > -3, { deepestMetres: Math.round(worst * 10) / 10, hit })
+}
+await ram('planet', 'solids[3]', '04c_planet_impact.png') // 0 star, 1 home, 2 station, then planets and moons
+await ram('star', 'solids[0]', '04d_star_impact.png')
+await ram('home_planet', 'solids[1]')
+await ram('moon', 'solids.slice(3).sort((a, b) => a.r - b.r)[0]')
+await page.evaluate(() => Object.assign(window.__portfolio.flight.ship, { x: 2600, z: 10200, heading: Math.PI * 0.62, speed: 0, kx: 0, kz: 0 }))
+await page.waitForTimeout(1500)
+
 // planets are not selectable while flying
 const disc = await page.evaluate(() => [...window.__portfolio.screenDiscs.entries()].find(([k]) => !k.startsWith('__')))
 await page.mouse.click(disc[1].x, disc[1].y)

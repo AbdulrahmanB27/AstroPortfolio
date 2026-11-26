@@ -32,7 +32,7 @@ const subline = (p: Project) => (p.placeholder ? 'Placeholder' : p.category)
 const swatch = (p: Project) => (/^#[0-9a-fA-F]{6}$/.test(p.planet.palette[0] ?? '') ? p.planet.palette[0] : PLANET_LOOKS[p.planet.type].palette[0])
 const setHover = (id: string | null) => useApp.getState().set({ hoverId: id })
 
-/** System view chrome: anchored planet labels, one short hint, a way home. Flight mode banner lives here too. */
+/** System view chrome: anchored planet labels (the home planet's is the way back) and one line of hints. Flight mode banner lives here too. */
 export function OrbitHud() {
   const mode = useApp((s) => s.mode)
   const busy = useApp((s) => s.busy)
@@ -57,20 +57,20 @@ export function OrbitHud() {
   if (!projects) return null
   return (
     <>
-      <button type="button" className={`backbtn${orbit ? ' is-on' : ''}`} onClick={() => director.returnHome()} tabIndex={orbit ? 0 : -1} aria-hidden={!orbit}>
-        <span aria-hidden="true">←</span> Home planet
-      </button>
       <div className={`labels${orbit || flight ? ' is-on' : ''}`} aria-hidden={!orbit}>
         {projects.map((p, i) => (
           <Label key={p.id} id={p.id} title={p.title} sub={subline(p)} featured={p.featured} badge={String(i + 1)} onPick={() => director.focusProject(p.id)} />
         ))}
         <Label id="__home" title="Home" sub="Return to the surface" featured={false} badge="Home" onPick={() => director.returnHome()} />
       </div>
-      <p className={`hint${orbit ? ' is-on' : ''}`}>Select a planet to view its project.</p>
+      <p className={`hint${orbit ? ' is-on' : ''}`}>
+        Select a planet to view its project <i aria-hidden="true">·</i> Select the home planet to land
+      </p>
       {/* On narrow screens every project stays one tap away even when its label has no room in the scene. */}
       <nav className={`pindex${orbit ? ' is-on' : ''}`} aria-label="Projects" aria-hidden={!orbit}>
         <p className="pindex__head">
           Projects <span>{projects.length}</span>
+          <em>Tap Home on the map to land</em>
         </p>
         <ul ref={list}>
           {projects.map((p, i) => (

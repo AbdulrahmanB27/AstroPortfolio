@@ -167,3 +167,69 @@ Gate for each visual phase: rubric average ≥ 4.3, nothing below 4, judged from
 - [x] `journey.mjs` and `admin-roundtrip.mjs` no longer hardcode six projects or an exact URL string.
 - [x] Verified: qa:schema 0 errors / 0 warnings; build; qa:journey 20/20; qa:admin 15/15; captures `port`,
   `port2`, `port3` with 0 console errors.
+
+## 11. Owner feedback round (2026-11-25)
+
+The owner reported four problems. All four are addressed; evidence is in the matching section of
+`tasks/verification.md`.
+
+- [x] **"The sun does not look good."** New star: luminous golden core darkening to deep orange at the limb,
+  fine convection cells, a few small sunspot groups with penumbrae, corona with streamers, flame tongues and
+  arches. Built on a pre-generated noise texture (`src/world/starNoise.ts`), which is also cheaper to draw.
+- [x] **"Visuals are glitched on Firefox."** Reproduced with the installed Firefox: freezes of 1 to 1.7 s in the
+  middle of transitions. Cause and fix: see lessons (light count recompiles; shadow map refresh). All
+  transitions now run at 60 fps in Firefox with no shader linking mid-transition. I could not look at the
+  owner's own Firefox window (the access request was not answered), so anything beyond what the tests show is
+  unknown.
+- [x] **"Screens are too small to be usable; scrolling should zoom in."** The establishing shots are a little
+  closer, and both displays now have a reading mode: scrolling, clicking the display or its zoom button pushes
+  the camera in until the display fills the view (about 3x the area on a laptop, 20 px text); Escape, clicking
+  outside or scrolling up at the top pulls back. On phones the reading panel grows to the full height.
+- [x] **"Going back to the home planet puts the camera under the planet."** The return path is rebuilt (see
+  lessons). From any turned, tilted or zoomed view the camera now swings round on its orbit and comes down
+  from above; longest frame 19 ms in Chrome, 40 ms in Firefox.
+
+Not done / open:
+- The owner's Firefox was not observed directly; ask them to confirm.
+- Committed to branch `claude/portfolio-rebuild` on 2026-11-26, not pushed.
+- Safari and real phones remain untested.
+
+
+
+## 12. Owner feedback round 2 (2026-11-26)
+
+The owner asked for five changes and a check of the phone layout. All done; evidence is in the matching
+section of `tasks/verification.md`.
+
+- [x] **Home menu:** three destinations instead of five: "Launch into orbit" (projects), "Enter the cockpit"
+  (About, Skills, Resume, Contact on the mission computer; it reopens on the page last read) and "Simple view".
+  Each shows its hint line all the time.
+- [x] **Simple view (new):** the whole portfolio as one plain scrolling page (`src/ui/SimpleView.tsx`), laid
+  over the scene, which stops drawing while it is open. It has its own address (`#simple`): it opens straight
+  from a link without playing the opening shot, and Esc, its Back button or the browser's Back closes it.
+- [x] **Displays:** the zoom icon is gone. From a distance a display is a preview that does not scroll; the
+  first scroll (or tap, click or swipe) only zooms, and the page starts to move once the display has arrived.
+  The cue under a display is now a fixed status line that always says what scrolling will do.
+- [x] **Project view:** a click or tap on empty space steps back (zooms out first if zoomed, then returns to
+  the system view). A click on the planet being looked at does nothing. The Back pill stays.
+- [x] **System view:** the "Home planet" pill is removed. The hint line reads "Select a planet to view its
+  project · Select the home planet to land"; on phones the project list header says "Tap Home on the map to
+  land". The home planet's label is now always placed, even when the map is crowded.
+- [x] **Flight mode:** the star, the planets, their moons, the home planet and the station are solid: the ship
+  slides past on a glancing touch and is stopped and pushed back on a head-on one, with a small ring of light
+  and a short shudder. The chase camera rides over bodies instead of passing through them. Boosting leaves a
+  trail from each engine (two streaks on the scout, one band on the freighter) and opens the view slightly.
+- [x] **Phones:** new test `tools/qa/phone.mjs` goes through every state with real touch input at six sizes.
+  Found and fixed while doing it: the simple view's section links shifted the whole interface; "Scroll for
+  more" could show with nothing more to scroll (and vanish at the first touch); the Home label could be
+  hidden in landscape; on tablet-shaped windows the home menu sat on top of the lander (it now drops onto the
+  ground at the lower right for windows narrower than 3:2). Pulling down at the top of a zoomed display zooms
+  back out on touch screens.
+- [x] QA scripts updated for the new controls; whole regression run in Chrome and Firefox.
+
+Not done / open:
+- Tested on emulated phones and tablets in Chrome only: no real phone, no Safari.
+- Flight mode still cannot be unlocked on a phone (the code is typed on a keyboard), and there is no boost on
+  touch (Shift only).
+- Project `CLAUDE.md` still describes the five-item menu and "click star -> personal section".
+- Committed to branch `claude/portfolio-rebuild` on 2026-11-26, not pushed.
